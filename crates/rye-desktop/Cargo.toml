@@ -1,0 +1,15 @@
+[package]
+name = "rye-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Native desktop renderer for rye — wgpu + winit + taffy, no WebView"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }
+wgpu = { workspace = true }
+winit = { workspace = true }
+taffy = { workspace = true }
+cosmic-text = { workspace = true }
+lyon = { workspace = true }

@@ -1,0 +1,10 @@
+[package]
+name = "rye-testing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Testing utilities for rye — virtual renderer, event simulation, query helpers, snapshots"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

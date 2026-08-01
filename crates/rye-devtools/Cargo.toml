@@ -1,0 +1,10 @@
+[package]
+name = "rye-devtools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Developer tools for rye — component inspector, signal viewer, profiler, render highlight"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

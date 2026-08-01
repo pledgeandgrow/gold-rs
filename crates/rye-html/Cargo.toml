@@ -1,0 +1,25 @@
+[package]
+name = "rye-html"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "DOM renderer for rye — web-sys based renderer for WASM target"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+version = "0.3"
+features = [
+    "Document", "Element", "Node", "NodeList", "Text", "Window",
+    "HtmlElement", "HtmlInputElement", "HtmlButtonElement",
+    "Event", "MouseEvent", "KeyboardEvent", "InputEvent", "FocusEvent",
+    "DocumentFragment", "ShadowRoot", "DomTokenList",
+    "ResizeObserver", "ResizeObserverEntry",
+    "IntersectionObserver", "IntersectionObserverEntry",
+]

@@ -1,0 +1,16 @@
+/target
+**/target
+Cargo.lock
+*.wasm
+*.gz
+*.br
+dist/
+node_modules/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.log

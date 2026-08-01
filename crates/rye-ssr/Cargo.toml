@@ -1,0 +1,12 @@
+[package]
+name = "rye-ssr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Server-side rendering for rye — streaming SSR, hydration, SSG, ISR"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }
+rye-serialize = { workspace = true }
+tokio = { workspace = true }

@@ -1,0 +1,10 @@
+[package]
+name = "rye-animations"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Declarative animations for rye — transitions, spring physics, shared element transitions"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

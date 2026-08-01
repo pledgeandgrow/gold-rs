@@ -1,0 +1,43 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/rye-signals/**"
+      - "crates/rye-core/**"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-criterion
+        run: cargo install cargo-criterion
+
+      - name: Run signal benchmarks
+        run: cargo criterion -p rye-signals --bench signals
+
+      - name: Run core benchmarks
+        run: cargo criterion -p rye-core --bench renderer
+
+      - name: Store benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: cargo
+          output-file-path: target/criterion/results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: "150%"
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-comment-cc-users: "@rye-rs/maintainers"

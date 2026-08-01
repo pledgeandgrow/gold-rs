@@ -1,0 +1,18 @@
+[package]
+name = "rye-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core abstractions for rye — Component trait, Renderer trait, Element, template engine"
+
+[features]
+default = []
+wee_alloc = ["dep:wee_alloc"]
+
+[dependencies]
+rye-signals = { workspace = true }
+rye-serialize = { workspace = true }
+wee_alloc = { version = "0.4", optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

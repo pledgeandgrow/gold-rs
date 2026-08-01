@@ -1,0 +1,10 @@
+[package]
+name = "rye-forms"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Reactive forms for rye — validation, dirty/touched state, async validation"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

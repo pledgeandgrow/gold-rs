@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Format & Lint ──────────────────────────────────────────
+  fmt:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+
+  # ── Test (Linux) ───────────────────────────────────────────
+  test-linux:
+    name: Test (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features --workspace
+
+  # ── Test (macOS) ───────────────────────────────────────────
+  test-macos:
+    name: Test (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features --workspace
+
+  # ── Test (Windows) ─────────────────────────────────────────
+  test-windows:
+    name: Test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --all-features --workspace
+
+  # ── WASM Build ─────────────────────────────────────────────
+  wasm-build:
+    name: WASM Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Install wasm-opt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+      - name: Build rye-html for WASM
+        run: cargo build -p rye-html --target wasm32-unknown-unknown --release
+      - name: Check WASM size
+        run: |
+          SIZE=$(stat -c%s target/wasm32-unknown-unknown/release/rye_html.wasm 2>/dev/null || echo 0)
+          GZIPPED=$(gzip -c target/wasm32-unknown-unknown/release/rye_html.wasm 2>/dev/null | wc -c || echo 0)
+          echo "WASM raw size: $SIZE bytes"
+          echo "WASM gzipped size: $GZIPPED bytes"
+          # TODO: enforce 50KB budget once hello-world app exists
+          # if [ $GZIPPED -gt 51200 ]; then
+          #   echo "::error::WASM bundle exceeds 50KB target ($GZIPPED bytes)"
+          #   exit 1
+          # fi
+
+  # ── Dependency Audit ───────────────────────────────────────
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+      - run: cargo audit
+
+  # ── Documentation Build ────────────────────────────────────
+  docs:
+    name: Docs Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --all-features --workspace --no-deps
+
+  # ── MSRV Check ─────────────────────────────────────────────
+  msrv:
+    name: MSRV Check (1.75)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.75.0
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --workspace

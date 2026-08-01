@@ -1,0 +1,59 @@
+name: WASM Size Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "Cargo.toml"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  size-check:
+    name: WASM Bundle Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-opt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binaryen
+
+      - name: Build rye-html for WASM (release)
+        run: cargo build -p rye-html --target wasm32-unknown-unknown --release
+
+      - name: Optimize with wasm-opt
+        run: |
+          wasm-opt -Oz \
+            -o target/wasm32-unknown-unknown/release/rye_html.opt.wasm \
+            target/wasm32-unknown-unknown/release/rye_html.wasm
+
+      - name: Measure sizes
+        run: |
+          RAW=$(stat -c%s target/wasm32-unknown-unknown/release/rye_html.wasm)
+          OPT=$(stat -c%s target/wasm32-unknown-unknown/release/rye_html.opt.wasm)
+          GZIPPED=$(gzip -c target/wasm32-unknown-unknown/release/rye_html.opt.wasm | wc -c)
+          BROTLI=$(brotli -c -q 11 target/wasm32-unknown-unknown/release/rye_html.opt.wasm | wc -c)
+
+          echo "## WASM Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Raw | $RAW bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| wasm-opt (-Oz) | $OPT bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gzipped | $GZIPPED bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Brotli | $BROTLI bytes |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Target: <50KB (51,200 bytes) gzipped for hello-world" >> $GITHUB_STEP_SUMMARY
+
+          echo "Raw: $RAW bytes"
+          echo "Optimized: $OPT bytes"
+          echo "Gzipped: $GZIPPED bytes"
+          echo "Brotli: $BROTLI bytes"

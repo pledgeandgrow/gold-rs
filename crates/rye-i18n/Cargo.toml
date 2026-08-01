@@ -1,0 +1,10 @@
+[package]
+name = "rye-i18n"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Internationalization for rye — compile-time extraction, reactive locale, CLDR pluralization"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

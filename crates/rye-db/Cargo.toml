@@ -1,0 +1,9 @@
+[package]
+name = "rye-db"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Database integration layer for rye — connection pooling, query builder, reactive queries"
+
+[dependencies]
+rye-signals = { workspace = true }

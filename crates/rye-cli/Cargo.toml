@@ -1,0 +1,16 @@
+[package]
+name = "rye-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI tool for rye — new, dev, build, test, deploy, add, upgrade"
+
+[[bin]]
+name = "rpg"
+path = "src/main.rs"
+
+[dependencies]
+rye-core = { workspace = true }
+notify = "6"
+tungstenite = "0.23"
+tiny_http = "0.12"

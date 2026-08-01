@@ -1,0 +1,74 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/rye-core",
+    "crates/rye-signals",
+    "crates/rye-macros",
+    "crates/rye-html",
+    "crates/rye-router",
+    "crates/rye-forms",
+    "crates/rye-i18n",
+    "crates/rye-animations",
+    "crates/rye-ssr",
+    "crates/rye-desktop",
+    "crates/rye-mobile",
+    "crates/rye-testing",
+    "crates/rye-devtools",
+    "crates/rye-cli",
+    "crates/rye-serialize",
+    "crates/rye-mcp",
+    "crates/rye-db",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rye-rs/rye"
+homepage = "https://rye.rs"
+description = "A cross-platform UI framework for Rust — safety, performance, ergonomics, everywhere."
+
+[workspace.dependencies]
+# Internal crates
+rye-core = { path = "crates/rye-core" }
+rye-signals = { path = "crates/rye-signals" }
+rye-macros = { path = "crates/rye-macros" }
+rye-html = { path = "crates/rye-html" }
+rye-router = { path = "crates/rye-router" }
+rye-forms = { path = "crates/rye-forms" }
+rye-i18n = { path = "crates/rye-i18n" }
+rye-animations = { path = "crates/rye-animations" }
+rye-ssr = { path = "crates/rye-ssr" }
+rye-desktop = { path = "crates/rye-desktop" }
+rye-mobile = { path = "crates/rye-mobile" }
+rye-testing = { path = "crates/rye-testing" }
+rye-devtools = { path = "crates/rye-devtools" }
+rye-serialize = { path = "crates/rye-serialize" }
+rye-mcp = { path = "crates/rye-mcp" }
+rye-db = { path = "crates/rye-db" }
+
+# External dependencies (shared versions)
+wgpu = "24"
+winit = "0.30"
+taffy = "0.7"
+cosmic-text = "0.12"
+lyon = "1"
+web-sys = "0.3"
+wasm-bindgen = "0.2"
+js-sys = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full", "extra-traits", "parsing"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = "z"

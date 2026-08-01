@@ -1,0 +1,10 @@
+[package]
+name = "rye-router"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Type-safe routing for rye — nested routes, guards, lazy loading, SSR-aware"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }
