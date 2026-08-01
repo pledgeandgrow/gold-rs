@@ -12,5 +12,5 @@ path = "src/main.rs"
 [dependencies]
 rye-core = { workspace = true }
 notify = "6"
-tungstenite = "0.23"
+tungstenite = "0.30"
 tiny_http = "0.12"
