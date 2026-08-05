@@ -10,6 +10,7 @@ pub mod dom_renderer;
 pub mod batch;
 pub mod events;
 pub mod hydrate;
+pub use hydrate::{hydrate, HydrationTarget};
 pub mod web_components;
 pub mod js_interop;
 

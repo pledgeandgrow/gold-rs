@@ -23,6 +23,14 @@ pub struct Signal<T: 'static> {
     inner: Rc<SignalInner<T>>,
 }
 
+impl<T: 'static> std::fmt::Debug for Signal<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Signal")
+            .field("id", &self.inner.id)
+            .finish()
+    }
+}
+
 struct SignalInner<T> {
     id: SignalId,
     value: RefCell<T>,

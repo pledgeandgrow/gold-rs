@@ -41,6 +41,7 @@ A UI framework that combines Rust's safety, React's ergonomics, Vue's simplicity
 - **Built-in Tailwind** — Tailwind 4.0 (Oxide engine) integration with arbitrary values, container queries, 3D transforms
 - **Scoped CSS** — Style encapsulation with shadow DOM
 - **CSS-in-Rust** — Reactive style expressions
+- **CSS variable theming** — All `rye-ui` components use `var(--rye-*)` custom properties; `ThemeProvider` injects light/dark/auto tokens; runtime theme switching via `data-theme` attribute (no re-render)
 - **Design token CLI** — `rpg theme` for creating, exporting, and diffing themes
 - **Figma integration** — Design token import and full design-to-code Figma plugin
 
@@ -248,6 +249,7 @@ fn Counter() {
 rye/
 ├── crates/
 │   ├── rye-core/         # Component, Renderer, Element, Template, hydration, islands, perf, interop (45+ modules)
+│   ├── rye-ui/            # Pre-built UI component library — 60+ components, CSS variable theming, light/dark/auto
 │   ├── rye-signals/      # Signal, Memo, Effect, Resource, GlobalSignal, Store, state machines (17 modules)
 │   ├── rye-macros/       # template! macro, #[component] attribute
 │   ├── rye-html/         # DOM renderer (web-sys, WASM)

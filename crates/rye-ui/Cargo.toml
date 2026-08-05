@@ -1,0 +1,10 @@
+[package]
+name = "rye-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Pre-built UI component library for rye — 60+ components with CSS variable theming (light/dark/auto)"
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }

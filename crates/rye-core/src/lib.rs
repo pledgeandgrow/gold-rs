@@ -43,11 +43,13 @@ pub mod component_codegen;
 pub mod layout_cache;
 pub mod text_shaping_cache;
 pub mod interop;
+pub mod render_loop;
+pub mod hooks;
 
 pub use component::{Component, ComponentProps, FunctionComponent};
 pub use element::Element;
-pub use renderer::{Renderer, BatchRenderer, EventHandler, NodeId};
-pub use template::Template;
+pub use renderer::{Renderer, BatchRenderer, EventHandler, NodeId, Hydratable};
+pub use template::{Template, TemplateNode, SharedEventHandler, ReactiveFn, ReactiveValue, shared_event_handler};
 pub use context::{provide_context, use_context, provide_context_signal, use_context_signal};
 pub use event_delegation::EventDelegator;
 pub use suspense::{Suspense, ErrorBoundary, SuspenseState};
@@ -60,3 +62,5 @@ pub use incremental_hydration::{IncrementalHydrationScheduler, HydrationTask, Hy
 pub use component_codegen::{ComponentCodeGenerator, ComponentGenDef, PropDef, PropType, TemplatePart};
 pub use layout_cache::{LayoutCache, LayoutConfig, LayoutResult, SmartLayoutCache};
 pub use text_shaping_cache::{TextShapingCache, ShapingKey, ShapedText, ShapedGlyph};
+pub use render_loop::{mount, hydrate_to_dom, RenderScope, render_tree_to_string};
+pub use hooks::{use_signal, use_signal_default};

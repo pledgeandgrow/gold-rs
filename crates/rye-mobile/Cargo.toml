@@ -12,3 +12,10 @@ rye-desktop = { workspace = true }
 wgpu = { workspace = true }
 winit = { workspace = true }
 taffy = { workspace = true }
+once_cell = { workspace = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { workspace = true, features = ["invocation"] }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc = { workspace = true }

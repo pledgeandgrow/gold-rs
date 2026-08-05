@@ -78,7 +78,8 @@ impl EventDelegator {
     /// Remove all handlers for a specific element and event type.
     pub fn remove_element_handler(&self, element_id: &str, event: &str) {
         let key = (element_id.to_string(), event.to_string());
-        if let Some(id) = self.element_handlers.borrow().get(&key).copied() {
+        let id = self.element_handlers.borrow().get(&key).copied();
+        if let Some(id) = id {
             self.handlers.borrow_mut().remove(&id);
             self.element_handlers.borrow_mut().remove(&key);
         }
@@ -229,5 +230,96 @@ mod tests {
         let events = delegator.registered_event_types();
         assert!(events.contains(&"click".to_string()));
         assert!(events.contains(&"input".to_string()));
+    }
+
+    #[test]
+    fn test_shared_handler_pattern() {
+        use crate::renderer::EventHandler;
+        use crate::template::SharedEventHandler;
+        use std::cell::RefCell;
+
+        let delegator = EventDelegator::new();
+        let counter = Rc::new(Cell::new(0));
+
+        // Create a shared handler like template! macro would
+        let counter_clone = Rc::clone(&counter);
+        let handler: EventHandler = Box::new(move |_| {
+            counter_clone.set(counter_clone.get() + 1);
+        });
+        let shared: SharedEventHandler = Rc::new(RefCell::new(handler));
+
+        // Register via delegator using a forwarding closure (like render_loop does)
+        let shared_clone = Rc::clone(&shared);
+        let id = delegator.add_handler("btn1", "click", Box::new(move |payload| {
+            let mut h = shared_clone.borrow_mut();
+            h(payload);
+        }));
+
+        // Dispatch should call the shared handler
+        delegator.dispatch("btn1", "click", &());
+        assert_eq!(counter.get(), 1);
+
+        delegator.dispatch("btn1", "click", &());
+        assert_eq!(counter.get(), 2);
+
+        // The shared handler is still alive (not consumed)
+        assert_eq!(Rc::strong_count(&shared), 2); // shared + shared_clone in closure
+
+        // Remove and verify
+        delegator.remove_handler(id);
+        delegator.dispatch("btn1", "click", &());
+        assert_eq!(counter.get(), 2);
+    }
+
+    #[test]
+    fn test_multiple_events_same_element() {
+        let delegator = EventDelegator::new();
+        let clicks = Rc::new(Cell::new(0));
+        let inputs = Rc::new(Cell::new(0));
+
+        let c = Rc::clone(&clicks);
+        delegator.add_handler("elem1", "click", Box::new(move |_| {
+            c.set(c.get() + 1);
+        }));
+
+        let i = Rc::clone(&inputs);
+        delegator.add_handler("elem1", "input", Box::new(move |_| {
+            i.set(i.get() + 1);
+        }));
+
+        delegator.dispatch("elem1", "click", &());
+        assert_eq!(clicks.get(), 1);
+        assert_eq!(inputs.get(), 0);
+
+        delegator.dispatch("elem1", "input", &());
+        assert_eq!(clicks.get(), 1);
+        assert_eq!(inputs.get(), 1);
+
+        // Remove only click handler
+        delegator.remove_element_handler("elem1", "click");
+        delegator.dispatch("elem1", "click", &());
+        delegator.dispatch("elem1", "input", &());
+        assert_eq!(clicks.get(), 1);
+        assert_eq!(inputs.get(), 2);
+    }
+
+    #[test]
+    fn test_clear_all() {
+        let delegator = EventDelegator::new();
+        let counter = Rc::new(Cell::new(0));
+
+        let c = Rc::clone(&counter);
+        delegator.add_handler("e1", "click", Box::new(move |_| {
+            c.set(c.get() + 1);
+        }));
+
+        delegator.dispatch("e1", "click", &());
+        assert_eq!(counter.get(), 1);
+
+        delegator.clear();
+        delegator.dispatch("e1", "click", &());
+        assert_eq!(counter.get(), 1);
+
+        assert!(!delegator.has_handlers_for("click"));
     }
 }

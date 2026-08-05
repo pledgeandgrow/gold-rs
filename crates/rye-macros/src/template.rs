@@ -280,7 +280,12 @@ fn collect_expression(
 
 /// Generate code from a TemplateNode AST.
 ///
-/// Produces a TokenStream that creates renderer nodes and returns an Element.
+/// Produces a TokenStream that creates an Element with:
+/// - Static attributes as string pairs
+/// - Dynamic attributes evaluated via `format!`
+/// - Event handlers as `EventHandler` boxes
+/// - Children as nested Template instances
+/// - Dynamic expressions as `TemplateNode::Dynamic` for reactive updates
 pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
     match node {
         TemplateNode::Text(text) => {
@@ -297,10 +302,15 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
             }
         }
         TemplateNode::Dynamic(expr) => {
+            // Dynamic expressions become Reactive nodes — the closure is
+            // called inside a per-node Effect, so signal reads are tracked
+            // and only this text node updates on change.
             quote! {
                 ::rye_core::Element::Template(
                     ::rye_core::Template::new(vec![
-                        ::rye_core::TemplateNode::Dynamic(#expr),
+                        ::rye_core::TemplateNode::Reactive(
+                            ::std::rc::Rc::new(move || ::std::string::ToString::to_string(&(#expr)))
+                        ),
                     ])
                 )
             }
@@ -312,33 +322,42 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
         } => {
             let tag_lit = tag.as_str();
 
-            // Generate attribute code
-            let attr_code: Vec<TokenStream> = attributes.iter().map(|attr| {
+            // Separate attributes into static, reactive, and events
+            let mut attr_code: Vec<TokenStream> = Vec::new();
+            let mut reactive_attr_code: Vec<TokenStream> = Vec::new();
+            let mut event_code: Vec<TokenStream> = Vec::new();
+
+            for attr in attributes {
                 match attr {
                     Attribute::Static { name, value } => {
                         let name = name.as_str();
                         let value = value.as_str();
-                        quote! {
+                        attr_code.push(quote! {
                             attrs.push((#name.to_string(), #value.to_string()));
-                        }
+                        });
                     }
                     Attribute::Dynamic { name, value } => {
                         let name = name.as_str();
-                        quote! {
-                            attrs.push((#name.to_string(), format!("{}", #value)));
-                        }
+                        reactive_attr_code.push(quote! {
+                            reactive_attrs.push((
+                                #name.to_string(),
+                                ::std::rc::Rc::new(move || format!("{}", #value)),
+                            ));
+                        });
                     }
                     Attribute::Event { event, handler } => {
                         let event = event.as_str();
-                        quote! {
+                        event_code.push(quote! {
                             {
                                 let handler: ::rye_core::renderer::EventHandler = Box::new(#handler);
-                                events.push((#event.to_string(), handler));
+                                let shared: ::rye_core::template::SharedEventHandler =
+                                    ::std::rc::Rc::new(::std::cell::RefCell::new(handler));
+                                events.push((#event.to_string(), shared));
                             }
-                        }
+                        });
                     }
                 }
-            }).collect();
+            }
 
             // Generate children code
             let child_code: Vec<TokenStream> = children.iter().map(|child| {
@@ -346,27 +365,60 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
                 quote! { children.push(#child_gen); }
             }).collect();
 
-            quote! {
-                ::rye_core::Element::Template(
-                    ::rye_core::Template::new_element(
-                        #tag_lit.to_string(),
-                        {
-                            let mut attrs = Vec::new();
-                            #(#attr_code)*
-                            attrs
-                        },
-                        {
-                            let mut events = Vec::new();
-                            #(#attr_code)*
-                            events
-                        },
-                        {
-                            let mut children = Vec::new();
-                            #(#child_code)*
-                            children
-                        },
+            // Use new_element_reactive if there are reactive attrs, else new_element
+            let has_reactive_attrs = !reactive_attr_code.is_empty();
+
+            if has_reactive_attrs {
+                quote! {
+                    ::rye_core::Element::Template(
+                        ::rye_core::Template::new_element_reactive(
+                            #tag_lit.to_string(),
+                            {
+                                let mut attrs = Vec::new();
+                                #(#attr_code)*
+                                attrs
+                            },
+                            {
+                                let mut reactive_attrs = Vec::new();
+                                #(#reactive_attr_code)*
+                                reactive_attrs
+                            },
+                            {
+                                let mut events = Vec::new();
+                                #(#event_code)*
+                                events
+                            },
+                            {
+                                let mut children = Vec::new();
+                                #(#child_code)*
+                                children
+                            },
+                        )
                     )
-                )
+                }
+            } else {
+                quote! {
+                    ::rye_core::Element::Template(
+                        ::rye_core::Template::new_element(
+                            #tag_lit.to_string(),
+                            {
+                                let mut attrs = Vec::new();
+                                #(#attr_code)*
+                                attrs
+                            },
+                            {
+                                let mut events = Vec::new();
+                                #(#event_code)*
+                                events
+                            },
+                            {
+                                let mut children = Vec::new();
+                                #(#child_code)*
+                                children
+                            },
+                        )
+                    )
+                }
             }
         }
     }

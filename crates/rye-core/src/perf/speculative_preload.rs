@@ -191,13 +191,15 @@ impl SpeculativePreloader {
     /// Mark a preload as complete.
     pub fn mark_ready(&self, route: &str) {
         self.statuses.lock().unwrap().insert(route.to_string(), PreloadStatus::Ready);
-        *self.active_preloads.lock().unwrap() = (*self.active_preloads.lock().unwrap()).saturating_sub(1);
+        let mut active = self.active_preloads.lock().unwrap();
+        *active = active.saturating_sub(1);
     }
 
     /// Mark a preload as failed.
     pub fn mark_failed(&self, route: &str) {
         self.statuses.lock().unwrap().insert(route.to_string(), PreloadStatus::Failed);
-        *self.active_preloads.lock().unwrap() = (*self.active_preloads.lock().unwrap()).saturating_sub(1);
+        let mut active = self.active_preloads.lock().unwrap();
+        *active = active.saturating_sub(1);
     }
 
     /// Check if a route has been preloaded (navigation hit).

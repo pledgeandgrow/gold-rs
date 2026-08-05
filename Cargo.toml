@@ -18,6 +18,7 @@ members = [
     "crates/rye-serialize",
     "crates/rye-mcp",
     "crates/rye-db",
+    "crates/rye-ui",
 ]
 
 [workspace.package]
@@ -46,6 +47,7 @@ rye-devtools = { path = "crates/rye-devtools" }
 rye-serialize = { path = "crates/rye-serialize" }
 rye-mcp = { path = "crates/rye-mcp" }
 rye-db = { path = "crates/rye-db" }
+rye-ui = { path = "crates/rye-ui" }
 
 # External dependencies (shared versions)
 wgpu = "24"
@@ -62,6 +64,10 @@ tokio = { version = "1", features = ["full"] }
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full", "extra-traits", "parsing"] }
+jni = "0.21"
+objc = "0.2"
+once_cell = "1"
+cbindgen = "0.27"
 
 [profile.release]
 lto = true

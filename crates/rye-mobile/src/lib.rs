@@ -21,6 +21,7 @@ pub mod haptics;
 pub mod permissions;
 pub mod lifecycle_persistence;
 pub mod widgets;
+pub mod ffi;
 
 pub use lifecycle::MobileLifecycle;
 pub use native_module::{NativeModule, NativeModuleRegistry, NativeModuleBuilder, NativePlatform, NativeType, NativeFunction};

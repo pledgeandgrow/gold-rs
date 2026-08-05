@@ -6,6 +6,7 @@
 mod dev_server;
 mod explain;
 mod scaffold;
+mod test;
 mod test_gen;
 mod lint;
 mod doctor;
@@ -18,6 +19,7 @@ mod init_wizard;
 mod generate;
 mod editor_ext;
 mod ecosystem;
+mod build;
 
 use std::env;
 use std::fs;
@@ -34,8 +36,8 @@ fn main() {
     match args[1].as_str() {
         "new" => cmd_new(&args[2..]),
         "dev" => cmd_dev(&args[2..]),
-        "build" => cmd_build(&args[2..]),
-        "test" => cmd_test(&args[2..]),
+        "build" => build::run(&args[2..]),
+        "test" => test::run(&args[2..]),
         "deploy" => cmd_deploy(&args[2..]),
         "add" => cmd_add(&args[2..]),
         "upgrade" => cmd_upgrade(&args[2..]),
@@ -143,35 +145,6 @@ fn cmd_dev(args: &[String]) {
     };
 
     dev_server::start_server(config);
-}
-
-fn cmd_build(args: &[String]) {
-    let target = args
-        .iter()
-        .find(|a| a.starts_with("--target"))
-        .map(|a| &a[9..])
-        .unwrap_or("web");
-    println!("Building for target: {}", target);
-    // TODO: build for target
-}
-
-fn cmd_test(args: &[String]) {
-    // Check for --generate flag
-    if args.iter().any(|a| a == "--generate" || a == "-g") {
-        // Remove --generate from args and pass the rest to test_gen
-        let gen_args: Vec<String> = args.iter().filter(|a| *a != "--generate" && *a != "-g").cloned().collect();
-        test_gen::run(&gen_args);
-        return;
-    }
-
-    if args.iter().any(|a| a == "--unit") {
-        println!("Running unit tests...");
-    } else if args.iter().any(|a| a == "--e2e") {
-        println!("Running E2E tests...");
-    } else {
-        println!("Running all tests...");
-    }
-    // TODO: run cargo test
 }
 
 fn cmd_deploy(args: &[String]) {

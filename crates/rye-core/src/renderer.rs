@@ -79,3 +79,37 @@ pub trait BatchRenderer: Renderer {
 
 /// An event handler callback.
 pub type EventHandler = Box<dyn FnMut(&dyn Any) + 'static>;
+
+/// A renderer that supports hydrating existing DOM nodes.
+///
+/// Implementations include `DomRenderer` (WASM/web-sys) and test renderers
+/// that simulate pre-existing DOM content. The core framework uses this trait
+/// to walk server-rendered HTML and attach reactive bindings without
+/// re-creating the DOM tree.
+pub trait Hydratable: Renderer {
+    /// Get the child node at a given index within an element.
+    ///
+    /// Returns `None` if the index is out of bounds.
+    fn get_child_node(&self, parent: &Self::Element, index: usize) -> Option<Self::Node>;
+
+    /// Get the number of child nodes in an element.
+    fn child_node_count(&self, parent: &Self::Element) -> usize;
+
+    /// Check if a generic node is an element node.
+    fn node_is_element(&self, node: &Self::Node) -> bool;
+
+    /// Check if a generic node is a text node.
+    fn node_is_text(&self, node: &Self::Node) -> bool;
+
+    /// Convert a generic node to an element, if possible.
+    fn node_as_element(&self, node: &Self::Node) -> Option<Self::Element>;
+
+    /// Convert a generic node to a text node, if possible.
+    fn node_as_text(&self, node: &Self::Node) -> Option<Self::Text>;
+
+    /// Get the text content of a text node.
+    fn get_text_content(&self, text: &Self::Text) -> String;
+
+    /// Get the tag name of an element (lowercase).
+    fn get_tag_name(&self, el: &Self::Element) -> String;
+}

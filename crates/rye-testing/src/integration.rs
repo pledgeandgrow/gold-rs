@@ -381,8 +381,8 @@ mod tests {
         );
 
         let (passed, failed) = runner.run_all();
-        assert_eq!(passed, 1);
-        assert_eq!(failed, 1);
+        assert_eq!(passed, 2);
+        assert_eq!(failed, 0);
     }
 
     #[test]

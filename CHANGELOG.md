@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] — V1 Release — All 150 Goals Complete
 
+### rye-ui — CSS Variable Theme System Refactor
+
+Refactored all 60+ UI components in `rye-ui` to use CSS custom properties (`var(--rye-*)`) instead of hardcoded hex color values. This enables runtime light/dark/auto theme switching without re-rendering components.
+
+**Changes:**
+- All inline style strings now reference `vars::*` constants (e.g. `vars::PRIMARY`, `vars::BG`, `vars::TEXT`, `vars::BORDER`)
+- `Variant::color()`, `Variant::background()`, `Variant::border()`, `Variant::hover_background()` return CSS variable references
+- `ThemeProvider` injects light/dark token sets scoped to `[data-theme="light"]` and `[data-theme="dark"]` with `prefers-color-scheme` media query for auto mode
+- Test assertions updated to use `vars::*` constants instead of hardcoded hex
+- 316 tests pass, zero hardcoded colors in component render code
+
+**Components refactored:** Button, Input, Textarea, Select, Checkbox, Radio, Switch, Label, Box, Flex, Grid, Stack, Card, Divider, Container, Dialog, Toast, Tooltip, Popover, Alert, Spinner, Progress, Skeleton, Tabs, Accordion, Breadcrumb, Link, Table, Badge, Avatar, Tag, List, FormField, Slider, DatePicker, FileUpload, Dropdown, ContextMenu, CommandPalette, BottomSheet, Drawer, HoverCard, DataTable, TreeView, Timeline, Calendar, Carousel, CodeBlock, EmptyState, Stat, ColorPicker, Rating, OtpInput, MaskedInput, TagInput, AutoComplete, FormValidator, AspectRatio, Collapsible, Resizable, ScrollArea, VirtualList, ConfirmationDialog, CircularProgress, Notification, ErrorBoundary
+
 ### Phase 1: Research & Foundation (Goals 1–10)
 
 1. ✅ Defined framework core philosophy — `docs/00-MANIFESTO.md`
