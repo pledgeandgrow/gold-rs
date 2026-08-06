@@ -52,7 +52,7 @@ rye-ui = { path = "crates/rye-ui" }
 rye-demo = { path = "crates/rye-demo" }
 
 # External dependencies (shared versions)
-wgpu = "24"
+wgpu = "30"
 winit = "0.30"
 taffy = "0.7"
 cosmic-text = "0.12"
