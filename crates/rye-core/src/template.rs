@@ -27,6 +27,14 @@ where
 /// it reads will cause the effect to re-run and update the DOM.
 pub type ReactiveFn = Rc<dyn Fn() -> String + 'static>;
 
+/// A reactive list computation that produces keyed items for reconciliation.
+///
+/// Each item is a `(key, Template)` pair. When the closure re-runs inside
+/// an `Effect`, the returned keys are compared with the previous run using
+/// the `reconcile` algorithm. Items are inserted, removed, or moved in the
+/// DOM as needed — no full re-render.
+pub type ReactiveListFn = Rc<dyn Fn() -> Vec<(crate::reconcile::Key, Template)> + 'static>;
+
 /// A value that can be either static or reactive (signal-backed).
 ///
 /// Used by component props to allow either a plain value or a `Signal<T>`.
@@ -112,6 +120,14 @@ pub enum TemplateNode {
     /// A reactive text binding — the closure is called inside an `Effect`,
     /// and the text node is updated whenever any signal it reads changes.
     Reactive(ReactiveFn),
+    /// A reactive list of children with keyed reconciliation.
+    /// The closure returns a vec of `(key, Template)` pairs. When the closure
+    /// re-runs (due to signal changes), the list is reconciled using the
+    /// `reconcile` algorithm — items are inserted, removed, or moved as needed.
+    ReactiveList {
+        /// The reactive list computation — returns keyed items.
+        items_fn: ReactiveListFn,
+    },
     /// An element with tag, attributes, events, and children.
     Element {
         /// Tag name (e.g. "div", "span").
@@ -189,5 +205,30 @@ impl Template {
     /// Create an empty template.
     pub fn empty() -> Self {
         Self { nodes: Vec::new() }
+    }
+
+    /// Create a reactive list template with keyed reconciliation.
+    ///
+    /// The closure is called inside an `Effect`. When any signal it reads
+    /// changes, the closure re-runs and the returned items are reconciled
+    /// against the previous run using keyed diffing — items are inserted,
+    /// removed, or moved in the DOM as needed.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use rye_core::template::Template;
+    /// use rye_signals::Signal;
+    ///
+    /// let items = Signal::new(vec!["a".to_string(), "b".to_string()]);
+    /// let list = Template::new_reactive_list(move || {
+    ///     items.get().iter().map(|item| {
+    ///         (item.len(), Template::text(item.clone()))
+    ///     }).collect()
+    /// });
+    /// ```
+    pub fn new_reactive_list(items_fn: ReactiveListFn) -> Self {
+        Self {
+            nodes: vec![TemplateNode::ReactiveList { items_fn }],
+        }
     }
 }

@@ -278,41 +278,30 @@ fn collect_expression(
     Ok(tokens.into_iter().collect())
 }
 
-/// Generate code from a TemplateNode AST.
+/// Generate code that produces a `Template` value from a TemplateNode AST.
 ///
-/// Produces a TokenStream that creates an Element with:
-/// - Static attributes as string pairs
-/// - Dynamic attributes evaluated via `format!`
-/// - Event handlers as `EventHandler` boxes
-/// - Children as nested Template instances
-/// - Dynamic expressions as `TemplateNode::Dynamic` for reactive updates
-pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
+/// This is used for child elements which need `Template` values, not `Element`.
+pub(crate) fn generate_template_code(node: &TemplateNode) -> TokenStream {
     match node {
         TemplateNode::Text(text) => {
             if text.is_empty() {
-                quote! { ::rye_core::Element::none() }
+                quote! { ::rye_core::Template::empty() }
             } else {
                 quote! {
-                    ::rye_core::Element::Template(
-                        ::rye_core::Template::new(vec![
-                            ::rye_core::TemplateNode::Text(#text.to_string()),
-                        ])
-                    )
+                    ::rye_core::Template::new(vec![
+                        ::rye_core::TemplateNode::Text(#text.to_string()),
+                    ])
                 }
             }
         }
         TemplateNode::Dynamic(expr) => {
-            // Dynamic expressions become Reactive nodes — the closure is
-            // called inside a per-node Effect, so signal reads are tracked
-            // and only this text node updates on change.
             quote! {
-                ::rye_core::Element::Template(
-                    ::rye_core::Template::new(vec![
-                        ::rye_core::TemplateNode::Reactive(
-                            ::std::rc::Rc::new(move || ::std::string::ToString::to_string(&(#expr)))
-                        ),
-                    ])
-                )
+                ::rye_core::Template::new(vec![
+                    ::rye_core::TemplateNode::Reactive(
+                        ::std::rc::Rc::new(move || ::std::string::ToString::to_string(&(#expr)))
+                            as ::rye_core::template::ReactiveFn
+                    ),
+                ])
             }
         }
         TemplateNode::Element {
@@ -322,7 +311,6 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
         } => {
             let tag_lit = tag.as_str();
 
-            // Separate attributes into static, reactive, and events
             let mut attr_code: Vec<TokenStream> = Vec::new();
             let mut reactive_attr_code: Vec<TokenStream> = Vec::new();
             let mut event_code: Vec<TokenStream> = Vec::new();
@@ -341,7 +329,8 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
                         reactive_attr_code.push(quote! {
                             reactive_attrs.push((
                                 #name.to_string(),
-                                ::std::rc::Rc::new(move || format!("{}", #value)),
+                                ::std::rc::Rc::new(move || format!("{}", #value))
+                                    as ::rye_core::template::ReactiveFn,
                             ));
                         });
                     }
@@ -359,67 +348,78 @@ pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
                 }
             }
 
-            // Generate children code
+            // Generate children as Template values (not Element)
             let child_code: Vec<TokenStream> = children.iter().map(|child| {
-                let child_gen = generate_code(child);
+                let child_gen = generate_template_code(child);
                 quote! { children.push(#child_gen); }
             }).collect();
 
-            // Use new_element_reactive if there are reactive attrs, else new_element
             let has_reactive_attrs = !reactive_attr_code.is_empty();
 
             if has_reactive_attrs {
                 quote! {
-                    ::rye_core::Element::Template(
-                        ::rye_core::Template::new_element_reactive(
-                            #tag_lit.to_string(),
-                            {
-                                let mut attrs = Vec::new();
-                                #(#attr_code)*
-                                attrs
-                            },
-                            {
-                                let mut reactive_attrs = Vec::new();
-                                #(#reactive_attr_code)*
-                                reactive_attrs
-                            },
-                            {
-                                let mut events = Vec::new();
-                                #(#event_code)*
-                                events
-                            },
-                            {
-                                let mut children = Vec::new();
-                                #(#child_code)*
-                                children
-                            },
-                        )
+                    ::rye_core::Template::new_element_reactive(
+                        #tag_lit.to_string(),
+                        {
+                            let mut attrs = Vec::new();
+                            #(#attr_code)*
+                            attrs
+                        },
+                        {
+                            let mut reactive_attrs = Vec::new();
+                            #(#reactive_attr_code)*
+                            reactive_attrs
+                        },
+                        {
+                            let mut events = Vec::new();
+                            #(#event_code)*
+                            events
+                        },
+                        {
+                            let mut children = Vec::new();
+                            #(#child_code)*
+                            children
+                        },
                     )
                 }
             } else {
                 quote! {
-                    ::rye_core::Element::Template(
-                        ::rye_core::Template::new_element(
-                            #tag_lit.to_string(),
-                            {
-                                let mut attrs = Vec::new();
-                                #(#attr_code)*
-                                attrs
-                            },
-                            {
-                                let mut events = Vec::new();
-                                #(#event_code)*
-                                events
-                            },
-                            {
-                                let mut children = Vec::new();
-                                #(#child_code)*
-                                children
-                            },
-                        )
+                    ::rye_core::Template::new_element(
+                        #tag_lit.to_string(),
+                        {
+                            let mut attrs = Vec::new();
+                            #(#attr_code)*
+                            attrs
+                        },
+                        {
+                            let mut events = Vec::new();
+                            #(#event_code)*
+                            events
+                        },
+                        {
+                            let mut children = Vec::new();
+                            #(#child_code)*
+                            children
+                        },
                     )
                 }
             }
         }
     }
+}
+
+/// Generate code from a TemplateNode AST.
+///
+/// Produces a TokenStream that creates an `Element::Template(...)` with:
+/// - Static attributes as string pairs
+/// - Dynamic attributes evaluated via `format!`
+/// - Event handlers as `EventHandler` boxes
+/// - Children as nested `Template` instances
+/// - Dynamic expressions as `TemplateNode::Reactive` for reactive updates
+pub(crate) fn generate_code(node: &TemplateNode) -> TokenStream {
+    if matches!(node, TemplateNode::Text(t) if t.is_empty()) {
+        return quote! { ::rye_core::Element::none() };
+    }
+    let template = generate_template_code(node);
+    quote! { ::rye_core::Element::Template(#template) }
 }

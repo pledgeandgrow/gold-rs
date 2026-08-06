@@ -247,6 +247,15 @@ fn render_template_node_to_html(
             let value = compute();
             output.push_str(&html_escape(&value));
         }
+        rye_core::TemplateNode::ReactiveList { items_fn } => {
+            // For SSR, evaluate the list closure once and render all items
+            let items = items_fn();
+            for (_, template) in items {
+                for node in &template.nodes {
+                    render_node(node, output, id_counter);
+                }
+            }
+        }
         rye_core::TemplateNode::Element {
             tag,
             attrs,

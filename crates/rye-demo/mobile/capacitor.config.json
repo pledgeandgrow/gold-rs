@@ -1,0 +1,11 @@
+{
+  "appId": "com.rye.demo",
+  "appName": "Rye Demo",
+  "webDir": "../www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

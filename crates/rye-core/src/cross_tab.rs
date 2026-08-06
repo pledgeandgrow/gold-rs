@@ -18,7 +18,7 @@ pub struct CrossTabSync<T: Clone + 'static> {
     listeners: Rc<RefCell<Vec<Rc<dyn Fn(&T)>>>>,
 }
 
-impl<T: Clone + std::fmt::Debug + 'static> CrossTabSync<T> {
+impl<T: Clone + std::fmt::Debug + serde::Serialize + 'static> CrossTabSync<T> {
     /// Create a new cross-tab sync channel.
     ///
     /// The channel name must be the same across tabs to sync.
@@ -76,7 +76,7 @@ impl<T: Clone + std::fmt::Debug + 'static> CrossTabSync<T> {
             if let Some(window) = web_sys::window() {
                 if let Ok(channel) = web_sys::BroadcastChannel::new(&self.channel_name) {
                     let serialized = serde_json::to_string(value).unwrap_or_default();
-                    channel.post_with(&wasm_bindgen::JsValue::from_str(&serialized));
+                    let _ = channel.post_message(&wasm_bindgen::JsValue::from_str(&serialized));
                 }
             }
         }
@@ -113,14 +113,14 @@ impl CrossTabRegistry {
     }
 
     /// Register a cross-tab sync channel.
-    pub fn register<T: Clone + std::fmt::Debug + 'static>(&self, name: &str, channel: CrossTabSync<T>) {
+    pub fn register<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(&self, name: &str, channel: CrossTabSync<T>) {
         self.channels
             .borrow_mut()
             .insert(name.to_string(), Rc::new(channel));
     }
 
     /// Get a channel by name.
-    pub fn get<T: Clone + std::fmt::Debug + 'static>(&self, name: &str) -> Option<CrossTabSync<T>> {
+    pub fn get<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(&self, name: &str) -> Option<CrossTabSync<T>> {
         self.channels
             .borrow()
             .get(name)
@@ -230,7 +230,7 @@ impl CrossTabStore {
                 let channel_name = format!("rye-crosstab-{}", self.namespace);
                 if let Ok(channel) = web_sys::BroadcastChannel::new(&channel_name) {
                     let msg = format!("{}={}", _key, _value);
-                    channel.post_with(&wasm_bindgen::JsValue::from_str(&msg));
+                    let _ = channel.post_message(&wasm_bindgen::JsValue::from_str(&msg));
                 }
             }
         }

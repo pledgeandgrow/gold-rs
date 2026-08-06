@@ -29,6 +29,37 @@ const EVENT_ID_ATTR: &str = "data-rye-event-id";
 /// Attribute name for the event type on DOM elements.
 const EVENT_TYPE_ATTR: &str = "data-rye-event";
 
+/// Check if an attribute name is safe to set on a DOM element.
+///
+/// Blocks XSS vectors:
+/// - `on*` attributes (e.g. `onclick`, `onload`) — event handler injection
+/// - Names with whitespace, quotes, or `>` — could break out of the attribute
+fn is_safe_attribute_name(name: &str) -> bool {
+    if name.is_empty() {
+        return false;
+    }
+    // Block event handler attributes (onload, onclick, onerror, etc.)
+    if name.len() >= 2 && name[..2].eq_ignore_ascii_case("on") {
+        return false;
+    }
+    // Block names containing characters that could break HTML parsing
+    if name.chars().any(|c| c.is_whitespace() || c == '"' || c == '\'' || c == '>' || c == '<' || c == '/') {
+        return false;
+    }
+    true
+}
+
+/// Check if an attribute value is safe for URL-bearing attributes (href, src, action, etc.).
+///
+/// Blocks `javascript:` URIs which can execute arbitrary script.
+fn is_safe_url_value(value: &str) -> bool {
+    let trimmed = value.trim().to_lowercase();
+    !trimmed.starts_with("javascript:")
+}
+
+/// Attributes whose values are URLs and should be checked for `javascript:` schemes.
+const URL_ATTRIBUTES: &[&str] = &["href", "src", "action", "formaction", "xlink:href", "data"];
+
 /// Web/DOM renderer using web-sys for WASM target.
 ///
 /// Uses event delegation — one root listener per event type, handlers
@@ -44,8 +75,8 @@ pub struct DomRenderer {
     root_closures: RefCell<Vec<wasm_bindgen::closure::Closure<dyn FnMut(web_sys::Event)>>>,
     /// Next element ID for unique data-rye-event-id attributes.
     next_element_id: RefCell<usize>,
-    /// Map of (element, event) → element_id string for cleanup.
-    element_event_ids: RefCell<std::collections::HashMap<(web_sys::Element, String), String>>,
+    /// Map of (element_id, event) → element_id string for cleanup.
+    element_event_ids: RefCell<std::collections::HashMap<(String, String), String>>,
 }
 
 impl DomRenderer {
@@ -119,7 +150,8 @@ impl DomRenderer {
                         Ok(el) => Some(el),
                         Err(node) => {
                             // Target is a text node — get parent
-                            node.parent_element()
+                            node.dyn_ref::<web_sys::Node>()
+                                .and_then(|n| n.parent_element())
                         }
                     };
 
@@ -129,7 +161,7 @@ impl DomRenderer {
                             // Check if the event type matches
                             if let Some(el_event) = el.get_attribute(EVENT_TYPE_ATTR) {
                                 if el_event == event_type_owned {
-                                    delegator_clone.dispatch(
+                                    delegator_clone.borrow().dispatch(
                                         &handler_id,
                                         &event_type_owned,
                                         &event as &dyn std::any::Any,
@@ -193,6 +225,14 @@ impl Renderer for DomRenderer {
     }
 
     fn set_attribute(&mut self, el: &Self::Element, name: &str, value: &str) {
+        // XSS prevention: reject dangerous attribute names
+        if !is_safe_attribute_name(name) {
+            return;
+        }
+        // XSS prevention: reject javascript: URIs in URL-bearing attributes
+        if URL_ATTRIBUTES.contains(&name) && !is_safe_url_value(value) {
+            return;
+        }
         self.queue_or_apply(DomMutation::SetAttribute {
             el: el.clone(),
             name: name.to_string(),
@@ -251,20 +291,22 @@ impl Renderer for DomRenderer {
         let _ = el.set_attribute(EVENT_ID_ATTR, &element_id);
         let _ = el.set_attribute(EVENT_TYPE_ATTR, &dom_event);
 
-        // Track for cleanup
+        // Track for cleanup using element_id as key (web_sys::Element doesn't impl Hash)
         self.element_event_ids
             .borrow_mut()
-            .insert((el.clone(), dom_event), element_id);
+            .insert((element_id.clone(), dom_event), element_id);
     }
 
     fn remove_event_listener(&mut self, el: &Self::Element, event: &str) {
         let dom_event = dom_event_name(event).to_string();
-        let key = (el.clone(), dom_event.clone());
-
-        if let Some(element_id) = self.element_event_ids.borrow_mut().remove(&key) {
-            self.delegator.borrow().remove_element_handler(&element_id, &dom_event);
-            let _ = el.remove_attribute(EVENT_ID_ATTR);
-            let _ = el.remove_attribute(EVENT_TYPE_ATTR);
+        // Find the element_id from the element's data attribute
+        if let Some(element_id) = el.get_attribute(EVENT_ID_ATTR) {
+            let key = (element_id.clone(), dom_event.clone());
+            if let Some(_) = self.element_event_ids.borrow_mut().remove(&key) {
+                self.delegator.borrow().remove_element_handler(&element_id, &dom_event);
+                let _ = el.remove_attribute(EVENT_ID_ATTR);
+                let _ = el.remove_attribute(EVENT_TYPE_ATTR);
+            }
         }
     }
 

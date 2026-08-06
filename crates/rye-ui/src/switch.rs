@@ -22,7 +22,7 @@ pub enum SwitchSize {
 }
 
 impl SwitchSize {
-    fn dimensions(&self) -> (u32, u32, u32) {
+    pub fn dimensions(&self) -> (u32, u32, u32) {
         match self {
             Self::Small => (28, 16, 12),
             Self::Medium => (40, 22, 18),

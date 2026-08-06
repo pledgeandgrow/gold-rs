@@ -19,6 +19,7 @@ members = [
     "crates/rye-mcp",
     "crates/rye-db",
     "crates/rye-ui",
+    "crates/rye-demo",
 ]
 
 [workspace.package]
@@ -48,6 +49,7 @@ rye-serialize = { path = "crates/rye-serialize" }
 rye-mcp = { path = "crates/rye-mcp" }
 rye-db = { path = "crates/rye-db" }
 rye-ui = { path = "crates/rye-ui" }
+rye-demo = { path = "crates/rye-demo" }
 
 # External dependencies (shared versions)
 wgpu = "24"
@@ -57,7 +59,7 @@ cosmic-text = "0.12"
 lyon = "1"
 web-sys = "0.3"
 wasm-bindgen = "0.2"
-js-sys = "0.2"
+js-sys = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

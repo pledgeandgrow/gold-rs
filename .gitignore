@@ -1,5 +1,6 @@
 /target
 **/target
+**/www/pkg
 Cargo.lock
 *.wasm
 *.gz

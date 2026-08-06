@@ -1,0 +1,44 @@
+[package]
+name = "rye-demo"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Demo app proving rye runs on web, desktop, and mobile — one codebase, two renderers"
+
+[package.metadata.wasm-pack]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["webview"]
+# WebView renderer (WASM + DOM) — default, works in browser and Capacitor
+webview = []
+# Native GPU renderer (wgpu + taffy) — opt-in for desktop exe
+native = ["dep:rye-desktop"]
+
+[dependencies]
+rye-core = { workspace = true }
+rye-signals = { workspace = true }
+rye-macros = { workspace = true }
+rye-ui = { workspace = true }
+
+# Native renderer — only linked when `native` feature is enabled
+rye-desktop = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+rye-html = { workspace = true }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+console_error_panic_hook = "0.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+version = "0.3"
+features = [
+    "Document", "Element", "Node", "Text", "Window",
+    "HtmlElement", "HtmlInputElement", "HtmlButtonElement",
+    "HtmlTextAreaElement", "HtmlSelectElement",
+    "Event", "EventTarget", "MouseEvent", "InputEvent", "KeyboardEvent",
+    "console",
+]

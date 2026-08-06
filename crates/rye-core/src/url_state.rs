@@ -102,17 +102,15 @@ impl UrlState {
         #[cfg(target_arch = "wasm32")]
         {
             if let Some(window) = web_sys::window() {
-                if let Ok(location) = window.location() {
-                    if let Ok(search) = location.search() {
-                        if let Ok(params) = web_sys::UrlSearchParams::new_with_str(&search) {
-                            params.set(key, value);
-                            let new_search = params.to_string();
-                            let url = format!(
-                                "{}?{}",
-                                location.pathname().unwrap_or_default(),
-                                new_search
-                            );
-                            let _ = window.history().push_state_with_url(
+                let location = window.location();
+                if let Ok(search) = location.search() {
+                    if let Ok(params) = web_sys::UrlSearchParams::new_with_str(&search) {
+                        params.set(key, value);
+                        let new_search = params.to_string();
+                        let path = location.pathname().unwrap_or_default();
+                        let url = format!("{}?{}", path, new_search);
+                        if let Ok(history) = window.history() {
+                            let _ = history.push_state_with_url(
                                 &wasm_bindgen::JsValue::NULL,
                                 "",
                                 Some(&url),
@@ -135,17 +133,15 @@ impl UrlState {
         #[cfg(target_arch = "wasm32")]
         {
             if let Some(window) = web_sys::window() {
-                if let Ok(location) = window.location() {
-                    if let Ok(search) = location.search() {
-                        if let Ok(params) = web_sys::UrlSearchParams::new_with_str(&search) {
-                            params.delete(key);
-                            let new_search = params.to_string();
-                            let url = format!(
-                                "{}?{}",
-                                location.pathname().unwrap_or_default(),
-                                new_search
-                            );
-                            let _ = window.history().push_state_with_url(
+                let location = window.location();
+                if let Ok(search) = location.search() {
+                    if let Ok(params) = web_sys::UrlSearchParams::new_with_str(&search) {
+                        params.delete(key);
+                        let new_search = params.to_string();
+                        let path = location.pathname().unwrap_or_default();
+                        let url = format!("{}?{}", path, new_search);
+                        if let Ok(history) = window.history() {
+                            let _ = history.push_state_with_url(
                                 &wasm_bindgen::JsValue::NULL,
                                 "",
                                 Some(&url),
@@ -191,16 +187,9 @@ pub fn get_all_url_params() -> HashMap<String, String> {
     {
         let mut result = HashMap::new();
         if let Some(window) = web_sys::window() {
-            if let Ok(search) = window.location().search() {
-                if let Ok(params) = web_sys::UrlSearchParams::new_with_str(&search) {
-                    for pair in params.entries() {
-                        if let Ok(key) = pair.key() {
-                            if let Ok(value) = pair.value() {
-                                result.insert(key, value);
-                            }
-                        }
-                    }
-                }
+            let location = window.location();
+            if let Ok(search) = location.search() {
+                result = parse_query_string(&search);
             }
         }
         result

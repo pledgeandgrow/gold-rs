@@ -19,10 +19,12 @@
 
 use crate::element::Element;
 use crate::hooks::{enter_hook_scope, drain_hook_context};
+use crate::reconcile::{reconcile, Key, ReconcileOp};
 use crate::renderer::{Hydratable, Renderer};
-use crate::template::{ReactiveFn, TemplateNode};
+use crate::template::{ReactiveListFn, TemplateNode};
 use rye_signals::Effect;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 /// A mounted render scope — holds all fine-grained `Effect`s and hook signals
@@ -218,6 +220,12 @@ fn hydrate_template_nodes<R: Hydratable>(
                 }
             }
 
+            TemplateNode::ReactiveList { items_fn } => {
+                // For hydration, we create the reactive list from scratch
+                // since we can't match existing DOM children to keyed items.
+                create_reactive_list(renderer, items_fn, parent, effects);
+            }
+
             TemplateNode::Element {
                 tag,
                 attrs: _,
@@ -362,6 +370,10 @@ fn create_template_nodes<R: Renderer>(
                 }));
             }
 
+            TemplateNode::ReactiveList { items_fn } => {
+                create_reactive_list(renderer, items_fn, parent, effects);
+            }
+
             TemplateNode::Element {
                 tag,
                 attrs,
@@ -426,6 +438,145 @@ fn create_template_nodes<R: Renderer>(
     }
 }
 
+/// Create a reactive list with keyed reconciliation.
+///
+/// On first run, creates DOM nodes for all items. On subsequent runs
+/// (inside an `Effect`), reconciles the new list against the old list
+/// using keyed diffing — inserts, removes, and moves DOM nodes as needed.
+fn create_reactive_list<R: Renderer>(
+    renderer: &Rc<RefCell<R>>,
+    items_fn: &ReactiveListFn,
+    parent: &R::Element,
+    effects: &mut Vec<Effect>,
+) {
+    // State held in the Effect closure: previous keys and the DOM elements for each key.
+    struct ListState<R: Renderer> {
+        keys: Vec<Key>,
+        // Map from key → (element, child_effects)
+        // We store the DOM elements so we can move/remove them.
+        elements: HashMap<Key, R::Element>,
+        // Child effects for each key — we need to keep them alive.
+        child_effects: HashMap<Key, Vec<Effect>>,
+    }
+
+    let state = Rc::new(RefCell::new(ListState::<R> {
+        keys: Vec::new(),
+        elements: HashMap::new(),
+        child_effects: HashMap::new(),
+    }));
+
+    let items_fn = Rc::clone(items_fn);
+    let parent = parent.clone();
+    let renderer_clone = Rc::clone(renderer);
+    let state_clone = Rc::clone(&state);
+
+    effects.push(Effect::new(move || {
+        let items = items_fn();
+        let new_keys: Vec<Key> = items.iter().map(|(k, _)| *k).collect();
+
+        let old_keys = {
+            let s = state_clone.borrow();
+            s.keys.clone()
+        };
+
+        let ops = reconcile(&old_keys, &new_keys);
+
+        let mut s = state_clone.borrow_mut();
+
+        // Apply operations in order:
+        // 1. Remove items not in new list
+        // 2. Insert new items
+        // 3. Move items that changed position
+
+        // First pass: handle removes
+        let mut removed_keys: Vec<Key> = Vec::new();
+        for op in &ops {
+            if let ReconcileOp::Remove { index } = op {
+                // Find the key at this index in the old list
+                if *index < old_keys.len() {
+                    let key = old_keys[*index];
+                    if let Some(el) = s.elements.remove(&key) {
+                        {
+                            let mut r = renderer_clone.borrow_mut();
+                            r.remove_child(&parent, *index);
+                        }
+                    }
+                    s.child_effects.remove(&key);
+                    removed_keys.push(key);
+                }
+            }
+        }
+
+        // Second pass: handle inserts and create DOM nodes for new items
+        for op in &ops {
+            if let ReconcileOp::Insert { index, key } = op {
+                // Find the item with this key
+                if let Some((_, template)) = items.iter().find(|(k, _)| k == key) {
+                    let mut child_effects: Vec<Effect> = Vec::new();
+
+                    // Create a wrapper element to hold the item's nodes
+                    let el = {
+                        let mut r = renderer_clone.borrow_mut();
+                        r.create_element("div")
+                    };
+
+                    // Render the item's template nodes into the wrapper
+                    for node in &template.nodes {
+                        create_template_nodes_single(
+                            &renderer_clone,
+                            node,
+                            &el,
+                            &mut child_effects,
+                        );
+                    }
+
+                    // Insert the wrapper at the correct position
+                    {
+                        let mut r = renderer_clone.borrow_mut();
+                        let node = r.element_to_node(&el);
+                        r.insert_child(&parent, &node, *index);
+                    }
+
+                    s.elements.insert(*key, el);
+                    s.child_effects.insert(*key, child_effects);
+                }
+            }
+        }
+
+        // Third pass: handle moves
+        for op in &ops {
+            if let ReconcileOp::Move { from, to, key } = op {
+                if let Some(el) = s.elements.get(key) {
+                    let mut r = renderer_clone.borrow_mut();
+                    r.move_child(&parent, *from, *to);
+                }
+            }
+        }
+
+        // Update state
+        s.keys = new_keys;
+
+        // Drop effects for removed items, keep effects for existing items
+        // Note: effects are already running, we just need to make sure
+        // removed items' effects are dropped. Since they're in child_effects
+        // and we removed them above, they'll be dropped when the HashMap
+        // entry is removed.
+    }));
+
+    // Keep the state alive for the lifetime of the Effect
+    std::mem::forget(state);
+}
+
+/// Create renderer nodes for a single TemplateNode (used by reactive list items).
+fn create_template_nodes_single<R: Renderer>(
+    renderer: &Rc<RefCell<R>>,
+    node: &TemplateNode,
+    parent: &R::Element,
+    effects: &mut Vec<Effect>,
+) {
+    create_template_nodes(renderer, std::slice::from_ref(node), parent, effects);
+}
+
 /// Convert a dynamic `Box<dyn Any>` value to a string.
 fn stringify_dynamic(value: &Box<dyn std::any::Any>) -> String {
     if let Some(text) = value.downcast_ref::<String>() {
@@ -487,6 +638,9 @@ fn render_node_to_string(node: &TemplateNode, output: &mut String, depth: usize)
         }
         TemplateNode::Reactive(_) => {
             output.push_str(&format!("{}<reactive />\n", indent));
+        }
+        TemplateNode::ReactiveList { .. } => {
+            output.push_str(&format!("{}<reactive-list />\n", indent));
         }
         TemplateNode::Element {
             tag,

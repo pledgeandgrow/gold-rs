@@ -18,6 +18,7 @@ version = "0.3"
 features = [
     "Document", "Element", "Node", "NodeList", "Text", "Window",
     "HtmlElement", "HtmlInputElement", "HtmlButtonElement",
+    "HtmlTextAreaElement", "HtmlSelectElement",
     "Event", "EventTarget", "MouseEvent", "KeyboardEvent", "InputEvent", "FocusEvent",
     "DocumentFragment", "ShadowRoot", "DomTokenList",
     "ResizeObserver", "ResizeObserverEntry",

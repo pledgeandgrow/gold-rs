@@ -39,35 +39,26 @@ impl<T: Clone + 'static> Memo<T> {
             compute: Box::new(compute),
         }));
 
+        // Register a placeholder scope to get the scope_id.
+        // The callback will be replaced immediately after with one that
+        // captures the correct scope_id.
+        let scope_id = runtime::register_scope(Rc::new(RefCell::new(|| {})));
+
+        // Create the real callback that references scope_id.
         let inner_clone = Rc::clone(&inner);
-        let callback: Callback = Rc::new(RefCell::new(move || {
-            // Clear old subscriptions so we can re-subscribe
-            // (handled by clear_scope_subscriptions before re-running)
-            runtime::clear_scope_subscriptions(0); // placeholder — we'll use proper scope_id
-            // Re-compute
-            let value = (inner_clone.borrow().compute)();
-            inner_clone.borrow_mut().value = Some(value);
-            // Notify downstream scopes that depend on this memo
-            runtime::notify(memo_id);
-        }));
-
-        let scope_id = runtime::register_scope(callback);
-
-        // Fix the callback to use the correct scope_id
-        let inner_clone2 = Rc::clone(&inner);
         let callback: Callback = Rc::new(RefCell::new(move || {
             // Clear old subscriptions before re-running
             runtime::clear_scope_subscriptions(scope_id);
             // Re-compute inside a tracking scope
             runtime::push_scope(scope_id);
-            let value = (inner_clone2.borrow().compute)();
+            let value = (inner_clone.borrow().compute)();
             runtime::pop_scope();
-            inner_clone2.borrow_mut().value = Some(value);
+            inner_clone.borrow_mut().value = Some(value);
             // Notify downstream scopes that depend on this memo
             runtime::notify(memo_id);
         }));
 
-        // Update the scope's callback
+        // Replace the placeholder callback with the real one.
         runtime::update_scope_callback(scope_id, callback);
 
         // Initial computation

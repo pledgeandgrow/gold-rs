@@ -4,7 +4,7 @@
 //! When a signal changes, all dependent scopes are re-run.
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 /// Unique ID for a signal.
@@ -25,6 +25,13 @@ thread_local! {
 
     /// All signal subscribers — maps signal ID to list of (scope ID, callback).
     static SUBSCRIBERS: RefCell<HashMap<SignalId, Vec<(ScopeId, Callback)>>> = RefCell::new(HashMap::new());
+
+    /// Reverse map: scope ID → set of signal IDs it subscribed to.
+    /// Enables O(subscriptions_per_scope) cleanup instead of O(total_signals × total_subscribers).
+    static SCOPE_SUBSCRIPTIONS: RefCell<HashMap<ScopeId, HashSet<SignalId>>> = RefCell::new(HashMap::new());
+
+    /// Reusable buffer for run_subscribers to avoid per-notify allocation.
+    static CALLBACK_BUFFER: RefCell<Vec<Callback>> = const { RefCell::new(Vec::new()) };
 
     /// Batch state.
     static BATCH_STATE: RefCell<BatchState> = const { RefCell::new(BatchState::new()) };
@@ -65,17 +72,28 @@ pub(crate) fn next_id() -> usize {
 pub(crate) fn register_scope(callback: Callback) -> ScopeId {
     let id = next_id();
     SCOPES.with(|s| s.borrow_mut().insert(id, callback));
+    SCOPE_SUBSCRIPTIONS.with(|ss| ss.borrow_mut().insert(id, HashSet::new()));
     id
 }
 
 /// Unregister a scope (on destroy).
+/// Uses the reverse map to only touch signals this scope subscribed to.
 pub(crate) fn unregister_scope(id: ScopeId) {
     SCOPES.with(|s| {
         s.borrow_mut().remove(&id);
     });
+    // Get the set of signals this scope subscribed to, then remove only those entries.
+    let signal_ids: Vec<SignalId> = SCOPE_SUBSCRIPTIONS.with(|ss| {
+        ss.borrow_mut().remove(&id)
+            .map(|set| set.into_iter().collect())
+            .unwrap_or_default()
+    });
     SUBSCRIBERS.with(|subs| {
-        for (_, list) in subs.borrow_mut().iter_mut() {
-            list.retain(|(scope_id, _)| *scope_id != id);
+        let mut subs = subs.borrow_mut();
+        for signal_id in signal_ids {
+            if let Some(list) = subs.get_mut(&signal_id) {
+                list.retain(|(scope_id, _)| *scope_id != id);
+            }
         }
     });
 }
@@ -103,6 +121,7 @@ pub(crate) fn pop_scope() {
 
 /// Register that the current scope depends on a signal.
 /// Called when a signal is read inside a tracking scope.
+/// Also records the reverse mapping (scope → signal) for fast cleanup.
 pub(crate) fn track(signal_id: SignalId) {
     SCOPE_STACK.with(|stack| {
         if let Some(&scope_id) = stack.borrow().last() {
@@ -115,6 +134,13 @@ pub(crate) fn track(signal_id: SignalId) {
                         if !list.iter().any(|(sid, _)| *sid == scope_id) {
                             list.push((scope_id, callback));
                         }
+                    });
+                    // Record reverse mapping for O(1) cleanup
+                    SCOPE_SUBSCRIPTIONS.with(|ss| {
+                        ss.borrow_mut()
+                            .entry(scope_id)
+                            .or_default()
+                            .insert(signal_id);
                     });
                 }
             });
@@ -138,18 +164,33 @@ pub(crate) fn notify(signal_id: SignalId) {
 }
 
 /// Run all subscriber callbacks for a signal.
+/// Uses a reusable buffer to avoid per-notify heap allocation.
+/// Swaps the buffer out so re-entrant notify calls (from within callbacks) get a fresh buffer.
 fn run_subscribers(signal_id: SignalId) {
-    let callbacks: Vec<Callback> = SUBSCRIBERS.with(|subs| {
-        subs.borrow()
-            .get(&signal_id)
-            .map(|list| list.iter().map(|(_, cb)| Rc::clone(cb)).collect())
-            .unwrap_or_default()
+    // Swap out the buffer to release the borrow before running callbacks.
+    let mut buffer: Vec<Callback> = CALLBACK_BUFFER.with(|buf| {
+        std::mem::take(&mut *buf.borrow_mut())
     });
 
-    for cb in callbacks {
+    SUBSCRIBERS.with(|subs| {
+        if let Some(list) = subs.borrow().get(&signal_id) {
+            for (_, cb) in list.iter() {
+                buffer.push(Rc::clone(cb));
+            }
+        }
+    });
+
+    // Run callbacks outside any borrows to avoid re-entrancy panic.
+    for cb in buffer.iter() {
         let cb_ref = cb.borrow();
         cb_ref();
     }
+
+    // Return the buffer for reuse (clear it first).
+    buffer.clear();
+    CALLBACK_BUFFER.with(|buf| {
+        *buf.borrow_mut() = buffer;
+    });
 }
 
 // ── Batch ─────────────────────────────────────────────────────
@@ -204,10 +245,25 @@ pub(crate) fn on_cleanup<F: FnOnce() + 'static>(cleanup: F) {
 }
 
 /// Clear all subscriptions for a scope (before re-running, so it can re-subscribe).
+/// Uses the reverse map to only touch signals this scope subscribed to — O(subscriptions) not O(all_signals).
 pub(crate) fn clear_scope_subscriptions(scope_id: ScopeId) {
+    let signal_ids: Vec<SignalId> = SCOPE_SUBSCRIPTIONS.with(|ss| {
+        ss.borrow_mut()
+            .get_mut(&scope_id)
+            .map(|set| {
+                let ids: Vec<_> = set.iter().copied().collect();
+                set.clear();
+                ids
+            })
+            .unwrap_or_default()
+    });
+
     SUBSCRIBERS.with(|subs| {
-        for (_, list) in subs.borrow_mut().iter_mut() {
-            list.retain(|(sid, _)| *sid != scope_id);
+        let mut subs = subs.borrow_mut();
+        for signal_id in signal_ids {
+            if let Some(list) = subs.get_mut(&signal_id) {
+                list.retain(|(sid, _)| *sid != scope_id);
+            }
         }
     });
 }

@@ -30,41 +30,59 @@ const OP_MOVE_CHILD: u32 = 6;
 pub enum DomMutation {
     /// Set an attribute on an element.
     SetAttribute {
+        /// The element to set the attribute on.
         el: Element,
+        /// The attribute name.
         name: String,
+        /// The attribute value.
         value: String,
     },
     /// Remove an attribute from an element.
     RemoveAttribute {
+        /// The element to remove the attribute from.
         el: Element,
+        /// The attribute name.
         name: String,
     },
     /// Set text content on a text node.
     SetText {
+        /// The text node to update.
         node: Text,
+        /// The new text content.
         content: String,
     },
     /// Insert a child node at a specific index.
     InsertChild {
+        /// The parent element.
         parent: Element,
+        /// The child node to insert.
         child: Node,
+        /// The index at which to insert.
         index: usize,
     },
     /// Remove the child at a given index.
     RemoveChild {
+        /// The parent element.
         parent: Element,
+        /// The index of the child to remove.
         index: usize,
     },
     /// Replace the child at a given index with a new node.
     ReplaceChild {
+        /// The parent element.
         parent: Element,
+        /// The new child node.
         new: Node,
+        /// The index of the child to replace.
         index: usize,
     },
     /// Move a child from one index to another within the same parent.
     MoveChild {
+        /// The parent element.
         parent: Element,
+        /// The source index.
         from: usize,
+        /// The destination index.
         to: usize,
     },
 }
@@ -84,7 +102,13 @@ var len = ops.length;
 for (var i = 0; i < len; i++) {
     var op = ops[i];
     switch (op[0]) {
-        case 0: op[1].setAttribute(op[2], op[3]); break;
+        case 0: 
+            if (op[2] === 'value' && (op[1].tagName === 'INPUT' || op[1].tagName === 'TEXTAREA' || op[1].tagName === 'SELECT')) {
+                op[1].value = op[3];
+            } else {
+                op[1].setAttribute(op[2], op[3]); 
+            }
+            break;
         case 1: op[1].removeAttribute(op[2]); break;
         case 2: op[1].data = op[2]; break;
         case 3:
@@ -213,6 +237,21 @@ pub fn apply_mutations(mutations: &[DomMutation]) {
 pub fn apply_mutation_direct(mutation: &DomMutation) {
     match mutation {
         DomMutation::SetAttribute { el, name, value } => {
+            use wasm_bindgen::JsCast;
+            if name == "value" {
+                if let Some(input) = el.dyn_ref::<web_sys::HtmlInputElement>() {
+                    input.set_value(value);
+                    return;
+                }
+                if let Some(ta) = el.dyn_ref::<web_sys::HtmlTextAreaElement>() {
+                    ta.set_value(value);
+                    return;
+                }
+                if let Some(sel) = el.dyn_ref::<web_sys::HtmlSelectElement>() {
+                    sel.set_value(value);
+                    return;
+                }
+            }
             let _ = el.set_attribute(name, value);
         }
         DomMutation::RemoveAttribute { el, name } => {
