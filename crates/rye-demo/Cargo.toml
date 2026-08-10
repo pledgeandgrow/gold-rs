@@ -42,3 +42,6 @@ features = [
     "Event", "EventTarget", "MouseEvent", "InputEvent", "KeyboardEvent",
     "console",
 ]
+
+[dev-dependencies]
+rye-ssr = { workspace = true }

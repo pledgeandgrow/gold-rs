@@ -549,106 +549,52 @@ fn dashboard_page() -> Element {
 
 fn counter_page() -> Element {
     let count = Signal::new(0i32);
-    let display = count.clone();
     let inc = count.clone();
     let dec = count.clone();
     let reset = count.clone();
+    let class_count = count.clone();
+    let display_count = count.clone();
 
-    // Reactive class — updates when count changes
-    let class_fn: ReactiveFn = {
-        let c = count.clone();
-        Rc::new(move || {
-            let v = c.get();
-            if v > 0 {
-                "counter-value positive".to_string()
-            } else if v < 0 {
-                "counter-value negative".to_string()
-            } else {
-                "counter-value".to_string()
+    rye_macros::template! {
+        div {
+            class: "page-wrapper",
+            div {
+                class: "page-header",
+                h1 { "Counter" }
+                p { "Fine-grained reactivity \u{2014} only the value updates, no VDOM diff" }
             }
-        })
-    };
-
-    let header = Template::new_element(
-        "div",
-        vec![("class".to_string(), "page-header".to_string())],
-        Vec::new(),
-        vec![
-            Template::new_element(
-                "h1",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("Counter")],
-            ),
-            Template::new_element(
-                "p",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text(
-                    "Fine-grained reactivity \u{2014} only the value updates, no VDOM diff",
-                )],
-            ),
-        ],
-    );
-
-    let display_fn: ReactiveFn = {
-        let d = display.clone();
-        Rc::new(move || d.get().to_string())
-    };
-
-    let counter_display = Template::new_element_reactive(
-        "div",
-        Vec::new(),
-        vec![("class".to_string(), class_fn)],
-        Vec::new(),
-        vec![Template::new(vec![TemplateNode::Reactive(display_fn)])],
-    );
-
-    let inc_handler: SharedEventHandler = shared_event_handler(move |_| {
-        inc.set(inc.get() + 1);
-    });
-    let dec_handler: SharedEventHandler = shared_event_handler(move |_| {
-        let c = dec.get();
-        dec.set(c - 1);
-    });
-    let reset_handler: SharedEventHandler = shared_event_handler(move |_| {
-        reset.set(0);
-    });
-
-    let buttons = Template::new_element(
-        "div",
-        vec![("class".to_string(), "counter-buttons".to_string())],
-        Vec::new(),
-        vec![
-            Template::new_element(
-                "button",
-                vec![("class".to_string(), "btn-primary".to_string())],
-                vec![("click".to_string(), inc_handler)],
-                vec![Template::text("+ Increment")],
-            ),
-            Template::new_element(
-                "button",
-                vec![("class".to_string(), "btn-secondary".to_string())],
-                vec![("click".to_string(), dec_handler)],
-                vec![Template::text("\u{2212} Decrement")],
-            ),
-            Template::new_element(
-                "button",
-                vec![("class".to_string(), "btn-ghost".to_string())],
-                vec![("click".to_string(), reset_handler)],
-                vec![Template::text("Reset")],
-            ),
-        ],
-    );
-
-    let card = Template::new_element(
-        "div",
-        vec![("class".to_string(), "counter-card".to_string())],
-        Vec::new(),
-        vec![counter_display, buttons],
-    );
-
-    Element::Template(combine(vec![header, card]))
+            div {
+                class: "counter-card",
+                div {
+                    class: { {
+                        let v = class_count.get();
+                        if v > 0 { "counter-value positive" }
+                        else if v < 0 { "counter-value negative" }
+                        else { "counter-value" }
+                    } },
+                    {display_count.get()}
+                }
+                div {
+                    class: "counter-buttons",
+                    button {
+                        class: "btn-primary",
+                        onclick: move |_| inc.set(inc.get() + 1),
+                        "+ Increment"
+                    }
+                    button {
+                        class: "btn-secondary",
+                        onclick: move |_| dec.set(dec.get() - 1),
+                        "\u{2212} Decrement"
+                    }
+                    button {
+                        class: "btn-ghost",
+                        onclick: move |_| reset.set(0),
+                        "Reset"
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ─── Todo page ──────────────────────────────────────────────────────────────
@@ -1898,11 +1844,81 @@ mod tests {
     }
 
     #[test]
+    fn test_template_macro_with_signal() {
+        let count = Signal::new(42i32);
+        let el = rye_macros::template! {
+            div {
+                class: "counter",
+                span { {count.get()} }
+            }
+        };
+        // Should produce a Template element
+        assert!(matches!(el, Element::Template(_)));
+    }
+
+    #[test]
+    fn test_template_macro_with_event() {
+        let count = Signal::new(0i32);
+        let inc = count.clone();
+        let el = rye_macros::template! {
+            button {
+                onclick: move |_| inc.set(inc.get() + 1),
+                "Click"
+            }
+        };
+        assert!(matches!(el, Element::Template(_)));
+    }
+
+    #[test]
+    fn test_template_macro_reactive_class() {
+        let count = Signal::new(5i32);
+        let c = count.clone();
+        let el = rye_macros::template! {
+            div {
+                class: { if c.get() > 0 { "positive" } else { "negative" } },
+                {count.get()}
+            }
+        };
+        assert!(matches!(el, Element::Template(_)));
+    }
+
+    #[test]
     fn test_backend() {
         let b = backend();
         #[cfg(target_arch = "wasm32")]
         assert_eq!(b, rye_core::RenderBackend::WebView);
         #[cfg(all(not(target_arch = "wasm32"), not(feature = "native")))]
         assert_eq!(b, rye_core::RenderBackend::WebView);
+    }
+
+    #[test]
+    fn test_template_macro_ssr_pipeline() {
+        // Prove the full pipeline: template! → Element → render_to_string → HTML
+        let count = Signal::new(42i32);
+        let display_count = count.clone();
+
+        let el = rye_macros::template! {
+            div {
+                class: "counter",
+                span { "Count: " }
+                span { {display_count.get()} }
+            }
+        };
+
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("counter"), "HTML should contain the class");
+        assert!(html.contains("Count:"), "HTML should contain the label");
+        assert!(html.contains("42"), "HTML should contain the signal value");
+    }
+
+    #[test]
+    fn test_counter_page_ssr() {
+        // Verify the template!-based counter_page renders to valid HTML via SSR
+        let el = counter_page();
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("page-wrapper"), "Should have page wrapper");
+        assert!(html.contains("Counter"), "Should have Counter heading");
+        assert!(html.contains("counter-card"), "Should have counter card");
+        assert!(html.contains("btn-primary"), "Should have increment button");
     }
 }

@@ -2,6 +2,25 @@
 //!
 //! The template! macro uses a custom parser that converts HTML-like syntax
 //! into calls to the Renderer trait.
+//!
+//! ## Known limitations
+//!
+//! - **Move closure capture conflicts**: Every dynamic expression (`{expr}`) and
+//!   reactive attribute (`attr: {expr}`) generates a `move` closure. If a signal
+//!   is used in multiple dynamic positions, it must be manually cloned before
+//!   each use (e.g. `let display_count = count.clone();` then `{display_count.get()}`).
+//!   Future improvement: auto-clone `Copy`/`Clone` types, or use borrowed closures.
+//! - **Single root node**: The macro only parses one root node. Multiple root
+//!   elements must be wrapped in a container `div`.
+//! - **No component invocation**: The macro cannot call other components yet.
+//!   Components must be invoked manually and passed as children.
+//! - **No reactive list syntax**: The macro cannot express `For` / keyed list
+//!   reconciliation. Use `Template::new_reactive_list()` manually.
+//! - **Returns `Element`, not `Template`**: The macro always wraps output in
+//!   `Element::Template(...)`. When a `Template` value is needed (for children
+//!   or composition), use `generate_template_code` or build manually.
+//! - **No `for` loops or `if` expressions in template body**: Conditional and
+//!   iterative rendering must be done outside the macro.
 
 use proc_macro2::{Group, TokenStream, TokenTree};
 use quote::quote;
