@@ -1,8 +1,8 @@
 //! ConfirmationDialog — confirm/cancel modal.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConfirmVariant {
@@ -42,19 +42,44 @@ pub struct ConfirmationDialogProps {
 
 impl Default for ConfirmationDialogProps {
     fn default() -> Self {
-        Self { open: false, title: String::new(), message: String::new(),
-               variant: ConfirmVariant::Default, confirm_label: None,
-               cancel_label: "Cancel".to_string(), class: None, style: None }
+        Self {
+            open: false,
+            title: String::new(),
+            message: String::new(),
+            variant: ConfirmVariant::Default,
+            confirm_label: None,
+            cancel_label: "Cancel".to_string(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ConfirmationDialogProps {
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = t.into(); self }
-    pub fn message(mut self, m: impl Into<String>) -> Self { self.message = m.into(); self }
-    pub fn variant(mut self, v: ConfirmVariant) -> Self { self.variant = v; self }
-    pub fn confirm_label(mut self, l: impl Into<String>) -> Self { self.confirm_label = Some(l.into()); self }
-    pub fn cancel_label(mut self, l: impl Into<String>) -> Self { self.cancel_label = l.into(); self }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = t.into();
+        self
+    }
+    pub fn message(mut self, m: impl Into<String>) -> Self {
+        self.message = m.into();
+        self
+    }
+    pub fn variant(mut self, v: ConfirmVariant) -> Self {
+        self.variant = v;
+        self
+    }
+    pub fn confirm_label(mut self, l: impl Into<String>) -> Self {
+        self.confirm_label = Some(l.into());
+        self
+    }
+    pub fn cancel_label(mut self, l: impl Into<String>) -> Self {
+        self.cancel_label = l.into();
+        self
+    }
 }
 
 pub struct ConfirmationDialog;
@@ -70,10 +95,15 @@ impl ConfirmationDialog {
         let modal_style = format!(
             "width:420px;max-width:90vw;background:{};border-radius:var(--rye-radius-lg);\
              box-shadow:{};padding:24px;{}",
-            vars::BG_ELEVATED, vars::SHADOW_XL, props.style.as_deref().unwrap_or(""),
+            vars::BG_ELEVATED,
+            vars::SHADOW_XL,
+            props.style.as_deref().unwrap_or(""),
         );
 
-        let confirm_label = props.confirm_label.as_deref().unwrap_or_else(|| props.variant.confirm_label());
+        let confirm_label = props
+            .confirm_label
+            .as_deref()
+            .unwrap_or_else(|| props.variant.confirm_label());
         let confirm_color = props.variant.confirm_color();
 
         let children = vec![
@@ -98,15 +128,34 @@ impl ConfirmationDialog {
                 ]),
         ];
 
-        let modal = Template::new_element("div",
-            vec![("style".to_string(), modal_style),
-                 ("class".to_string(), format!("rye-confirm-dialog {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children);
+        let modal = Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), modal_style),
+                (
+                    "class".to_string(),
+                    format!(
+                        "rye-confirm-dialog {}",
+                        props.class.as_deref().unwrap_or("")
+                    ),
+                ),
+            ],
+            Vec::new(),
+            children,
+        );
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), backdrop_style.to_string()),
-                 ("class".to_string(), "rye-confirm-dialog-backdrop".to_string())],
-            Vec::new(), vec![modal]))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), backdrop_style.to_string()),
+                (
+                    "class".to_string(),
+                    "rye-confirm-dialog-backdrop".to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![modal],
+        ))
     }
 }
 
@@ -149,8 +198,13 @@ mod tests {
 
     #[test]
     fn test_confirmation_dialog_open() {
-        let el = ConfirmationDialog::render(ConfirmationDialogProps::default()
-            .open(true).title("Delete?").message("Are you sure?").variant(ConfirmVariant::Danger));
+        let el = ConfirmationDialog::render(
+            ConfirmationDialogProps::default()
+                .open(true)
+                .title("Delete?")
+                .message("Are you sure?")
+                .variant(ConfirmVariant::Danger),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

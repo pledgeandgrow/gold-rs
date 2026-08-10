@@ -4,7 +4,7 @@
 //! telemetry are closely related. See `telemetry::CrashReport`,
 //! `telemetry::CrashReporter`, and `telemetry::crash_handler_script`.
 
-pub use super::telemetry::{CrashReport, CrashReporter, crash_handler_script};
+pub use super::telemetry::{crash_handler_script, CrashReport, CrashReporter};
 
 #[cfg(test)]
 mod tests {

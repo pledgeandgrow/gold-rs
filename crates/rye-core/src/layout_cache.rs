@@ -257,7 +257,10 @@ impl SmartLayoutCache {
 
     /// Invalidate all cached layouts for a component.
     pub fn invalidate_component(&self, component_hash: u64) -> usize {
-        self.component_hashes.lock().unwrap().remove(&component_hash);
+        self.component_hashes
+            .lock()
+            .unwrap()
+            .remove(&component_hash);
         self.cache.invalidate_component(component_hash)
     }
 
@@ -381,9 +384,18 @@ mod tests {
     #[test]
     fn test_layout_cache_invalidate_component() {
         let cache = LayoutCache::new(100);
-        cache.insert(&LayoutConfig::new(1, 10, 20), LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0));
-        cache.insert(&LayoutConfig::new(1, 20, 30), LayoutResult::new(2, 0.0, 0.0, 200.0, 100.0));
-        cache.insert(&LayoutConfig::new(2, 40, 50), LayoutResult::new(3, 0.0, 0.0, 300.0, 150.0));
+        cache.insert(
+            &LayoutConfig::new(1, 10, 20),
+            LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0),
+        );
+        cache.insert(
+            &LayoutConfig::new(1, 20, 30),
+            LayoutResult::new(2, 0.0, 0.0, 200.0, 100.0),
+        );
+        cache.insert(
+            &LayoutConfig::new(2, 40, 50),
+            LayoutResult::new(3, 0.0, 0.0, 300.0, 150.0),
+        );
 
         let count = cache.invalidate_component(1);
         assert_eq!(count, 2);
@@ -393,7 +405,10 @@ mod tests {
     #[test]
     fn test_layout_cache_clear() {
         let cache = LayoutCache::new(100);
-        cache.insert(&LayoutConfig::new(1, 2, 3), LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0));
+        cache.insert(
+            &LayoutConfig::new(1, 2, 3),
+            LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0),
+        );
         cache.clear();
         assert!(cache.is_empty());
     }
@@ -401,9 +416,18 @@ mod tests {
     #[test]
     fn test_layout_cache_eviction() {
         let cache = LayoutCache::new(2);
-        cache.insert(&LayoutConfig::new(1, 1, 1), LayoutResult::new(1, 0.0, 0.0, 10.0, 10.0));
-        cache.insert(&LayoutConfig::new(2, 2, 2), LayoutResult::new(2, 0.0, 0.0, 20.0, 20.0));
-        cache.insert(&LayoutConfig::new(3, 3, 3), LayoutResult::new(3, 0.0, 0.0, 30.0, 30.0));
+        cache.insert(
+            &LayoutConfig::new(1, 1, 1),
+            LayoutResult::new(1, 0.0, 0.0, 10.0, 10.0),
+        );
+        cache.insert(
+            &LayoutConfig::new(2, 2, 2),
+            LayoutResult::new(2, 0.0, 0.0, 20.0, 20.0),
+        );
+        cache.insert(
+            &LayoutConfig::new(3, 3, 3),
+            LayoutResult::new(3, 0.0, 0.0, 30.0, 30.0),
+        );
 
         let stats = cache.stats();
         assert!(stats.evictions >= 1);
@@ -414,7 +438,10 @@ mod tests {
     fn test_smart_layout_cache_register_invalidate() {
         let cache = SmartLayoutCache::new(100);
         cache.register(1, 10, 20);
-        cache.insert(&LayoutConfig::new(1, 10, 20), LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0));
+        cache.insert(
+            &LayoutConfig::new(1, 10, 20),
+            LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0),
+        );
 
         assert!(cache.get(&LayoutConfig::new(1, 10, 20)).is_some());
         let count = cache.invalidate_component(1);
@@ -426,7 +453,10 @@ mod tests {
     fn test_smart_layout_cache_clear() {
         let cache = SmartLayoutCache::new(100);
         cache.register(1, 10, 20);
-        cache.insert(&LayoutConfig::new(1, 10, 20), LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0));
+        cache.insert(
+            &LayoutConfig::new(1, 10, 20),
+            LayoutResult::new(1, 0.0, 0.0, 100.0, 50.0),
+        );
         cache.clear();
         assert_eq!(cache.stats().cache_size, 0);
     }

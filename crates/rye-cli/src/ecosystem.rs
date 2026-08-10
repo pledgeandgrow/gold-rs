@@ -40,7 +40,8 @@ impl MonorepoConfig {
 
     /// Add a shared dependency.
     pub fn add_shared_dep(mut self, name: &str, version: &str) -> Self {
-        self.shared_deps.insert(name.to_string(), version.to_string());
+        self.shared_deps
+            .insert(name.to_string(), version.to_string());
         self
     }
 
@@ -118,8 +119,14 @@ impl PublishedLibrary {
         json.push_str("{\n");
         json.push_str(&format!("  \"name\": \"{}\",\n", self.package_name()));
         json.push_str(&format!("  \"version\": \"{}\",\n", self.version));
-        json.push_str(&format!("  \"components\": [{}],\n",
-            self.components.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(", ")));
+        json.push_str(&format!(
+            "  \"components\": [{}],\n",
+            self.components
+                .iter()
+                .map(|c| format!("\"{}\"", c))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
         json.push_str(&format!("  \"docs\": \"{}\",\n", self.docs_url));
         json.push_str(&format!("  \"playground\": \"{}\"\n", self.playground_url));
         json.push_str("}\n");
@@ -362,7 +369,10 @@ impl CiPipeline {
         yml.push_str("    runs-on: ubuntu-latest\n");
         yml.push_str(&format!("    steps:\n"));
         yml.push_str("      - uses: actions/checkout@v4\n");
-        yml.push_str(&format!("      - uses: dtolnay/rust-toolchain@{}\n", self.toolchain));
+        yml.push_str(&format!(
+            "      - uses: dtolnay/rust-toolchain@{}\n",
+            self.toolchain
+        ));
         if self.build {
             yml.push_str("      - run: cargo build --release\n");
         }
@@ -386,10 +396,18 @@ impl CiPipeline {
         let mut yml = String::new();
         yml.push_str(&format!("image: rust:latest\n\nstages:\n"));
         let mut stages = Vec::new();
-        if self.build { stages.push("  - build"); }
-        if self.test { stages.push("  - test"); }
-        if self.lint { stages.push("  - lint"); }
-        if self.deploy { stages.push("  - deploy"); }
+        if self.build {
+            stages.push("  - build");
+        }
+        if self.test {
+            stages.push("  - test");
+        }
+        if self.lint {
+            stages.push("  - lint");
+        }
+        if self.deploy {
+            stages.push("  - deploy");
+        }
         yml.push_str(&stages.join("\n"));
         yml.push_str("\n\n");
         if self.build {
@@ -437,7 +455,11 @@ pub fn run_monorepo(args: &[String]) {
 
 /// Run the publish command.
 pub fn run_publish(args: &[String]) {
-    let name = args.iter().find(|a| !a.starts_with("--")).map(|s| s.as_str()).unwrap_or("my-lib");
+    let name = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map(|s| s.as_str())
+        .unwrap_or("my-lib");
     let lib = PublishedLibrary::new("@rye", name, "0.1.0");
     println!("Publishing {} v{}", lib.package_name(), lib.version);
     println!("{}", lib.generate_manifest());
@@ -457,7 +479,11 @@ pub fn run_theme(args: &[String]) {
             println!("{}", theme.export_css());
         }
         "export" => {
-            let format = args.iter().find(|a| a.starts_with("--format")).map(|a| &a[9..]).unwrap_or("css");
+            let format = args
+                .iter()
+                .find(|a| a.starts_with("--format"))
+                .map(|a| &a[9..])
+                .unwrap_or("css");
             println!("Exporting theme as {}", format);
         }
         "diff" => {
@@ -473,15 +499,29 @@ pub fn run_theme(args: &[String]) {
 
 /// Run the docs command.
 pub fn run_docs(args: &[String]) {
-    let port = args.iter().find(|a| a.starts_with("--port")).and_then(|a| a[6..].parse().ok()).unwrap_or(4000);
-    let config = DocsServerConfig { port, ..Default::default() };
+    let port = args
+        .iter()
+        .find(|a| a.starts_with("--port"))
+        .and_then(|a| a[6..].parse().ok())
+        .unwrap_or(4000);
+    let config = DocsServerConfig {
+        port,
+        ..Default::default()
+    };
     println!("Starting docs server on port {}", config.port);
-    println!("Live search: {}, Interactive: {}, Offline: {}", config.live_search, config.interactive, config.offline);
+    println!(
+        "Live search: {}, Interactive: {}, Offline: {}",
+        config.live_search, config.interactive, config.offline
+    );
 }
 
 /// Run the ci command.
 pub fn run_ci(args: &[String]) {
-    let platform = args.iter().find(|a| !a.starts_with("--")).map(|s| s.as_str()).unwrap_or("github");
+    let platform = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map(|s| s.as_str())
+        .unwrap_or("github");
     let ci_platform = match platform {
         "gitlab" => CiPlatform::GitLabCi,
         "circle" | "circleci" => CiPlatform::CircleCi,
@@ -507,7 +547,9 @@ mod tests {
 
     #[test]
     fn test_monorepo_add_member() {
-        let config = MonorepoConfig::new(".").add_member("crates/web").add_member("crates/api");
+        let config = MonorepoConfig::new(".")
+            .add_member("crates/web")
+            .add_member("crates/api");
         assert_eq!(config.member_count(), 2);
     }
 
@@ -576,7 +618,9 @@ mod tests {
     #[test]
     fn test_design_theme_diff_added() {
         let theme1 = DesignTheme::new("light").add_color("primary", "#007acc");
-        let theme2 = DesignTheme::new("dark").add_color("primary", "#007acc").add_color("accent", "#ff0");
+        let theme2 = DesignTheme::new("dark")
+            .add_color("primary", "#007acc")
+            .add_color("accent", "#ff0");
         let diffs = theme1.diff(&theme2);
         assert!(diffs.iter().any(|d| d.contains("added")));
     }
@@ -605,7 +649,10 @@ mod tests {
     // CI tests
     #[test]
     fn test_ci_platform_config_file() {
-        assert_eq!(CiPlatform::GitHubActions.config_file(), ".github/workflows/ci.yml");
+        assert_eq!(
+            CiPlatform::GitHubActions.config_file(),
+            ".github/workflows/ci.yml"
+        );
         assert_eq!(CiPlatform::GitLabCi.config_file(), ".gitlab-ci.yml");
     }
 

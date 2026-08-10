@@ -1,8 +1,8 @@
 //! Avatar — image with fallback initials, sizes.
 
-use rye_core::Element;
+use crate::theme::{vars, Size};
 use rye_core::template::Template;
-use crate::theme::{Size, vars};
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct AvatarProps {
@@ -15,14 +15,29 @@ pub struct AvatarProps {
 
 impl Default for AvatarProps {
     fn default() -> Self {
-        Self { src: None, name: String::new(), size: Size::Medium, class: None, style: None }
+        Self {
+            src: None,
+            name: String::new(),
+            size: Size::Medium,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl AvatarProps {
-    pub fn src(mut self, s: impl Into<String>) -> Self { self.src = Some(s.into()); self }
-    pub fn name(mut self, n: impl Into<String>) -> Self { self.name = n.into(); self }
-    pub fn size(mut self, s: Size) -> Self { self.size = s; self }
+    pub fn src(mut self, s: impl Into<String>) -> Self {
+        self.src = Some(s.into());
+        self
+    }
+    pub fn name(mut self, n: impl Into<String>) -> Self {
+        self.name = n.into();
+        self
+    }
+    pub fn size(mut self, s: Size) -> Self {
+        self.size = s;
+        self
+    }
 }
 
 pub struct Avatar;
@@ -30,10 +45,14 @@ pub struct Avatar;
 impl Avatar {
     pub fn render(props: AvatarProps) -> Element {
         let dim = match props.size {
-            Size::Small => "24px", Size::Medium => "40px", Size::Large => "56px",
+            Size::Small => "24px",
+            Size::Medium => "40px",
+            Size::Large => "56px",
         };
         let font_size = match props.size {
-            Size::Small => "10px", Size::Medium => "16px", Size::Large => "22px",
+            Size::Small => "10px",
+            Size::Medium => "16px",
+            Size::Large => "22px",
         };
 
         let style = format!(
@@ -44,20 +63,36 @@ impl Avatar {
         );
 
         let children = if let Some(src) = &props.src {
-            vec![Template::new_element("img",
-                vec![("src".to_string(), src.clone()),
-                     ("alt".to_string(), props.name.clone()),
-                     ("style".to_string(), "width:100%;height:100%;object-fit:cover;".to_string())],
-                Vec::new(), Vec::new())]
+            vec![Template::new_element(
+                "img",
+                vec![
+                    ("src".to_string(), src.clone()),
+                    ("alt".to_string(), props.name.clone()),
+                    (
+                        "style".to_string(),
+                        "width:100%;height:100%;object-fit:cover;".to_string(),
+                    ),
+                ],
+                Vec::new(),
+                Vec::new(),
+            )]
         } else {
             let initials = get_initials(&props.name);
             vec![Template::text(&initials)]
         };
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-avatar {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-avatar {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -87,7 +122,10 @@ mod tests {
 
     #[test]
     fn test_avatar_builder() {
-        let p = AvatarProps::default().src("https://example.com/a.png").name("Alice").size(Size::Large);
+        let p = AvatarProps::default()
+            .src("https://example.com/a.png")
+            .name("Alice")
+            .size(Size::Large);
         assert_eq!(p.src.as_deref(), Some("https://example.com/a.png"));
         assert_eq!(p.name, "Alice");
     }

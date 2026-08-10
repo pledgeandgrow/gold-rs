@@ -52,7 +52,10 @@ impl AnalyticsEvent {
     pub fn to_json(&self) -> String {
         let mut json = format!(
             r#"{{"name":"{}","category":"{}","timestamp":{},"session_id":"{}""#,
-            escape(&self.name), escape(&self.category), self.timestamp, escape(&self.session_id)
+            escape(&self.name),
+            escape(&self.category),
+            self.timestamp,
+            escape(&self.session_id)
         );
 
         if let Some(uid) = &self.user_id {
@@ -60,7 +63,9 @@ impl AnalyticsEvent {
         }
 
         if !self.properties.is_empty() {
-            let props: Vec<String> = self.properties.iter()
+            let props: Vec<String> = self
+                .properties
+                .iter()
                 .map(|(k, v)| format!(r#""{}":"{}""#, escape(k), escape(v)))
                 .collect();
             json.push_str(&format!(r#","properties":{{{}}}"#, props.join(",")));
@@ -217,13 +222,27 @@ impl WebVitals {
     /// Serialize to JSON.
     pub fn to_json(&self) -> String {
         let mut parts = Vec::new();
-        if let Some(v) = self.lcp { parts.push(format!(r#""lcp":{}"#, v)); }
-        if let Some(v) = self.fid { parts.push(format!(r#""fid":{}"#, v)); }
-        if let Some(v) = self.cls { parts.push(format!(r#""cls":{}"#, v)); }
-        if let Some(v) = self.inp { parts.push(format!(r#""inp":{}"#, v)); }
-        if let Some(v) = self.ttfb { parts.push(format!(r#""ttfb":{}"#, v)); }
-        if let Some(v) = self.fcp { parts.push(format!(r#""fcp":{}"#, v)); }
-        if let Some(v) = self.tti { parts.push(format!(r#""tti":{}"#, v)); }
+        if let Some(v) = self.lcp {
+            parts.push(format!(r#""lcp":{}"#, v));
+        }
+        if let Some(v) = self.fid {
+            parts.push(format!(r#""fid":{}"#, v));
+        }
+        if let Some(v) = self.cls {
+            parts.push(format!(r#""cls":{}"#, v));
+        }
+        if let Some(v) = self.inp {
+            parts.push(format!(r#""inp":{}"#, v));
+        }
+        if let Some(v) = self.ttfb {
+            parts.push(format!(r#""ttfb":{}"#, v));
+        }
+        if let Some(v) = self.fcp {
+            parts.push(format!(r#""fcp":{}"#, v));
+        }
+        if let Some(v) = self.tti {
+            parts.push(format!(r#""tti":{}"#, v));
+        }
         format!("{{{}}}", parts.join(","))
     }
 }

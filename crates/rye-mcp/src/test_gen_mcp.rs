@@ -40,7 +40,9 @@ struct ParsedComponent {
 fn extract_fn_name(line: &str) -> Option<String> {
     let after_fn = line.find("fn ")?;
     let rest = &line[after_fn + 3..];
-    let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+    let name = rest
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .next()?;
     if name.is_empty() {
         None
     } else {
@@ -68,7 +70,9 @@ fn extract_props_fields(source: &str, struct_name: &str) -> Vec<(String, String)
     let struct_pattern = format!("struct {} {{", struct_name);
     let alt_pattern = format!("struct {}{{", struct_name);
 
-    let start = source.find(&struct_pattern).or_else(|| source.find(&alt_pattern));
+    let start = source
+        .find(&struct_pattern)
+        .or_else(|| source.find(&alt_pattern));
 
     if let Some(start_idx) = start {
         if let Some(open_brace) = source[start_idx..].find('{') {
@@ -97,7 +101,8 @@ fn extract_props_fields(source: &str, struct_name: &str) -> Vec<(String, String)
 
 fn parse_components(source: &str) -> Vec<ParsedComponent> {
     let mut components = Vec::new();
-    let mut props_map: std::collections::HashMap<String, Vec<(String, String)>> = std::collections::HashMap::new();
+    let mut props_map: std::collections::HashMap<String, Vec<(String, String)>> =
+        std::collections::HashMap::new();
 
     for line in source.lines() {
         let trimmed = line.trim();
@@ -127,7 +132,8 @@ fn parse_components(source: &str) -> Vec<ParsedComponent> {
                 consumed[j] = true;
                 let next_line = lines[j].trim();
                 if next_line.starts_with("#[") {
-                    if next_line.starts_with("#[rye::island]") || next_line.starts_with("#[island]") {
+                    if next_line.starts_with("#[rye::island]") || next_line.starts_with("#[island]")
+                    {
                         found_island = true;
                     }
                     j += 1;
@@ -156,7 +162,9 @@ fn parse_components(source: &str) -> Vec<ParsedComponent> {
 
 fn extract_struct_name(line: &str) -> Option<String> {
     let after_struct = line.strip_prefix("struct ")?;
-    let name = after_struct.split(|c: char| c.is_whitespace() || c == '{').next()?;
+    let name = after_struct
+        .split(|c: char| c.is_whitespace() || c == '{')
+        .next()?;
     let name = name.trim();
     if name.is_empty() {
         None
@@ -189,7 +197,11 @@ pub fn generate_test_from_source(source: &str) -> String {
                 .iter()
                 .map(|(name, ty)| format!("    {}: {},", name, default_value_for_type(ty)))
                 .collect();
-            format!("    let props = {} {{\n{}\n    }};\n", props_type, fields.join("\n"))
+            format!(
+                "    let props = {} {{\n{}\n    }};\n",
+                props_type,
+                fields.join("\n")
+            )
         };
 
         let render_call = if comp.props.is_empty() {

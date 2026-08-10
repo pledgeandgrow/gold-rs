@@ -18,9 +18,8 @@
 //! See [`crate::ThemeProvider`] for injecting CSS variables into the DOM.
 
 pub use crate::tokens::{
-    DesignTokens, ColorTokens, TypographyTokens, SpacingTokens,
-    BorderTokens, ShadowTokens, ZIndexTokens, TransitionTokens,
-    vars, v, vf,
+    v, vars, vf, BorderTokens, ColorTokens, DesignTokens, ShadowTokens, SpacingTokens,
+    TransitionTokens, TypographyTokens, ZIndexTokens,
 };
 
 /// Color scheme for themed components.
@@ -148,19 +147,28 @@ pub struct Theme {
 
 impl Default for Theme {
     fn default() -> Self {
-        Self { color_scheme: ColorScheme::Light, tokens: DesignTokens::light() }
+        Self {
+            color_scheme: ColorScheme::Light,
+            tokens: DesignTokens::light(),
+        }
     }
 }
 
 impl Theme {
     /// Create a dark theme.
     pub fn dark() -> Self {
-        Self { color_scheme: ColorScheme::Dark, tokens: DesignTokens::dark() }
+        Self {
+            color_scheme: ColorScheme::Dark,
+            tokens: DesignTokens::dark(),
+        }
     }
 
     /// Create a light theme.
     pub fn light() -> Self {
-        Self { color_scheme: ColorScheme::Light, tokens: DesignTokens::light() }
+        Self {
+            color_scheme: ColorScheme::Light,
+            tokens: DesignTokens::light(),
+        }
     }
 
     /// Generate CSS custom properties for this theme.
@@ -170,17 +178,20 @@ impl Theme {
 
     /// Builder: override primary color.
     pub fn primary(mut self, color: impl Into<String>) -> Self {
-        self.tokens = self.tokens.primary(color); self
+        self.tokens = self.tokens.primary(color);
+        self
     }
 
     /// Builder: override border radius.
     pub fn radius(mut self, r: impl Into<String>) -> Self {
-        self.tokens = self.tokens.radius(r); self
+        self.tokens = self.tokens.radius(r);
+        self
     }
 
     /// Builder: override font family.
     pub fn font_family(mut self, f: impl Into<String>) -> Self {
-        self.tokens = self.tokens.font_family(f); self
+        self.tokens = self.tokens.font_family(f);
+        self
     }
 }
 

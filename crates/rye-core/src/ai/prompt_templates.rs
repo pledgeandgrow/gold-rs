@@ -50,7 +50,10 @@ pub fn get_template(id: &str) -> Option<&'static PromptTemplate> {
 
 /// List templates by category.
 pub fn templates_by_category(category: &str) -> Vec<&'static PromptTemplate> {
-    TEMPLATES.iter().filter(|t| t.category == category).collect()
+    TEMPLATES
+        .iter()
+        .filter(|t| t.category == category)
+        .collect()
 }
 
 /// Get all categories.

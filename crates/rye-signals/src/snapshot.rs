@@ -46,10 +46,8 @@ thread_local! {
 ///
 /// The signal's value will be serialized using the provided serializer function
 /// when a snapshot is taken, and can be restored using the deserializer.
-pub fn register<T: Clone + std::fmt::Display + 'static>(
-    signal: &Signal<T>,
-    type_name: &str,
-) where
+pub fn register<T: Clone + std::fmt::Display + 'static>(signal: &Signal<T>, type_name: &str)
+where
     T: std::str::FromStr,
 {
     let id = signal.id();
@@ -70,14 +68,16 @@ pub fn register<T: Clone + std::fmt::Display + 'static>(
     DESERIALIZERS.with(|d| {
         d.borrow_mut().insert(
             id,
-            Box::new(move |s: &str| {
-                match s.parse::<T>() {
-                    Ok(val) => {
-                        signal_clone2.set(val);
-                        Ok(())
-                    }
-                    Err(_) => Err(format!("Failed to parse '{}' as {}", s, std::any::type_name::<T>())),
+            Box::new(move |s: &str| match s.parse::<T>() {
+                Ok(val) => {
+                    signal_clone2.set(val);
+                    Ok(())
                 }
+                Err(_) => Err(format!(
+                    "Failed to parse '{}' as {}",
+                    s,
+                    std::any::type_name::<T>()
+                )),
             }),
         );
     });

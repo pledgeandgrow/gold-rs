@@ -1,8 +1,10 @@
 //! Button component — variants, sizes, loading, disabled, icon support.
 
-use rye_core::Element;
-use rye_core::template::{Template, TemplateNode, ReactiveValue, SharedEventHandler, shared_event_handler};
 use crate::theme::{Size, Variant};
+use rye_core::template::{
+    shared_event_handler, ReactiveValue, SharedEventHandler, Template, TemplateNode,
+};
+use rye_core::Element;
 
 /// Props for the Button component.
 pub struct ButtonProps {
@@ -135,7 +137,11 @@ impl Button {
             style.push_str(extra);
         }
 
-        let class = format!("rye-btn rye-btn-{} {}", props.variant.as_str(), props.class.as_deref().unwrap_or(""));
+        let class = format!(
+            "rye-btn rye-btn-{} {}",
+            props.variant.as_str(),
+            props.class.as_deref().unwrap_or("")
+        );
 
         let type_str = match props.button_type {
             ButtonType::Button => "button",
@@ -152,7 +158,9 @@ impl Button {
         }
 
         if props.label.is_reactive() {
-            children.push(Template::new(vec![TemplateNode::Reactive(props.label.to_reactive_fn())]));
+            children.push(Template::new(vec![TemplateNode::Reactive(
+                props.label.to_reactive_fn(),
+            )]));
         } else {
             let label = props.label.get();
             if !label.is_empty() {
@@ -243,8 +251,7 @@ mod tests {
     fn test_button_reactive_label() {
         use rye_signals::Signal;
         let label = Signal::new("Submit".to_string());
-        let props = ButtonProps::default()
-            .label_reactive(label.clone());
+        let props = ButtonProps::default().label_reactive(label.clone());
         assert!(props.label.is_reactive());
         assert_eq!(props.label.get(), "Submit");
 

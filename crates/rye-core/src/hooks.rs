@@ -71,9 +71,7 @@ pub(crate) struct HookGuard {
 impl HookGuard {
     /// Take ownership of the signals created during the render pass.
     pub(crate) fn into_signals(self) -> Vec<Rc<dyn std::any::Any>> {
-        self.context
-            .map(|c| c.signals)
-            .unwrap_or_default()
+        self.context.map(|c| c.signals).unwrap_or_default()
     }
 }
 
@@ -159,8 +157,8 @@ where
 mod tests {
     use super::*;
     use crate::element::Element;
-    use crate::template::Template;
     use crate::renderer::Renderer;
+    use crate::template::Template;
 
     /// A minimal test renderer.
     struct TestRenderer;
@@ -168,8 +166,12 @@ mod tests {
         type Node = String;
         type Text = String;
         type Element = String;
-        fn create_element(&mut self, tag: &str) -> Self::Element { tag.to_string() }
-        fn create_text(&mut self, content: &str) -> Self::Text { content.to_string() }
+        fn create_element(&mut self, tag: &str) -> Self::Element {
+            tag.to_string()
+        }
+        fn create_text(&mut self, content: &str) -> Self::Text {
+            content.to_string()
+        }
         fn set_text(&mut self, _node: &Self::Text, _content: &str) {}
         fn set_attribute(&mut self, _el: &Self::Element, _name: &str, _value: &str) {}
         fn remove_attribute(&mut self, _el: &Self::Element, _name: &str) {}
@@ -177,11 +179,23 @@ mod tests {
         fn remove_child(&mut self, _parent: &Self::Element, _index: usize) {}
         fn replace_child(&mut self, _parent: &Self::Element, _new: &Self::Node, _index: usize) {}
         fn move_child(&mut self, _parent: &Self::Element, _from: usize, _to: usize) {}
-        fn set_event_listener(&mut self, _el: &Self::Element, _event: &str, _handler: crate::renderer::EventHandler) {}
+        fn set_event_listener(
+            &mut self,
+            _el: &Self::Element,
+            _event: &str,
+            _handler: crate::renderer::EventHandler,
+        ) {
+        }
         fn remove_event_listener(&mut self, _el: &Self::Element, _event: &str) {}
-        fn root(&self) -> Self::Element { "root".to_string() }
-        fn text_to_node(&self, text: &Self::Text) -> Self::Node { text.clone() }
-        fn element_to_node(&self, el: &Self::Element) -> Self::Node { el.clone() }
+        fn root(&self) -> Self::Element {
+            "root".to_string()
+        }
+        fn text_to_node(&self, text: &Self::Text) -> Self::Node {
+            text.clone()
+        }
+        fn element_to_node(&self, el: &Self::Element) -> Self::Node {
+            el.clone()
+        }
     }
 
     #[test]
@@ -244,7 +258,9 @@ mod tests {
                 // Return a template that reads the signal
                 let count_clone = count.clone();
                 Element::Template(Template::new(vec![
-                    crate::template::TemplateNode::Reactive(std::rc::Rc::new(move || count_clone.get().to_string())),
+                    crate::template::TemplateNode::Reactive(std::rc::Rc::new(move || {
+                        count_clone.get().to_string()
+                    })),
                 ]))
             },
             renderer,

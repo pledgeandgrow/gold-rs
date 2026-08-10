@@ -1,19 +1,24 @@
 //! Tooltip — hover tooltip with positions.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TooltipPosition {
-    Top, Bottom, Left, Right,
+    Top,
+    Bottom,
+    Left,
+    Right,
 }
 
 impl TooltipPosition {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::Top => "top", Self::Bottom => "bottom",
-            Self::Left => "left", Self::Right => "right",
+            Self::Top => "top",
+            Self::Bottom => "bottom",
+            Self::Left => "left",
+            Self::Right => "right",
         }
     }
 }
@@ -29,15 +34,29 @@ pub struct TooltipProps {
 
 impl Default for TooltipProps {
     fn default() -> Self {
-        Self { content: String::new(), position: TooltipPosition::Top,
-               delay_ms: 200, class: None, style: None }
+        Self {
+            content: String::new(),
+            position: TooltipPosition::Top,
+            delay_ms: 200,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl TooltipProps {
-    pub fn content(mut self, c: impl Into<String>) -> Self { self.content = c.into(); self }
-    pub fn position(mut self, p: TooltipPosition) -> Self { self.position = p; self }
-    pub fn delay(mut self, d: u64) -> Self { self.delay_ms = d; self }
+    pub fn content(mut self, c: impl Into<String>) -> Self {
+        self.content = c.into();
+        self
+    }
+    pub fn position(mut self, p: TooltipPosition) -> Self {
+        self.position = p;
+        self
+    }
+    pub fn delay(mut self, d: u64) -> Self {
+        self.delay_ms = d;
+        self
+    }
 }
 
 pub struct Tooltip;
@@ -56,18 +75,32 @@ impl Tooltip {
             vars::TEXT, vars::BG, vars::Z_TOOLTIP,
         );
 
-        let children = vec![
-            Template::new_element("span",
-                vec![("class".to_string(), "rye-tooltip-content".to_string()),
-                     ("style".to_string(), tooltip_style),
-                     ("data-position".to_string(), props.position.as_str().to_string())],
-                Vec::new(), vec![Template::text(&props.content)]),
-        ];
+        let children = vec![Template::new_element(
+            "span",
+            vec![
+                ("class".to_string(), "rye-tooltip-content".to_string()),
+                ("style".to_string(), tooltip_style),
+                (
+                    "data-position".to_string(),
+                    props.position.as_str().to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![Template::text(&props.content)],
+        )];
 
-        Element::Template(Template::new_element("span",
-            vec![("class".to_string(), format!("rye-tooltip {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "span",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-tooltip {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -90,7 +123,10 @@ mod tests {
 
     #[test]
     fn test_tooltip_builder() {
-        let p = TooltipProps::default().content("Click me").position(TooltipPosition::Right).delay(500);
+        let p = TooltipProps::default()
+            .content("Click me")
+            .position(TooltipPosition::Right)
+            .delay(500);
         assert_eq!(p.content, "Click me");
         assert_eq!(p.position, TooltipPosition::Right);
     }

@@ -15,10 +15,10 @@
 //!    to find the nearest `data-rye-event-id` and dispatches to the registry
 //! 4. Handlers are stored in an `EventDelegator` and removed by ID — no leaks
 
+use crate::batch::{apply_mutation_direct, apply_mutations, DomMutation};
+use crate::events::dom_event_name;
 use rye_core::event_delegation::EventDelegator;
 use rye_core::renderer::{BatchRenderer, EventHandler, Hydratable, Renderer};
-use crate::batch::{DomMutation, apply_mutations, apply_mutation_direct};
-use crate::events::dom_event_name;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -43,7 +43,10 @@ fn is_safe_attribute_name(name: &str) -> bool {
         return false;
     }
     // Block names containing characters that could break HTML parsing
-    if name.chars().any(|c| c.is_whitespace() || c == '"' || c == '\'' || c == '>' || c == '<' || c == '/') {
+    if name
+        .chars()
+        .any(|c| c.is_whitespace() || c == '"' || c == '\'' || c == '>' || c == '<' || c == '/')
+    {
         return false;
     }
     true
@@ -124,21 +127,33 @@ impl DomRenderer {
 
         // Events to delegate at the root level
         let event_types = [
-            "click", "input", "change", "submit",
-            "keydown", "keyup", "keypress",
-            "focus", "blur",
-            "mouseenter", "mouseleave",
-            "mousedown", "mouseup", "mousemove",
-            "touchstart", "touchend", "touchmove",
-            "scroll", "resize",
+            "click",
+            "input",
+            "change",
+            "submit",
+            "keydown",
+            "keyup",
+            "keypress",
+            "focus",
+            "blur",
+            "mouseenter",
+            "mouseleave",
+            "mousedown",
+            "mouseup",
+            "mousemove",
+            "touchstart",
+            "touchend",
+            "touchmove",
+            "scroll",
+            "resize",
         ];
 
         for event_type in event_types {
             let delegator_clone = Rc::clone(&delegator);
             let event_type_owned = event_type.to_string();
 
-            let closure = wasm_bindgen::closure::Closure::wrap(Box::new(
-                move |event: web_sys::Event| {
+            let closure =
+                wasm_bindgen::closure::Closure::wrap(Box::new(move |event: web_sys::Event| {
                     // Walk up from event target to find data-rye-event-id
                     let target = match event.target() {
                         Some(t) => t,
@@ -172,8 +187,8 @@ impl DomRenderer {
                         }
                         current = el.parent_element();
                     }
-                },
-            ) as Box<dyn FnMut(web_sys::Event)>);
+                })
+                    as Box<dyn FnMut(web_sys::Event)>);
 
             let js_fn = closure.as_ref().unchecked_ref();
             let _ = root.add_event_listener_with_callback(event_type, js_fn);
@@ -285,7 +300,9 @@ impl Renderer for DomRenderer {
         let element_id = self.next_id();
 
         // Register handler in the delegator
-        self.delegator.borrow().add_handler(&element_id, &dom_event, handler);
+        self.delegator
+            .borrow()
+            .add_handler(&element_id, &dom_event, handler);
 
         // Set data attributes on the element for delegation dispatch
         let _ = el.set_attribute(EVENT_ID_ATTR, &element_id);
@@ -303,7 +320,9 @@ impl Renderer for DomRenderer {
         if let Some(element_id) = el.get_attribute(EVENT_ID_ATTR) {
             let key = (element_id.clone(), dom_event.clone());
             if let Some(_) = self.element_event_ids.borrow_mut().remove(&key) {
-                self.delegator.borrow().remove_element_handler(&element_id, &dom_event);
+                self.delegator
+                    .borrow()
+                    .remove_element_handler(&element_id, &dom_event);
                 let _ = el.remove_attribute(EVENT_ID_ATTR);
                 let _ = el.remove_attribute(EVENT_TYPE_ATTR);
             }

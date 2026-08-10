@@ -119,12 +119,17 @@ impl SecurityReport {
 
     /// Whether the report has critical or high findings.
     pub fn has_critical_issues(&self) -> bool {
-        self.findings.iter().any(|f| f.severity >= SecuritySeverity::High)
+        self.findings
+            .iter()
+            .any(|f| f.severity >= SecuritySeverity::High)
     }
 
     /// Count findings by severity.
     pub fn count_by_severity(&self, severity: SecuritySeverity) -> usize {
-        self.findings.iter().filter(|f| f.severity == severity).count()
+        self.findings
+            .iter()
+            .filter(|f| f.severity == severity)
+            .count()
     }
 
     /// Generate a summary.
@@ -169,7 +174,8 @@ pub fn check_xss(html: &str) -> Vec<SecurityFinding> {
             rule: SecurityRule::XssEval,
             description: "Use of eval() detected — arbitrary code execution".to_string(),
             location: "eval()".to_string(),
-            recommendation: "Avoid eval() — use JSON.parse() or Function() with caution".to_string(),
+            recommendation: "Avoid eval() — use JSON.parse() or Function() with caution"
+                .to_string(),
         });
     }
 
@@ -386,14 +392,16 @@ mod tests {
 
     #[test]
     fn test_check_script_integrity_missing() {
-        let findings = check_script_integrity(r#"<script src="https://cdn.example.com/lib.js"></script>"#);
+        let findings =
+            check_script_integrity(r#"<script src="https://cdn.example.com/lib.js"></script>"#);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].rule, SecurityRule::MissingIntegrity);
     }
 
     #[test]
     fn test_check_script_integrity_present() {
-        let findings = check_script_integrity(r#"<script src="lib.js" integrity="sha384-abc"></script>"#);
+        let findings =
+            check_script_integrity(r#"<script src="lib.js" integrity="sha384-abc"></script>"#);
         assert_eq!(findings.len(), 0);
     }
 
@@ -401,7 +409,10 @@ mod tests {
     fn test_audit_html() {
         let html = r#"<div id="app"></div><script>el.innerHTML = data;</script>"#;
         let report = audit_html(html);
-        assert!(report.findings.iter().any(|f| f.rule == SecurityRule::XssInnerHTML));
+        assert!(report
+            .findings
+            .iter()
+            .any(|f| f.rule == SecurityRule::XssInnerHTML));
     }
 
     #[test]

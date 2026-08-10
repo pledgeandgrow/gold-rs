@@ -386,9 +386,7 @@ mod tests {
 
     #[test]
     fn test_camera_config_builder() {
-        let config = CameraConfig::photo()
-            .allow_editing()
-            .dont_save();
+        let config = CameraConfig::photo().allow_editing().dont_save();
         assert!(config.allows_editing);
         assert!(!config.save_to_gallery);
     }

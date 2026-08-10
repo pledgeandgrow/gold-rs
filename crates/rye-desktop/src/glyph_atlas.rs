@@ -9,10 +9,9 @@
 use std::collections::HashMap;
 
 use wgpu::{
-    AddressMode, Extent3d, FilterMode, Origin3d, Sampler,
-    SamplerDescriptor, TexelCopyTextureInfo, TexelCopyBufferLayout, Texture, TextureAspect,
-    TextureDescriptor, TextureDimension, TextureFormat, TextureUsages, TextureView,
-    TextureViewDescriptor,
+    AddressMode, Extent3d, FilterMode, Origin3d, Sampler, SamplerDescriptor, TexelCopyBufferLayout,
+    TexelCopyTextureInfo, Texture, TextureAspect, TextureDescriptor, TextureDimension,
+    TextureFormat, TextureUsages, TextureView, TextureViewDescriptor,
 };
 
 /// A cached glyph entry — position and size in the atlas.

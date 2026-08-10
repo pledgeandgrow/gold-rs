@@ -1,8 +1,8 @@
 //! Drawer — slide-in side panel (left/right).
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DrawerSide {
@@ -12,7 +12,10 @@ pub enum DrawerSide {
 
 impl DrawerSide {
     pub fn as_str(&self) -> &'static str {
-        match self { Self::Left => "left", Self::Right => "right" }
+        match self {
+            Self::Left => "left",
+            Self::Right => "right",
+        }
     }
 }
 
@@ -28,16 +31,34 @@ pub struct DrawerProps {
 
 impl Default for DrawerProps {
     fn default() -> Self {
-        Self { open: false, side: DrawerSide::Right, title: None,
-               width: "400px".to_string(), class: None, style: None }
+        Self {
+            open: false,
+            side: DrawerSide::Right,
+            title: None,
+            width: "400px".to_string(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl DrawerProps {
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
-    pub fn side(mut self, s: DrawerSide) -> Self { self.side = s; self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
-    pub fn width(mut self, w: impl Into<String>) -> Self { self.width = w.into(); self }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
+    pub fn side(mut self, s: DrawerSide) -> Self {
+        self.side = s;
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
+    pub fn width(mut self, w: impl Into<String>) -> Self {
+        self.width = w.into();
+        self
+    }
 }
 
 pub struct Drawer;
@@ -48,7 +69,11 @@ impl Drawer {
             return Element::None;
         }
 
-        let backdrop_style = format!("position:fixed;inset:0;background:{};z-index:{};", vars::OVERLAY, vars::Z_OVERLAY);
+        let backdrop_style = format!(
+            "position:fixed;inset:0;background:{};z-index:{};",
+            vars::OVERLAY,
+            vars::Z_OVERLAY
+        );
 
         let (side_pos, transform) = match props.side {
             DrawerSide::Left => ("left:0;top:0;bottom:0;", ""),
@@ -59,7 +84,13 @@ impl Drawer {
             "position:fixed;{}width:{};max-width:90vw;background:{};\
              box-shadow:{};z-index:{};\
              display:flex;flex-direction:column;overflow:hidden;{}{}",
-            side_pos, props.width, vars::BG_ELEVATED, vars::SHADOW_LG, vars::Z_MODAL, transform, props.style.as_deref().unwrap_or(""),
+            side_pos,
+            props.width,
+            vars::BG_ELEVATED,
+            vars::SHADOW_LG,
+            vars::Z_MODAL,
+            transform,
+            props.style.as_deref().unwrap_or(""),
         );
 
         let mut children = Vec::new();
@@ -79,22 +110,52 @@ impl Drawer {
                 ]));
         }
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "padding:20px;overflow-y:auto;flex:1;".to_string()),
-                 ("class".to_string(), "rye-drawer-body".to_string())],
-            Vec::new(), Vec::new()));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "padding:20px;overflow-y:auto;flex:1;".to_string(),
+                ),
+                ("class".to_string(), "rye-drawer-body".to_string()),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ));
 
-        let drawer = Template::new_element("div",
-            vec![("style".to_string(), drawer_style),
-                 ("class".to_string(), format!("rye-drawer rye-drawer-{} {}", props.side.as_str(), props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children);
+        let drawer = Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), drawer_style),
+                (
+                    "class".to_string(),
+                    format!(
+                        "rye-drawer rye-drawer-{} {}",
+                        props.side.as_str(),
+                        props.class.as_deref().unwrap_or("")
+                    ),
+                ),
+            ],
+            Vec::new(),
+            children,
+        );
 
-        let backdrop = Template::new_element("div",
-            vec![("style".to_string(), backdrop_style.to_string()),
-                 ("class".to_string(), "rye-drawer-backdrop".to_string())],
-            Vec::new(), Vec::new());
+        let backdrop = Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), backdrop_style.to_string()),
+                ("class".to_string(), "rye-drawer-backdrop".to_string()),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
 
-        Element::Template(Template::new_element("div", Vec::new(), Vec::new(), vec![backdrop, drawer]))
+        Element::Template(Template::new_element(
+            "div",
+            Vec::new(),
+            Vec::new(),
+            vec![backdrop, drawer],
+        ))
     }
 }
 
@@ -117,7 +178,11 @@ mod tests {
 
     #[test]
     fn test_drawer_builder() {
-        let p = DrawerProps::default().open(true).side(DrawerSide::Left).title("Filters").width("500px");
+        let p = DrawerProps::default()
+            .open(true)
+            .side(DrawerSide::Left)
+            .title("Filters")
+            .width("500px");
         assert!(p.open);
         assert_eq!(p.side, DrawerSide::Left);
     }
@@ -130,7 +195,12 @@ mod tests {
 
     #[test]
     fn test_drawer_open_left() {
-        let el = Drawer::render(DrawerProps::default().open(true).side(DrawerSide::Left).title("Menu"));
+        let el = Drawer::render(
+            DrawerProps::default()
+                .open(true)
+                .side(DrawerSide::Left)
+                .title("Menu"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 

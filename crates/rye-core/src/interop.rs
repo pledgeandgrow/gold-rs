@@ -36,13 +36,15 @@ impl ReactWrapper {
 
     /// Add a prop mapping.
     pub fn map_prop(mut self, rye_name: &str, react_name: &str) -> Self {
-        self.prop_mappings.insert(rye_name.to_string(), react_name.to_string());
+        self.prop_mappings
+            .insert(rye_name.to_string(), react_name.to_string());
         self
     }
 
     /// Add an event mapping.
     pub fn map_event(mut self, rye_event: &str, react_callback: &str) -> Self {
-        self.event_mappings.insert(rye_event.to_string(), react_callback.to_string());
+        self.event_mappings
+            .insert(rye_event.to_string(), react_callback.to_string());
         self
     }
 
@@ -56,17 +58,24 @@ impl ReactWrapper {
         ));
         js.push_str("  const reactProps = {};\n");
         for (rye, react) in &self.prop_mappings {
-            js.push_str(&format!("  if (props.{rye} !== undefined) reactProps.{react} = props.{rye};\n"));
+            js.push_str(&format!(
+                "  if (props.{rye} !== undefined) reactProps.{react} = props.{rye};\n"
+            ));
         }
         for (rye, react) in &self.event_mappings {
-            js.push_str(&format!("  if (props.{rye}) reactProps.{react} = props.{rye};\n"));
+            js.push_str(&format!(
+                "  if (props.{rye}) reactProps.{react} = props.{rye};\n"
+            ));
         }
         if self.has_children {
             js.push_str("  return React.createElement(");
             js.push_str(&self.name);
             js.push_str(", reactProps, props.children);\n");
         } else {
-            js.push_str(&format!("  return React.createElement({}, reactProps);\n", self.name));
+            js.push_str(&format!(
+                "  return React.createElement({}, reactProps);\n",
+                self.name
+            ));
         }
         js.push_str("}\n");
         js
@@ -110,13 +119,15 @@ impl VueWrapper {
 
     /// Add a prop mapping.
     pub fn map_prop(mut self, rye_name: &str, vue_name: &str) -> Self {
-        self.prop_mappings.insert(rye_name.to_string(), vue_name.to_string());
+        self.prop_mappings
+            .insert(rye_name.to_string(), vue_name.to_string());
         self
     }
 
     /// Add an event mapping.
     pub fn map_event(mut self, rye_event: &str, vue_event: &str) -> Self {
-        self.event_mappings.insert(rye_event.to_string(), vue_event.to_string());
+        self.event_mappings
+            .insert(rye_event.to_string(), vue_event.to_string());
         self
     }
 
@@ -182,7 +193,10 @@ impl Tailwind4Config {
         }
         config.push_str("  ],\n");
         config.push_str(&format!("  arbitraryValues: {},\n", self.arbitrary_values));
-        config.push_str(&format!("  containerQueries: {},\n", self.container_queries));
+        config.push_str(&format!(
+            "  containerQueries: {},\n",
+            self.container_queries
+        ));
         config.push_str(&format!("  transforms3d: {},\n", self.transforms_3d));
         if !self.theme_extensions.is_empty() {
             config.push_str("  theme: {\n    extend: {\n");
@@ -465,7 +479,11 @@ impl FigmaNode {
             FigmaNodeType::Frame | FigmaNodeType::Component | FigmaNodeType::Group => {
                 code.push_str(&format!("{}div {{\n", pad));
                 if !self.style.is_empty() {
-                    let style_str: Vec<String> = self.style.iter().map(|(k, v)| format!("{}: {}", k, v)).collect();
+                    let style_str: Vec<String> = self
+                        .style
+                        .iter()
+                        .map(|(k, v)| format!("{}: {}", k, v))
+                        .collect();
                     code.push_str(&format!("{}  style: \"{}\",\n", pad, style_str.join("; ")));
                 }
                 for child in &self.children {
@@ -474,16 +492,30 @@ impl FigmaNode {
                 code.push_str(&format!("{}}}\n", pad));
             }
             FigmaNodeType::Text => {
-                code.push_str(&format!("{}span {{ \"{}\" }}\n", pad, self.text.as_deref().unwrap_or("")));
+                code.push_str(&format!(
+                    "{}span {{ \"{}\" }}\n",
+                    pad,
+                    self.text.as_deref().unwrap_or("")
+                ));
             }
             FigmaNodeType::Rectangle => {
-                code.push_str(&format!("{}div {{ style: \"width:{}px; height:{}px;\" }}\n", pad, self.width, self.height));
+                code.push_str(&format!(
+                    "{}div {{ style: \"width:{}px; height:{}px;\" }}\n",
+                    pad, self.width, self.height
+                ));
             }
             FigmaNodeType::Ellipse => {
-                code.push_str(&format!("{}div {{ style: \"border-radius:50%; width:{}px; height:{}px;\" }}\n", pad, self.width, self.height));
+                code.push_str(&format!(
+                    "{}div {{ style: \"border-radius:50%; width:{}px; height:{}px;\" }}\n",
+                    pad, self.width, self.height
+                ));
             }
             FigmaNodeType::Image => {
-                code.push_str(&format!("{}img {{ src: \"{}\" }}\n", pad, self.style.get("src").unwrap_or(&"".to_string())));
+                code.push_str(&format!(
+                    "{}img {{ src: \"{}\" }}\n",
+                    pad,
+                    self.style.get("src").unwrap_or(&"".to_string())
+                ));
             }
         }
         code
@@ -510,7 +542,8 @@ impl FigmaState {
 
     /// Add a style override.
     pub fn add_override(mut self, key: &str, value: &str) -> Self {
-        self.style_overrides.insert(key.to_string(), value.to_string());
+        self.style_overrides
+            .insert(key.to_string(), value.to_string());
         self
     }
 }
@@ -651,8 +684,16 @@ mod tests {
     fn test_compute_shader_builder() {
         let shader = ComputeShader::new("process", "// code")
             .with_workgroup_size(8, 8, 1)
-            .add_input(ComputeBinding { name: "data".into(), binding_type: ComputeBindingType::StorageBuffer, size: 1024 })
-            .add_output(ComputeBinding { name: "result".into(), binding_type: ComputeBindingType::StorageBuffer, size: 1024 });
+            .add_input(ComputeBinding {
+                name: "data".into(),
+                binding_type: ComputeBindingType::StorageBuffer,
+                size: 1024,
+            })
+            .add_output(ComputeBinding {
+                name: "result".into(),
+                binding_type: ComputeBindingType::StorageBuffer,
+                size: 1024,
+            });
         assert_eq!(shader.workgroup_size, (8, 8, 1));
         assert_eq!(shader.inputs.len(), 1);
         assert_eq!(shader.outputs.len(), 1);
@@ -660,7 +701,10 @@ mod tests {
 
     #[test]
     fn test_compute_binding_type_wgsl_access() {
-        assert_eq!(ComputeBindingType::StorageBuffer.wgsl_access(), "read_write");
+        assert_eq!(
+            ComputeBindingType::StorageBuffer.wgsl_access(),
+            "read_write"
+        );
         assert_eq!(ComputeBindingType::UniformBuffer.wgsl_access(), "read");
     }
 
@@ -668,8 +712,16 @@ mod tests {
     fn test_compute_shader_generate_wgsl() {
         let shader = ComputeShader::new("process", "  // shader body")
             .with_workgroup_size(8, 8, 1)
-            .add_input(ComputeBinding { name: "input".into(), binding_type: ComputeBindingType::StorageBuffer, size: 1024 })
-            .add_output(ComputeBinding { name: "output".into(), binding_type: ComputeBindingType::StorageBuffer, size: 1024 });
+            .add_input(ComputeBinding {
+                name: "input".into(),
+                binding_type: ComputeBindingType::StorageBuffer,
+                size: 1024,
+            })
+            .add_output(ComputeBinding {
+                name: "output".into(),
+                binding_type: ComputeBindingType::StorageBuffer,
+                size: 1024,
+            });
         let wgsl = shader.generate_wgsl();
         assert!(wgsl.contains("@compute"));
         assert!(wgsl.contains("@workgroup_size(8, 8, 1)"));

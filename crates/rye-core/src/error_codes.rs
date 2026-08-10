@@ -103,7 +103,10 @@ impl ErrorCode {
         }
 
         if !self.related_errors.is_empty() {
-            out.push_str(&format!("\nRelated errors: {}\n", self.related_errors.join(", ")));
+            out.push_str(&format!(
+                "\nRelated errors: {}\n",
+                self.related_errors.join(", ")
+            ));
         }
 
         out
@@ -111,8 +114,16 @@ impl ErrorCode {
 
     /// Format as JSON (for `rpg explain R001 --json`).
     pub fn format_json(&self) -> String {
-        let causes: Vec<String> = self.common_causes.iter().map(|s| format!("\"{}\"", json_escape(s))).collect();
-        let related: Vec<String> = self.related_errors.iter().map(|s| format!("\"{}\"", s)).collect();
+        let causes: Vec<String> = self
+            .common_causes
+            .iter()
+            .map(|s| format!("\"{}\"", json_escape(s)))
+            .collect();
+        let related: Vec<String> = self
+            .related_errors
+            .iter()
+            .map(|s| format!("\"{}\"", s))
+            .collect();
 
         format!(
             r#"{{"error_code":"{}","category":"{}","message":"{}","common_causes":[{}],"suggestion":"{}","correct_example":"{}","related_errors":[{}]}}"#,
@@ -166,14 +177,19 @@ pub fn search(keyword: &str) -> Vec<&'static ErrorCode> {
             c.message.to_lowercase().contains(&kw)
                 || c.suggestion.to_lowercase().contains(&kw)
                 || c.code.to_lowercase().contains(&kw)
-                || c.common_causes.iter().any(|cause| cause.to_lowercase().contains(&kw))
+                || c.common_causes
+                    .iter()
+                    .any(|cause| cause.to_lowercase().contains(&kw))
         })
         .collect()
 }
 
 /// List all error codes in a category.
 pub fn list_category(category: ErrorCategory) -> Vec<&'static ErrorCode> {
-    ERROR_CODES.iter().filter(|c| c.category == category).collect()
+    ERROR_CODES
+        .iter()
+        .filter(|c| c.category == category)
+        .collect()
 }
 
 static ERROR_CODES: &[ErrorCode] = &[
@@ -701,7 +717,11 @@ mod tests {
         ];
         for cat in &categories {
             let codes = list_category(*cat);
-            assert!(!codes.is_empty(), "Category {:?} has no error codes", cat.name());
+            assert!(
+                !codes.is_empty(),
+                "Category {:?} has no error codes",
+                cat.name()
+            );
         }
     }
 

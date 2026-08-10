@@ -141,11 +141,12 @@ pub fn deploy_command(config: &DeployConfig) -> String {
         DeployTarget::CloudflarePages => {
             format!("npx wrangler pages deploy {}", config.output_dir.display())
         }
-        DeployTarget::CloudflareWorkers => {
-            "npx wrangler deploy".to_string()
-        }
+        DeployTarget::CloudflareWorkers => "npx wrangler deploy".to_string(),
         DeployTarget::SelfHosted => {
-            format!("rsync -avz {}/ user@server:/var/www/html/", config.output_dir.display())
+            format!(
+                "rsync -avz {}/ user@server:/var/www/html/",
+                config.output_dir.display()
+            )
         }
         DeployTarget::GithubPages => {
             format!("npx gh-pages -d {}", config.output_dir.display())
@@ -260,11 +261,20 @@ mod tests {
     fn test_deploy_target_from_str() {
         assert_eq!(DeployTarget::from_str("netlify"), DeployTarget::Netlify);
         assert_eq!(DeployTarget::from_str("vercel"), DeployTarget::Vercel);
-        assert_eq!(DeployTarget::from_str("cloudflare"), DeployTarget::CloudflarePages);
-        assert_eq!(DeployTarget::from_str("cf-workers"), DeployTarget::CloudflareWorkers);
+        assert_eq!(
+            DeployTarget::from_str("cloudflare"),
+            DeployTarget::CloudflarePages
+        );
+        assert_eq!(
+            DeployTarget::from_str("cf-workers"),
+            DeployTarget::CloudflareWorkers
+        );
         assert_eq!(DeployTarget::from_str("self"), DeployTarget::SelfHosted);
         assert_eq!(DeployTarget::from_str("github"), DeployTarget::GithubPages);
-        assert!(matches!(DeployTarget::from_str("custom-target"), DeployTarget::Custom(_)));
+        assert!(matches!(
+            DeployTarget::from_str("custom-target"),
+            DeployTarget::Custom(_)
+        ));
     }
 
     #[test]

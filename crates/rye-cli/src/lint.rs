@@ -58,7 +58,11 @@ fn lint_file(file_path: &str, json: bool) {
         print!("{}", result.format_text());
     }
 
-    let errors = result.findings.iter().filter(|f| f.severity == code_review::Severity::Error).count();
+    let errors = result
+        .findings
+        .iter()
+        .filter(|f| f.severity == code_review::Severity::Error)
+        .count();
     if errors > 0 {
         std::process::exit(1);
     }
@@ -92,7 +96,11 @@ fn lint_directory(dir: &str, json: bool) {
                     Err(_) => continue,
                 };
                 let result = code_review::review_source(path_str, &source);
-                let errors = result.findings.iter().filter(|f| f.severity == code_review::Severity::Error).count();
+                let errors = result
+                    .findings
+                    .iter()
+                    .filter(|f| f.severity == code_review::Severity::Error)
+                    .count();
                 total_errors += errors;
                 total_files += 1;
 
@@ -110,7 +118,10 @@ fn lint_directory(dir: &str, json: bool) {
         let entries: Vec<String> = all_results.iter().map(|r| r.format_json()).collect();
         println!("[{}]", entries.join(","));
     } else {
-        println!("\nLinted {} file(s), found {} error(s).", total_files, total_errors);
+        println!(
+            "\nLinted {} file(s), found {} error(s).",
+            total_files, total_errors
+        );
     }
 
     if total_errors > 0 {

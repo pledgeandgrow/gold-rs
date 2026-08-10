@@ -85,8 +85,11 @@ pub fn start_server(config: DevServerConfig) {
     let (tx, rx) = mpsc::channel::<FileChange>();
 
     // Shared list of connected WebSocket clients
-    let clients: Arc<Mutex<Vec<tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>>>> =
-        Arc::new(Mutex::new(Vec::new()));
+    let clients: Arc<
+        Mutex<
+            Vec<tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>>,
+        >,
+    > = Arc::new(Mutex::new(Vec::new()));
     let _clients = clients.clone();
 
     // Start file watcher thread
@@ -101,7 +104,11 @@ pub fn start_server(config: DevServerConfig) {
             println!(
                 "  File changed: {} ({})",
                 change.path.display(),
-                if change.template_only { "template" } else { "full" }
+                if change.template_only {
+                    "template"
+                } else {
+                    "full"
+                }
             );
 
             // Trigger rebuild
@@ -110,18 +117,25 @@ pub fn start_server(config: DevServerConfig) {
             match rebuild_result {
                 Ok(should_full_reload) => {
                     let msg = if should_full_reload {
-                        format!(
-                            r#"{{"type":"full","url":"/pkg/{}_bg.wasm"}}"#,
-                            pkg_name
-                        )
+                        format!(r#"{{"type":"full","url":"/pkg/{}_bg.wasm"}}"#, pkg_name)
                     } else {
                         r#"{"type":"template","patch":""}"#.to_string()
                     };
-                    println!("  HMR: {}", if should_full_reload { "full reload" } else { "template patch" });
+                    println!(
+                        "  HMR: {}",
+                        if should_full_reload {
+                            "full reload"
+                        } else {
+                            "template patch"
+                        }
+                    );
                     // In a real implementation, we'd send `msg` to all connected WebSocket clients
                 }
                 Err(e) => {
-                    let msg = format!(r#"{{"type":"error","message":"{}"}}"#, e.replace('"', "\\\""));
+                    let msg = format!(
+                        r#"{{"type":"error","message":"{}"}}"#,
+                        e.replace('"', "\\\"")
+                    );
                     eprintln!("  Build error: {}", e);
                     // In a real implementation, we'd send `msg` to all connected clients
                     let _ = msg; // suppress unused warning for now
@@ -148,12 +162,7 @@ pub fn start_server(config: DevServerConfig) {
 }
 
 /// Handle an HTTP request — serve static files, Wasm packages, or the HMR client.
-fn handle_http_request(
-    request: tiny_http::Request,
-    static_dir: &Path,
-    pkg_name: &str,
-    port: u16,
-) {
+fn handle_http_request(request: tiny_http::Request, static_dir: &Path, pkg_name: &str, port: u16) {
     let url = request.url().to_string();
 
     // Inject HMR client script into HTML
@@ -166,8 +175,13 @@ fn handle_http_request(
 
         if let Ok(html) = std::fs::read_to_string(&file_path) {
             let injected = inject_hmr_client(&html, port);
-            let response = tiny_http::Response::from_string(injected)
-                .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html; charset=utf-8"[..]).unwrap());
+            let response = tiny_http::Response::from_string(injected).with_header(
+                tiny_http::Header::from_bytes(
+                    &b"Content-Type"[..],
+                    &b"text/html; charset=utf-8"[..],
+                )
+                .unwrap(),
+            );
             let _ = request.respond(response);
             return;
         }
@@ -184,8 +198,10 @@ fn handle_http_request(
             } else {
                 "application/octet-stream"
             };
-            let response = tiny_http::Response::from_data(data)
-                .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes()).unwrap());
+            let response = tiny_http::Response::from_data(data).with_header(
+                tiny_http::Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes())
+                    .unwrap(),
+            );
             let _ = request.respond(response);
             return;
         }
@@ -196,16 +212,17 @@ fn handle_http_request(
     if file_path.is_file() {
         if let Ok(data) = std::fs::read(&file_path) {
             let content_type = guess_content_type(&url);
-            let response = tiny_http::Response::from_data(data)
-                .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes()).unwrap());
+            let response = tiny_http::Response::from_data(data).with_header(
+                tiny_http::Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes())
+                    .unwrap(),
+            );
             let _ = request.respond(response);
             return;
         }
     }
 
     // 404
-    let response = tiny_http::Response::from_string("404 Not Found")
-        .with_status_code(404);
+    let response = tiny_http::Response::from_string("404 Not Found").with_status_code(404);
     let _ = request.respond(response);
 }
 
@@ -285,7 +302,7 @@ fn guess_content_type(url: &str) -> &'static str {
 
 /// Watch for `.rs` file changes and send events to the channel.
 fn watch_files(root: PathBuf, tx: mpsc::Sender<FileChange>, debounce_ms: u64) {
-    use notify::{Watcher, RecursiveMode, Event};
+    use notify::{Event, RecursiveMode, Watcher};
 
     let (notify_tx, notify_rx) = mpsc::channel::<notify::Result<Event>>();
 
@@ -324,7 +341,10 @@ fn watch_files(root: PathBuf, tx: mpsc::Sender<FileChange>, debounce_ms: u64) {
                 let path = ev.paths.first().cloned().unwrap_or_default();
                 let template_only = is_template_only_change(&path);
 
-                let _ = tx.send(FileChange { path, template_only });
+                let _ = tx.send(FileChange {
+                    path,
+                    template_only,
+                });
             }
             Err(e) => {
                 eprintln!("File watch error: {}", e);
@@ -339,7 +359,10 @@ fn is_rust_file_change(event: &notify::Event) -> bool {
     if !matches!(event.kind, EventKind::Create(_) | EventKind::Modify(_)) {
         return false;
     }
-    event.paths.iter().any(|p| p.extension().is_some_and(|e| e == "rs"))
+    event
+        .paths
+        .iter()
+        .any(|p| p.extension().is_some_and(|e| e == "rs"))
 }
 
 /// Heuristic: check if a file change is likely template-only (no logic change).

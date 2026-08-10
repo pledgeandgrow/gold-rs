@@ -185,11 +185,7 @@ fn encode_mutation(mutation: &DomMutation) -> js_sys::Array {
             arr.set(2, JsValue::from(*index as u32));
             arr
         }
-        DomMutation::ReplaceChild {
-            parent,
-            new,
-            index,
-        } => {
+        DomMutation::ReplaceChild { parent, new, index } => {
             let arr = js_sys::Array::new_with_length(4);
             arr.set(0, JsValue::from(OP_REPLACE_CHILD));
             arr.set(1, parent.clone().into());
@@ -280,11 +276,7 @@ pub fn apply_mutation_direct(mutation: &DomMutation) {
                 let _ = parent.remove_child(&child);
             }
         }
-        DomMutation::ReplaceChild {
-            parent,
-            new,
-            index,
-        } => {
+        DomMutation::ReplaceChild { parent, new, index } => {
             let node: &web_sys::Node = parent.as_ref();
             let children = node.child_nodes();
             if let Some(old) = children.item(*index as u32) {

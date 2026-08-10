@@ -108,7 +108,9 @@ impl RyeGcType {
     /// Get the reference type emulation representation.
     pub fn reference_type(&self) -> &'static str {
         match self {
-            RyeGcType::String | RyeGcType::Array | RyeGcType::Struct | RyeGcType::Map => "externref",
+            RyeGcType::String | RyeGcType::Array | RyeGcType::Struct | RyeGcType::Map => {
+                "externref"
+            }
             RyeGcType::Optional => "externref",
             RyeGcType::Function => "funcref",
             RyeGcType::ExternRef => "externref",
@@ -228,7 +230,10 @@ impl WasmGcTypeRegistry {
 
     /// Register a type.
     pub fn register(&self, name: &str, rye_type: RyeGcType) {
-        self.types.lock().unwrap().insert(name.to_string(), rye_type);
+        self.types
+            .lock()
+            .unwrap()
+            .insert(name.to_string(), rye_type);
     }
 
     /// Get a type by name.

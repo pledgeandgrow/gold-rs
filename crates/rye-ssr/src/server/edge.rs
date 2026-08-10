@@ -55,7 +55,10 @@ impl Default for EdgeConfig {
 impl EdgeConfig {
     /// Create config for a specific runtime.
     pub fn for_runtime(runtime: EdgeRuntime) -> Self {
-        Self { runtime, ..Default::default() }
+        Self {
+            runtime,
+            ..Default::default()
+        }
     }
 
     /// Set cache TTL.
@@ -82,8 +85,7 @@ pub fn edge_cache_headers(ttl: u32) -> Vec<(&'static str, String)> {
 /// Generate the edge function entry point for the given runtime.
 pub fn edge_entry_script(config: &EdgeConfig) -> String {
     match config.runtime {
-        EdgeRuntime::CloudflareWorkers => {
-            r#"export default {
+        EdgeRuntime::CloudflareWorkers => r#"export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const html = await __rye_edge_render(url.pathname, url.searchParams);
@@ -94,10 +96,9 @@ pub fn edge_entry_script(config: &EdgeConfig) -> String {
       }
     });
   }
-};"#.to_string()
-        }
-        EdgeRuntime::DenoDeploy => {
-            r#"Deno.serve(async (request) => {
+};"#
+        .to_string(),
+        EdgeRuntime::DenoDeploy => r#"Deno.serve(async (request) => {
   const url = new URL(request.url);
   const html = await __rye_edge_render(url.pathname, url.searchParams);
   return new Response(html, {
@@ -106,10 +107,9 @@ pub fn edge_entry_script(config: &EdgeConfig) -> String {
       'Cache-Control': 'public, max-age=60'
     }
   });
-});"#.to_string()
-        }
-        EdgeRuntime::VercelEdge => {
-            r#"export default async function handler(request) {
+});"#
+            .to_string(),
+        EdgeRuntime::VercelEdge => r#"export default async function handler(request) {
   const url = new URL(request.url);
   const html = await __rye_edge_render(url.pathname, url.searchParams);
   return new Response(html, {
@@ -118,11 +118,9 @@ pub fn edge_entry_script(config: &EdgeConfig) -> String {
       'Cache-Control': 'public, max-age=60'
     }
   });
-};"#.to_string()
-        }
-        EdgeRuntime::Wasi => {
-            "// WASI edge runtime — uses standard HTTP server".to_string()
-        }
+};"#
+        .to_string(),
+        EdgeRuntime::Wasi => "// WASI edge runtime — uses standard HTTP server".to_string(),
     }
 }
 
@@ -139,7 +137,10 @@ mod tests {
 
     #[test]
     fn test_edge_runtime_names() {
-        assert_eq!(EdgeRuntime::CloudflareWorkers.as_str(), "cloudflare-workers");
+        assert_eq!(
+            EdgeRuntime::CloudflareWorkers.as_str(),
+            "cloudflare-workers"
+        );
         assert_eq!(EdgeRuntime::DenoDeploy.as_str(), "deno-deploy");
         assert_eq!(EdgeRuntime::VercelEdge.as_str(), "vercel-edge");
         assert_eq!(EdgeRuntime::Wasi.as_str(), "wasi");
@@ -158,7 +159,9 @@ mod tests {
     #[test]
     fn test_edge_cache_headers() {
         let headers = edge_cache_headers(60);
-        assert!(headers.iter().any(|(k, v)| *k == "Cache-Control" && v.contains("max-age=60")));
+        assert!(headers
+            .iter()
+            .any(|(k, v)| *k == "Cache-Control" && v.contains("max-age=60")));
     }
 
     #[test]

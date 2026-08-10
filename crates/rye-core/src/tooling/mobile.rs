@@ -232,11 +232,14 @@ pub fn check_build_tools(platform: MobilePlatform) -> Vec<String> {
             #[cfg(not(target_os = "macos"))]
             missing.push("xcodebuild (requires macOS)".to_string());
             #[cfg(target_os = "macos")]
-            { let _ = &mut missing; }
+            {
+                let _ = &mut missing;
+            }
         }
         MobilePlatform::Android => {
             // Check for Android SDK
-            if std::env::var("ANDROID_HOME").is_err() && std::env::var("ANDROID_SDK_ROOT").is_err() {
+            if std::env::var("ANDROID_HOME").is_err() && std::env::var("ANDROID_SDK_ROOT").is_err()
+            {
                 missing.push("ANDROID_HOME / ANDROID_SDK_ROOT not set".to_string());
             }
         }

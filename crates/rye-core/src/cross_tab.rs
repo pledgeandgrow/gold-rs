@@ -113,14 +113,21 @@ impl CrossTabRegistry {
     }
 
     /// Register a cross-tab sync channel.
-    pub fn register<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(&self, name: &str, channel: CrossTabSync<T>) {
+    pub fn register<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(
+        &self,
+        name: &str,
+        channel: CrossTabSync<T>,
+    ) {
         self.channels
             .borrow_mut()
             .insert(name.to_string(), Rc::new(channel));
     }
 
     /// Get a channel by name.
-    pub fn get<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(&self, name: &str) -> Option<CrossTabSync<T>> {
+    pub fn get<T: Clone + std::fmt::Debug + serde::Serialize + 'static>(
+        &self,
+        name: &str,
+    ) -> Option<CrossTabSync<T>> {
         self.channels
             .borrow()
             .get(name)
@@ -177,7 +184,9 @@ impl CrossTabStore {
 
     /// Set a key-value pair and broadcast to other tabs.
     pub fn set(&self, key: &str, value: &str) {
-        self.data.borrow_mut().insert(key.to_string(), value.to_string());
+        self.data
+            .borrow_mut()
+            .insert(key.to_string(), value.to_string());
         self.broadcast_kv(key, value);
 
         let listeners = self.listeners.borrow().clone();

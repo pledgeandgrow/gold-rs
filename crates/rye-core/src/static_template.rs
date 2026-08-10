@@ -57,7 +57,9 @@ impl StaticTemplateRegistry {
 
     /// Register a static template.
     pub fn register(&self, template: StaticTemplate) {
-        self.templates.borrow_mut().insert(template.id.clone(), template);
+        self.templates
+            .borrow_mut()
+            .insert(template.id.clone(), template);
     }
 
     /// Get a static template by ID.
@@ -114,10 +116,15 @@ pub fn is_static_node(node: &crate::template::TemplateNode) -> bool {
         crate::template::TemplateNode::Dynamic(_) => false,
         crate::template::TemplateNode::Reactive(_) => false,
         crate::template::TemplateNode::ReactiveList { .. } => false,
-        crate::template::TemplateNode::Element { children, reactive_attrs, .. } => {
-            reactive_attrs.is_empty() && children.iter().all(|child| {
-                child.nodes.iter().all(is_static_node)
-            })
+        crate::template::TemplateNode::Element {
+            children,
+            reactive_attrs,
+            ..
+        } => {
+            reactive_attrs.is_empty()
+                && children
+                    .iter()
+                    .all(|child| child.nodes.iter().all(is_static_node))
         }
     }
 }
@@ -150,7 +157,12 @@ fn render_static_node(node: &crate::template::TemplateNode, out: &mut String) {
         crate::template::TemplateNode::ReactiveList { .. } => {
             // Should not reach here if is_static_node was checked
         }
-        crate::template::TemplateNode::Element { tag, attrs, children, .. } => {
+        crate::template::TemplateNode::Element {
+            tag,
+            attrs,
+            children,
+            ..
+        } => {
             out.push('<');
             out.push_str(tag);
             for (name, value) in attrs {
@@ -217,13 +229,20 @@ pub fn analyze_template(template: &crate::template::Template) -> TemplateAnalysi
     }
 }
 
-fn analyze_node(node: &crate::template::TemplateNode, current_depth: usize) -> (usize, usize, usize) {
+fn analyze_node(
+    node: &crate::template::TemplateNode,
+    current_depth: usize,
+) -> (usize, usize, usize) {
     match node {
         crate::template::TemplateNode::Text(_) => (1, 0, current_depth),
         crate::template::TemplateNode::Dynamic(_) => (0, 1, current_depth),
         crate::template::TemplateNode::Reactive(_) => (0, 1, current_depth),
         crate::template::TemplateNode::ReactiveList { .. } => (0, 1, current_depth),
-        crate::template::TemplateNode::Element { children, reactive_attrs, .. } => {
+        crate::template::TemplateNode::Element {
+            children,
+            reactive_attrs,
+            ..
+        } => {
             let mut static_count = 1;
             let mut dynamic_count = 0;
             let mut max_depth = current_depth;
@@ -297,7 +316,10 @@ mod tests {
     fn test_registry_render() {
         let registry = StaticTemplateRegistry::new();
         registry.register(StaticTemplate::new("footer", "<footer>Copyright</footer>"));
-        assert_eq!(registry.render("footer"), Some("<footer>Copyright</footer>".to_string()));
+        assert_eq!(
+            registry.render("footer"),
+            Some("<footer>Copyright</footer>".to_string())
+        );
         assert_eq!(registry.render("nonexistent"), None);
     }
 

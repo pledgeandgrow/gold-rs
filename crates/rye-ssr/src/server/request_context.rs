@@ -265,10 +265,16 @@ mod tests {
     #[test]
     fn test_from_headers() {
         let mut headers = HashMap::new();
-        headers.insert("accept-language".to_string(), "fr-FR,fr;q=0.9,en;q=0.8".to_string());
+        headers.insert(
+            "accept-language".to_string(),
+            "fr-FR,fr;q=0.9,en;q=0.8".to_string(),
+        );
         headers.insert("x-theme".to_string(), "dark".to_string());
         headers.insert("user-agent".to_string(), "Mozilla/5.0".to_string());
-        headers.insert("x-forwarded-for".to_string(), "10.0.0.1, 10.0.0.2".to_string());
+        headers.insert(
+            "x-forwarded-for".to_string(),
+            "10.0.0.1, 10.0.0.2".to_string(),
+        );
 
         let ctx = RequestContext::from_headers("req-1", "/page", &headers);
         assert_eq!(ctx.locale, "fr-FR");

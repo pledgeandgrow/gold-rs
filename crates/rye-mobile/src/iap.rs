@@ -21,7 +21,10 @@ pub enum ProductType {
 impl ProductType {
     /// Check if this is a subscription.
     pub fn is_subscription(&self) -> bool {
-        matches!(self, ProductType::AutoRenewableSubscription | ProductType::NonRenewingSubscription)
+        matches!(
+            self,
+            ProductType::AutoRenewableSubscription | ProductType::NonRenewingSubscription
+        )
     }
 
     /// Check if this is consumable.
@@ -126,12 +129,21 @@ pub enum PurchaseState {
 impl PurchaseState {
     /// Check if the purchase is in a valid/active state.
     pub fn is_active(&self) -> bool {
-        matches!(self, PurchaseState::Purchased | PurchaseState::Restored | PurchaseState::Active)
+        matches!(
+            self,
+            PurchaseState::Purchased | PurchaseState::Restored | PurchaseState::Active
+        )
     }
 
     /// Check if the purchase failed.
     pub fn is_failure(&self) -> bool {
-        matches!(self, PurchaseState::Failed | PurchaseState::Refunded | PurchaseState::Expired | PurchaseState::Cancelled)
+        matches!(
+            self,
+            PurchaseState::Failed
+                | PurchaseState::Refunded
+                | PurchaseState::Expired
+                | PurchaseState::Cancelled
+        )
     }
 }
 
@@ -239,7 +251,10 @@ impl IapManager {
 
     /// Register a product.
     pub fn register_product(&self, product: Product) {
-        self.products.lock().unwrap().insert(product.id.clone(), product);
+        self.products
+            .lock()
+            .unwrap()
+            .insert(product.id.clone(), product);
     }
 
     /// Get a product by ID.

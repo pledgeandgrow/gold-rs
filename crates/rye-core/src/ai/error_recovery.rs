@@ -37,7 +37,10 @@ impl RecoveryPlan {
     /// Format as human-readable text.
     pub fn format_text(&self) -> String {
         let mut out = String::new();
-        out.push_str(&format!("Recovery Plan for {} — {}\n\n", self.error_code, self.error_message));
+        out.push_str(&format!(
+            "Recovery Plan for {} — {}\n\n",
+            self.error_code, self.error_message
+        ));
         out.push_str("Steps:\n");
         for step in &self.steps {
             out.push_str(&format!("  {}. {}\n", step.step, step.action));
@@ -396,10 +399,7 @@ fn build_plan(ec: &ErrorCode) -> RecoveryPlan {
 
 /// Get recovery plans for multiple error codes at once.
 pub fn get_recovery_plans(codes: &[&str]) -> Vec<RecoveryPlan> {
-    codes
-        .iter()
-        .filter_map(|c| get_recovery_plan(c))
-        .collect()
+    codes.iter().filter_map(|c| get_recovery_plan(c)).collect()
 }
 
 /// Format recovery plans as a JSON array.

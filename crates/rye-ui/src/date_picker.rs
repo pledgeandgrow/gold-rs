@@ -1,8 +1,8 @@
 //! DatePicker — calendar picker.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct DatePickerProps {
@@ -17,16 +17,39 @@ pub struct DatePickerProps {
 
 impl Default for DatePickerProps {
     fn default() -> Self {
-        Self { value: None, label: None, min: None, max: None, disabled: false, class: None, style: None }
+        Self {
+            value: None,
+            label: None,
+            min: None,
+            max: None,
+            disabled: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl DatePickerProps {
-    pub fn value(mut self, y: u32, m: u32, d: u32) -> Self { self.value = Some((y, m, d)); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn min(mut self, y: u32, m: u32, d: u32) -> Self { self.min = Some((y, m, d)); self }
-    pub fn max(mut self, y: u32, m: u32, d: u32) -> Self { self.max = Some((y, m, d)); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
+    pub fn value(mut self, y: u32, m: u32, d: u32) -> Self {
+        self.value = Some((y, m, d));
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn min(mut self, y: u32, m: u32, d: u32) -> Self {
+        self.min = Some((y, m, d));
+        self
+    }
+    pub fn max(mut self, y: u32, m: u32, d: u32) -> Self {
+        self.max = Some((y, m, d));
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
 }
 
 fn format_date(y: u32, m: u32, d: u32) -> String {
@@ -58,7 +81,10 @@ impl DatePicker {
         let mut attrs = vec![
             ("type".to_string(), "date".to_string()),
             ("style".to_string(), style),
-            ("class".to_string(), format!("rye-date-picker {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "class".to_string(),
+                format!("rye-date-picker {}", props.class.as_deref().unwrap_or("")),
+            ),
         ];
 
         if let Some((y, m, d)) = props.value {
@@ -74,11 +100,19 @@ impl DatePicker {
             attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        children.push(Template::new_element("input", attrs, Vec::new(), Vec::new()));
+        children.push(Template::new_element(
+            "input",
+            attrs,
+            Vec::new(),
+            Vec::new(),
+        ));
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-date-picker-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 

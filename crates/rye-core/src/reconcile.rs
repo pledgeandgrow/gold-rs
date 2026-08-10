@@ -51,18 +51,12 @@ pub fn reconcile(old_keys: &[Key], new_keys: &[Key]) -> Vec<ReconcileOp> {
     }
 
     // Build new key → index map
-    let new_map: std::collections::HashMap<Key, usize> = new_keys
-        .iter()
-        .enumerate()
-        .map(|(i, &k)| (k, i))
-        .collect();
+    let new_map: std::collections::HashMap<Key, usize> =
+        new_keys.iter().enumerate().map(|(i, &k)| (k, i)).collect();
 
     // Build old key → index map
-    let old_map: std::collections::HashMap<Key, usize> = old_keys
-        .iter()
-        .enumerate()
-        .map(|(i, &k)| (k, i))
-        .collect();
+    let old_map: std::collections::HashMap<Key, usize> =
+        old_keys.iter().enumerate().map(|(i, &k)| (k, i)).collect();
 
     let mut ops = Vec::new();
 
@@ -87,7 +81,10 @@ pub fn reconcile(old_keys: &[Key], new_keys: &[Key]) -> Vec<ReconcileOp> {
     // Items to insert (not in old list)
     for (i, &new_key) in new_keys.iter().enumerate() {
         if !old_map.contains_key(&new_key) {
-            ops.push(ReconcileOp::Insert { index: i, key: new_key });
+            ops.push(ReconcileOp::Insert {
+                index: i,
+                key: new_key,
+            });
         }
     }
 
@@ -135,14 +132,18 @@ mod tests {
     #[test]
     fn reconcile_empty_old() {
         let ops = reconcile(&[], &[1, 2, 3]);
-        assert!(ops.iter().all(|op| matches!(op, ReconcileOp::Insert { .. })));
+        assert!(ops
+            .iter()
+            .all(|op| matches!(op, ReconcileOp::Insert { .. })));
         assert_eq!(ops.len(), 3);
     }
 
     #[test]
     fn reconcile_empty_new() {
         let ops = reconcile(&[1, 2, 3], &[]);
-        assert!(ops.iter().all(|op| matches!(op, ReconcileOp::Remove { .. })));
+        assert!(ops
+            .iter()
+            .all(|op| matches!(op, ReconcileOp::Remove { .. })));
         assert_eq!(ops.len(), 3);
     }
 
@@ -155,12 +156,16 @@ mod tests {
     #[test]
     fn reconcile_append() {
         let ops = reconcile(&[1, 2], &[1, 2, 3]);
-        assert!(ops.iter().any(|op| matches!(op, ReconcileOp::Insert { key: 3, .. })));
+        assert!(ops
+            .iter()
+            .any(|op| matches!(op, ReconcileOp::Insert { key: 3, .. })));
     }
 
     #[test]
     fn reconcile_remove_middle() {
         let ops = reconcile(&[1, 2, 3], &[1, 3]);
-        assert!(ops.iter().any(|op| matches!(op, ReconcileOp::Remove { .. })));
+        assert!(ops
+            .iter()
+            .any(|op| matches!(op, ReconcileOp::Remove { .. })));
     }
 }

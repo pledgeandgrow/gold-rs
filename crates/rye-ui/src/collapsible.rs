@@ -1,8 +1,8 @@
 //! Collapsible — show/hide content with animation.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct CollapsibleProps {
@@ -13,12 +13,25 @@ pub struct CollapsibleProps {
 }
 
 impl Default for CollapsibleProps {
-    fn default() -> Self { Self { title: String::new(), open: false, class: None, style: None } }
+    fn default() -> Self {
+        Self {
+            title: String::new(),
+            open: false,
+            class: None,
+            style: None,
+        }
+    }
 }
 
 impl CollapsibleProps {
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = t.into(); self }
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = t.into();
+        self
+    }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
 }
 
 pub struct Collapsible;
@@ -27,7 +40,8 @@ impl Collapsible {
     pub fn render(props: CollapsibleProps) -> Element {
         let style = format!(
             "border:1px solid {};border-radius:var(--rye-radius-md);overflow:hidden;{}",
-            vars::BORDER, props.style.as_deref().unwrap_or(""),
+            vars::BORDER,
+            props.style.as_deref().unwrap_or(""),
         );
 
         let arrow = if props.open { "▼" } else { "▶" };
@@ -45,16 +59,35 @@ impl Collapsible {
         let mut children = vec![header];
 
         if props.open {
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), format!("padding:16px;font-size:var(--rye-font-size-md);color:{};", vars::TEXT)),
-                     ("class".to_string(), "rye-collapsible-content".to_string())],
-                Vec::new(), Vec::new()));
+            children.push(Template::new_element(
+                "div",
+                vec![
+                    (
+                        "style".to_string(),
+                        format!(
+                            "padding:16px;font-size:var(--rye-font-size-md);color:{};",
+                            vars::TEXT
+                        ),
+                    ),
+                    ("class".to_string(), "rye-collapsible-content".to_string()),
+                ],
+                Vec::new(),
+                Vec::new(),
+            ));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-collapsible {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!("rye-collapsible {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 

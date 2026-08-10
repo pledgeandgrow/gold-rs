@@ -119,7 +119,11 @@ impl ShadowRoot {
             r#"(function(){{var e=document.getElementById("{id}");if(!e)return;var s=e.attachShadow({{mode:"{mode}"{delegates}}});s.innerHTML='{styles}{children}';}})();"#,
             id = element_id,
             mode = self.mode,
-            delegates = if self.delegates_focus { ", delegatesFocus: true" } else { "" },
+            delegates = if self.delegates_focus {
+                ", delegatesFocus: true"
+            } else {
+                ""
+            },
             styles = style_content.replace('\'', "\\'"),
             children = self.children.replace('\'', "\\'"),
         )
@@ -201,12 +205,20 @@ impl ShadowStyleSheetRegistry {
 
     /// Get a style sheet by name.
     pub fn get(&self, name: &str) -> Option<ShadowStyleSheet> {
-        self.sheets.borrow().iter().find(|s| s.name == name).cloned()
+        self.sheets
+            .borrow()
+            .iter()
+            .find(|s| s.name == name)
+            .cloned()
     }
 
     /// Get all registered style sheet names.
     pub fn names(&self) -> Vec<String> {
-        self.sheets.borrow().iter().map(|s| s.name.clone()).collect()
+        self.sheets
+            .borrow()
+            .iter()
+            .map(|s| s.name.clone())
+            .collect()
     }
 
     /// Apply a named style sheet to a shadow root.

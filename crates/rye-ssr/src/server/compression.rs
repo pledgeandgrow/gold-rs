@@ -97,7 +97,12 @@ impl CompressionConfig {
             return false;
         }
 
-        let ct = content_type.split(';').next().unwrap_or("").trim().to_lowercase();
+        let ct = content_type
+            .split(';')
+            .next()
+            .unwrap_or("")
+            .trim()
+            .to_lowercase();
 
         // Check excluded types first
         for excluded in &self.excluded_types {
@@ -189,7 +194,10 @@ impl CompressionMiddleware {
         if algorithm == CompressionAlgorithm::None {
             None
         } else {
-            Some(("Content-Encoding".to_string(), algorithm.encoding().to_string()))
+            Some((
+                "Content-Encoding".to_string(),
+                algorithm.encoding().to_string(),
+            ))
         }
     }
 
@@ -340,7 +348,10 @@ mod tests {
     fn test_middleware_process_compress() {
         let middleware = CompressionMiddleware::default();
         let decision = middleware.process_response("text/html", 5000, "br, gzip");
-        assert_eq!(decision, CompressionDecision::Compress(CompressionAlgorithm::Brotli));
+        assert_eq!(
+            decision,
+            CompressionDecision::Compress(CompressionAlgorithm::Brotli)
+        );
     }
 
     #[test]
@@ -368,7 +379,10 @@ mod tests {
     fn test_middleware_encoding_header() {
         let middleware = CompressionMiddleware::default();
         let header = middleware.encoding_header(CompressionAlgorithm::Brotli);
-        assert_eq!(header, Some(("Content-Encoding".to_string(), "br".to_string())));
+        assert_eq!(
+            header,
+            Some(("Content-Encoding".to_string(), "br".to_string()))
+        );
 
         let none_header = middleware.encoding_header(CompressionAlgorithm::None);
         assert!(none_header.is_none());

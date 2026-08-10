@@ -15,39 +15,24 @@
 //! # Then serve crates/rye-demo/www/ with any static server
 //! ```
 
-use rye_core::Element;
-use rye_core::template::{Template, TemplateNode, ReactiveFn, ReactiveListFn, SharedEventHandler, shared_event_handler};
-use rye_signals::Signal;
-use rye_ui::{
-    Alert, AlertProps, AlertVariant,
-    Avatar, AvatarProps,
-    Badge, BadgeProps,
-    Breadcrumb, BreadcrumbProps, BreadcrumbItem,
-    Button, ButtonProps,
-    Card, CardProps,
-    Checkbox, CheckboxProps,
-    CircularProgress, CircularProgressProps,
-    CodeBlock, CodeBlockProps, CodeLanguage,
-    Divider, DividerProps,
-    EmptyState, EmptyStateProps,
-    Input, InputProps,
-    Label, LabelProps,
-    Link, LinkProps,
-    List, ListProps, ListItem, ListVariant,
-    Notification, NotificationProps, NotificationVariant,
-    Progress, ProgressProps,
-    RadioGroup, RadioGroupProps,
-    Select, SelectProps, SelectOption,
-    Skeleton, SkeletonProps, SkeletonShape,
-    Spinner, SpinnerProps,
-    Stat, StatProps, StatTrend,
-    Tag, TagProps,
-    Textarea, TextareaProps,
-    Timeline, TimelineProps, TimelineItem, TimelineVariant,
-    Variant,
+use rye_core::template::{
+    shared_event_handler, ReactiveFn, ReactiveListFn, SharedEventHandler, Template, TemplateNode,
 };
-use rye_ui::theme::Size;
+use rye_core::Element;
+use rye_signals::Signal;
 use rye_ui::switch::SwitchSize;
+use rye_ui::theme::Size;
+use rye_ui::{
+    Alert, AlertProps, AlertVariant, Avatar, AvatarProps, Badge, BadgeProps, Breadcrumb,
+    BreadcrumbItem, BreadcrumbProps, Button, ButtonProps, Card, CardProps, Checkbox, CheckboxProps,
+    CircularProgress, CircularProgressProps, CodeBlock, CodeBlockProps, CodeLanguage, Divider,
+    DividerProps, EmptyState, EmptyStateProps, Input, InputProps, Label, LabelProps, Link,
+    LinkProps, List, ListItem, ListProps, ListVariant, Notification, NotificationProps,
+    NotificationVariant, Progress, ProgressProps, RadioGroup, RadioGroupProps, Select,
+    SelectOption, SelectProps, Skeleton, SkeletonProps, SkeletonShape, Spinner, SpinnerProps, Stat,
+    StatProps, StatTrend, Tag, TagProps, Textarea, TextareaProps, Timeline, TimelineItem,
+    TimelineProps, TimelineVariant, Variant,
+};
 use std::rc::Rc;
 
 // ─── Helper: Element → Vec<Template> ─────────────────────────────────────────
@@ -56,9 +41,7 @@ use std::rc::Rc;
 fn to_templates(el: Element) -> Vec<Template> {
     match el {
         Element::Template(t) => vec![t],
-        Element::Fragment(els) => {
-            els.into_iter().flat_map(to_templates).collect()
-        }
+        Element::Fragment(els) => els.into_iter().flat_map(to_templates).collect(),
         Element::None => vec![],
         Element::Component(_) => vec![],
     }
@@ -66,10 +49,7 @@ fn to_templates(el: Element) -> Vec<Template> {
 
 /// Combine multiple Templates into one by flattening their nodes.
 fn combine(templates: Vec<Template>) -> Template {
-    let nodes: Vec<TemplateNode> = templates
-        .into_iter()
-        .flat_map(|t| t.nodes)
-        .collect();
+    let nodes: Vec<TemplateNode> = templates.into_iter().flat_map(|t| t.nodes).collect();
     Template::new(nodes)
 }
 
@@ -252,11 +232,19 @@ fn sidebar(active: &Signal<Page>, dark_mode: &Signal<bool>) -> Template {
                 });
                 let dm_icon = dark_mode.clone();
                 let icon_fn: ReactiveFn = Rc::new(move || {
-                    if dm_icon.get() { "\u{1F319}".to_string() } else { "\u{2600}\u{FE0F}".to_string() }
+                    if dm_icon.get() {
+                        "\u{1F319}".to_string()
+                    } else {
+                        "\u{2600}\u{FE0F}".to_string()
+                    }
                 });
                 let dm_label = dark_mode.clone();
                 let label_fn: ReactiveFn = Rc::new(move || {
-                    if dm_label.get() { "Dark".to_string() } else { "Light".to_string() }
+                    if dm_label.get() {
+                        "Dark".to_string()
+                    } else {
+                        "Light".to_string()
+                    }
                 });
                 Template::new_element(
                     "div",
@@ -314,9 +302,7 @@ fn dashboard_page() -> Element {
     let make_progress_card = |label: &str, color: &str, signal: &Signal<f64>| -> Template {
         let color = color.to_string();
         let val_signal = signal.clone();
-        let val_fn: ReactiveFn = Rc::new(move || {
-            format!("{:.0}%", val_signal.get())
-        });
+        let val_fn: ReactiveFn = Rc::new(move || format!("{:.0}%", val_signal.get()));
 
         let pct_signal = signal.clone();
         let pct_fn: ReactiveFn = Rc::new(move || {
@@ -326,17 +312,19 @@ fn dashboard_page() -> Element {
 
         let bar_track = Template::new_element(
             "div",
-            vec![("style".to_string(), "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;".to_string())],
+            vec![(
+                "style".to_string(),
+                "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;"
+                    .to_string(),
+            )],
             Vec::new(),
-            vec![
-                Template::new_element_reactive(
-                    "div",
-                    Vec::new(),
-                    vec![("style".to_string(), pct_fn)],
-                    Vec::new(),
-                    Vec::new(),
-                ),
-            ],
+            vec![Template::new_element_reactive(
+                "div",
+                Vec::new(),
+                vec![("style".to_string(), pct_fn)],
+                Vec::new(),
+                Vec::new(),
+            )],
         );
 
         Template::new_element(
@@ -349,7 +337,12 @@ fn dashboard_page() -> Element {
                     vec![("class".to_string(), "progress-card-header".to_string())],
                     Vec::new(),
                     vec![
-                        Template::new_element("span", Vec::new(), Vec::new(), vec![Template::text(label)]),
+                        Template::new_element(
+                            "span",
+                            Vec::new(),
+                            Vec::new(),
+                            vec![Template::text(label)],
+                        ),
                         Template::new_element_reactive(
                             "span",
                             vec![("class".to_string(), "progress-value".to_string())],
@@ -450,7 +443,12 @@ fn dashboard_page() -> Element {
                         vec![("class".to_string(), "activity-content".to_string())],
                         Vec::new(),
                         vec![
-                            Template::new_element("span", Vec::new(), Vec::new(), vec![Template::text(text.to_string())]),
+                            Template::new_element(
+                                "span",
+                                Vec::new(),
+                                Vec::new(),
+                                vec![Template::text(text.to_string())],
+                            ),
                             Template::new_element(
                                 "span",
                                 vec![("class".to_string(), "activity-time".to_string())],
@@ -469,8 +467,18 @@ fn dashboard_page() -> Element {
         vec![("class".to_string(), "page-header".to_string())],
         Vec::new(),
         vec![
-            Template::new_element("h1", Vec::new(), Vec::new(), vec![Template::text("Dashboard")]),
-            Template::new_element("p", Vec::new(), Vec::new(), vec![Template::text("Real-time metrics powered by rye signals")]),
+            Template::new_element(
+                "h1",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("Dashboard")],
+            ),
+            Template::new_element(
+                "p",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("Real-time metrics powered by rye signals")],
+            ),
         ],
     );
 
@@ -486,8 +494,14 @@ fn dashboard_page() -> Element {
         vec![("class".to_string(), "section-title".to_string())],
         Vec::new(),
         vec![
-            Template::new_element("h2", Vec::new(), Vec::new(), vec![Template::text("System Health")]),
-            Template::new_element("div",
+            Template::new_element(
+                "h2",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("System Health")],
+            ),
+            Template::new_element(
+                "div",
                 vec![("style".to_string(), "margin-left:auto;".to_string())],
                 Vec::new(),
                 to_templates(refresh_btn),
@@ -506,7 +520,12 @@ fn dashboard_page() -> Element {
         "div",
         vec![("class".to_string(), "section-title".to_string())],
         Vec::new(),
-        vec![Template::new_element("h2", Vec::new(), Vec::new(), vec![Template::text("Recent Activity")])],
+        vec![Template::new_element(
+            "h2",
+            Vec::new(),
+            Vec::new(),
+            vec![Template::text("Recent Activity")],
+        )],
     );
 
     let activity_list = Template::new_element(
@@ -555,8 +574,20 @@ fn counter_page() -> Element {
         vec![("class".to_string(), "page-header".to_string())],
         Vec::new(),
         vec![
-            Template::new_element("h1", Vec::new(), Vec::new(), vec![Template::text("Counter")]),
-            Template::new_element("p", Vec::new(), Vec::new(), vec![Template::text("Fine-grained reactivity \u{2014} only the value updates, no VDOM diff")]),
+            Template::new_element(
+                "h1",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("Counter")],
+            ),
+            Template::new_element(
+                "p",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text(
+                    "Fine-grained reactivity \u{2014} only the value updates, no VDOM diff",
+                )],
+            ),
         ],
     );
 
@@ -624,9 +655,18 @@ fn counter_page() -> Element {
 
 fn todo_page() -> Element {
     let todos = Signal::new(vec![
-        TodoItem { text: "Build WASM demo".to_string(), done: false },
-        TodoItem { text: "Test on mobile".to_string(), done: false },
-        TodoItem { text: "Ship to production".to_string(), done: false },
+        TodoItem {
+            text: "Build WASM demo".to_string(),
+            done: false,
+        },
+        TodoItem {
+            text: "Test on mobile".to_string(),
+            done: false,
+        },
+        TodoItem {
+            text: "Ship to production".to_string(),
+            done: false,
+        },
     ]);
     let todo_input = Signal::new(String::new());
     let next_id = Signal::new(100usize);
@@ -680,7 +720,9 @@ fn todo_page() -> Element {
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        { let _ = (&event, &keydown_input, &keydown_todos, &keydown_next_id); }
+        {
+            let _ = (&event, &keydown_input, &keydown_todos, &keydown_next_id);
+        }
     });
 
     // ── Reactive list with keyed reconciliation ─────────────────────────────
@@ -791,8 +833,20 @@ fn todo_page() -> Element {
         vec![("class".to_string(), "page-header".to_string())],
         Vec::new(),
         vec![
-            Template::new_element("h1", Vec::new(), Vec::new(), vec![Template::text("Todo List")]),
-            Template::new_element("p", Vec::new(), Vec::new(), vec![Template::text("Add, toggle done, and remove items \u{2014} powered by Signal<Vec<TodoItem>>")]),
+            Template::new_element(
+                "h1",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("Todo List")],
+            ),
+            Template::new_element(
+                "p",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text(
+                    "Add, toggle done, and remove items \u{2014} powered by Signal<Vec<TodoItem>>",
+                )],
+            ),
         ],
     );
 
@@ -805,7 +859,10 @@ fn todo_page() -> Element {
         "input",
         vec![
             ("class".to_string(), "todo-input".to_string()),
-            ("placeholder".to_string(), "What needs to be done?".to_string()),
+            (
+                "placeholder".to_string(),
+                "What needs to be done?".to_string(),
+            ),
             ("type".to_string(), "text".to_string()),
         ],
         vec![("value".to_string(), input_fn)],
@@ -866,7 +923,12 @@ fn todo_page() -> Element {
         Vec::new(),
         vec![
             Template::text("\u{1F4DD}"),
-            Template::new_element("p", Vec::new(), Vec::new(), vec![Template::text("No todos yet. Add one above!")]),
+            Template::new_element(
+                "p",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("No todos yet. Add one above!")],
+            ),
         ],
     );
 
@@ -887,11 +949,18 @@ fn interactive_switch(label: &str, signal: &Signal<bool>, size: SwitchSize) -> T
     let track_toggled = signal.clone();
     let track_fn: ReactiveFn = Rc::new(move || {
         let checked = track_toggled.get();
-        let bg = if checked { "var(--rye-primary)" } else { "var(--rye-input-border)" };
+        let bg = if checked {
+            "var(--rye-primary)"
+        } else {
+            "var(--rye-input-border)"
+        };
         format!(
             "width:{}px;height:{}px;border-radius:{}px;background:{};position:relative;\
              transition:background 0.2s;flex-shrink:0;",
-            w, h, h / 2, bg,
+            w,
+            h,
+            h / 2,
+            bg,
         )
     });
 
@@ -915,7 +984,11 @@ fn interactive_switch(label: &str, signal: &Signal<bool>, size: SwitchSize) -> T
 
     Template::new_element(
         "label",
-        vec![("style".to_string(), "display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;".to_string())],
+        vec![(
+            "style".to_string(),
+            "display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;"
+                .to_string(),
+        )],
         vec![("click".to_string(), click_handler)],
         vec![
             Template::new_element_reactive(
@@ -923,15 +996,13 @@ fn interactive_switch(label: &str, signal: &Signal<bool>, size: SwitchSize) -> T
                 vec![("class".to_string(), "rye-switch-track".to_string())],
                 vec![("style".to_string(), track_fn)],
                 Vec::new(),
-                vec![
-                    Template::new_element_reactive(
-                        "span",
-                        Vec::new(),
-                        vec![("style".to_string(), knob_fn)],
-                        Vec::new(),
-                        Vec::new(),
-                    ),
-                ],
+                vec![Template::new_element_reactive(
+                    "span",
+                    Vec::new(),
+                    vec![("style".to_string(), knob_fn)],
+                    Vec::new(),
+                    Vec::new(),
+                )],
             ),
             Template::text(&label_text),
         ],
@@ -947,10 +1018,28 @@ fn components_page() -> Element {
     let sw3 = Signal::new(true);
 
     let badges = vec![
-        Badge::render(BadgeProps::default().text("Primary").variant(Variant::Primary)),
-        Badge::render(BadgeProps::default().text("Success").variant(Variant::Success).dot(true)),
-        Badge::render(BadgeProps::default().text("Warning").variant(Variant::Warning)),
-        Badge::render(BadgeProps::default().text("Danger").variant(Variant::Destructive).dot(true)),
+        Badge::render(
+            BadgeProps::default()
+                .text("Primary")
+                .variant(Variant::Primary),
+        ),
+        Badge::render(
+            BadgeProps::default()
+                .text("Success")
+                .variant(Variant::Success)
+                .dot(true),
+        ),
+        Badge::render(
+            BadgeProps::default()
+                .text("Warning")
+                .variant(Variant::Warning),
+        ),
+        Badge::render(
+            BadgeProps::default()
+                .text("Danger")
+                .variant(Variant::Destructive)
+                .dot(true),
+        ),
         Badge::render(BadgeProps::default().text("Info").variant(Variant::Info)),
     ];
 
@@ -961,12 +1050,36 @@ fn components_page() -> Element {
     ];
 
     let buttons = vec![
-        Button::render(ButtonProps::default().label("Primary").variant(Variant::Primary)),
-        Button::render(ButtonProps::default().label("Secondary").variant(Variant::Secondary)),
-        Button::render(ButtonProps::default().label("Outline").variant(Variant::Outline)),
-        Button::render(ButtonProps::default().label("Ghost").variant(Variant::Ghost)),
-        Button::render(ButtonProps::default().label("Danger").variant(Variant::Destructive)),
-        Button::render(ButtonProps::default().label("Success").variant(Variant::Success)),
+        Button::render(
+            ButtonProps::default()
+                .label("Primary")
+                .variant(Variant::Primary),
+        ),
+        Button::render(
+            ButtonProps::default()
+                .label("Secondary")
+                .variant(Variant::Secondary),
+        ),
+        Button::render(
+            ButtonProps::default()
+                .label("Outline")
+                .variant(Variant::Outline),
+        ),
+        Button::render(
+            ButtonProps::default()
+                .label("Ghost")
+                .variant(Variant::Ghost),
+        ),
+        Button::render(
+            ButtonProps::default()
+                .label("Danger")
+                .variant(Variant::Destructive),
+        ),
+        Button::render(
+            ButtonProps::default()
+                .label("Success")
+                .variant(Variant::Success),
+        ),
     ];
 
     let progress_bars = vec![
@@ -976,24 +1089,46 @@ fn components_page() -> Element {
         Progress::render(ProgressProps::default().value(100.0).color("#8b5cf6")),
     ];
 
-    let card = Card::render(
-        CardProps::default()
-            .padding("24px")
-            .background("#1a1a2e"),
-    );
+    let card = Card::render(CardProps::default().padding("24px").background("#1a1a2e"));
 
     // ── New component showcases ──────────────────────────────────────────────
 
     let alerts = vec![
-        Alert::render(AlertProps::default().title("Info").message("This is an informational alert.").variant(AlertVariant::Info)),
-        Alert::render(AlertProps::default().title("Success").message("Operation completed successfully!").variant(AlertVariant::Success).dismissible(true)),
-        Alert::render(AlertProps::default().title("Warning").message("Please review before proceeding.").variant(AlertVariant::Warning)),
-        Alert::render(AlertProps::default().title("Error").message("Something went wrong.").variant(AlertVariant::Error).dismissible(true)),
+        Alert::render(
+            AlertProps::default()
+                .title("Info")
+                .message("This is an informational alert.")
+                .variant(AlertVariant::Info),
+        ),
+        Alert::render(
+            AlertProps::default()
+                .title("Success")
+                .message("Operation completed successfully!")
+                .variant(AlertVariant::Success)
+                .dismissible(true),
+        ),
+        Alert::render(
+            AlertProps::default()
+                .title("Warning")
+                .message("Please review before proceeding.")
+                .variant(AlertVariant::Warning),
+        ),
+        Alert::render(
+            AlertProps::default()
+                .title("Error")
+                .message("Something went wrong.")
+                .variant(AlertVariant::Error)
+                .dismissible(true),
+        ),
     ];
 
     let spinners = vec![
         Spinner::render(SpinnerProps::default().size(Size::Small)),
-        Spinner::render(SpinnerProps::default().size(Size::Medium).label("Loading...")),
+        Spinner::render(
+            SpinnerProps::default()
+                .size(Size::Medium)
+                .label("Loading..."),
+        ),
         Spinner::render(SpinnerProps::default().size(Size::Large).color("#f59e0b")),
     ];
 
@@ -1006,8 +1141,17 @@ fn components_page() -> Element {
     let tags = vec![
         Tag::render(TagProps::default().text("Rust").variant(Variant::Primary)),
         Tag::render(TagProps::default().text("WASM").variant(Variant::Success)),
-        Tag::render(TagProps::default().text("Beta").variant(Variant::Warning).removable(true)),
-        Tag::render(TagProps::default().text("Deprecated").variant(Variant::Destructive)),
+        Tag::render(
+            TagProps::default()
+                .text("Beta")
+                .variant(Variant::Warning)
+                .removable(true),
+        ),
+        Tag::render(
+            TagProps::default()
+                .text("Deprecated")
+                .variant(Variant::Destructive),
+        ),
     ];
 
     let dividers = vec![
@@ -1016,33 +1160,62 @@ fn components_page() -> Element {
     ];
 
     let inputs = vec![
-        Input::render(InputProps::default().placeholder("Enter your name").label("Name")),
-        Input::render(InputProps::default().placeholder("Disabled input").disabled(true).label("Disabled")),
-        Input::render(InputProps::default().placeholder("Error state").error("This field is required").label("With Error")),
+        Input::render(
+            InputProps::default()
+                .placeholder("Enter your name")
+                .label("Name"),
+        ),
+        Input::render(
+            InputProps::default()
+                .placeholder("Disabled input")
+                .disabled(true)
+                .label("Disabled"),
+        ),
+        Input::render(
+            InputProps::default()
+                .placeholder("Error state")
+                .error("This field is required")
+                .label("With Error"),
+        ),
     ];
 
-    let textareas = vec![
-        Textarea::render(TextareaProps::default().placeholder("Write something...").label("Message").rows(3)),
-    ];
+    let textareas = vec![Textarea::render(
+        TextareaProps::default()
+            .placeholder("Write something...")
+            .label("Message")
+            .rows(3),
+    )];
 
-    let selects = vec![
-        Select::render(SelectProps::default()
+    let selects = vec![Select::render(
+        SelectProps::default()
             .label("Framework")
             .placeholder("Select...")
             .options(vec![
-                SelectOption { value: "rust".to_string(), label: "Rust".to_string(), disabled: false },
-                SelectOption { value: "wasm".to_string(), label: "WASM".to_string(), disabled: false },
-            ])),
-    ];
+                SelectOption {
+                    value: "rust".to_string(),
+                    label: "Rust".to_string(),
+                    disabled: false,
+                },
+                SelectOption {
+                    value: "wasm".to_string(),
+                    label: "WASM".to_string(),
+                    disabled: false,
+                },
+            ]),
+    )];
 
     let checkboxes = vec![
         Checkbox::render(CheckboxProps::default().label("Accept terms").checked(true)),
         Checkbox::render(CheckboxProps::default().label("Subscribe to newsletter")),
-        Checkbox::render(CheckboxProps::default().label("Indeterminate option").indeterminate(true)),
+        Checkbox::render(
+            CheckboxProps::default()
+                .label("Indeterminate option")
+                .indeterminate(true),
+        ),
     ];
 
-    let radios = vec![
-        RadioGroup::render(RadioGroupProps::default()
+    let radios = vec![RadioGroup::render(
+        RadioGroupProps::default()
             .name("plan")
             .label("Subscription Plan")
             .options(vec![
@@ -1050,8 +1223,8 @@ fn components_page() -> Element {
                 ("pro".to_string(), "Pro".to_string()),
                 ("enterprise".to_string(), "Enterprise".to_string()),
             ])
-            .selected("pro")),
-    ];
+            .selected("pro"),
+    )];
 
     let labels = vec![
         Label::render(LabelProps::default().text("Email Address").required(true)),
@@ -1060,64 +1233,124 @@ fn components_page() -> Element {
 
     let links = vec![
         Link::render(LinkProps::default().text("Primary Link").href("#")),
-        Link::render(LinkProps::default().text("Secondary").href("#").variant(rye_ui::link::LinkVariant::Secondary)),
-        Link::render(LinkProps::default().text("Muted").href("#").variant(rye_ui::link::LinkVariant::Muted)),
+        Link::render(
+            LinkProps::default()
+                .text("Secondary")
+                .href("#")
+                .variant(rye_ui::link::LinkVariant::Secondary),
+        ),
+        Link::render(
+            LinkProps::default()
+                .text("Muted")
+                .href("#")
+                .variant(rye_ui::link::LinkVariant::Muted),
+        ),
     ];
 
     let skeletons = vec![
-        Skeleton::render(SkeletonProps::default().shape(SkeletonShape::Text).width("200px").count(3)),
-        Skeleton::render(SkeletonProps::default().shape(SkeletonShape::Circle).width("48px").height("48px")),
-        Skeleton::render(SkeletonProps::default().shape(SkeletonShape::Rect).width("100%").height("100px")),
+        Skeleton::render(
+            SkeletonProps::default()
+                .shape(SkeletonShape::Text)
+                .width("200px")
+                .count(3),
+        ),
+        Skeleton::render(
+            SkeletonProps::default()
+                .shape(SkeletonShape::Circle)
+                .width("48px")
+                .height("48px"),
+        ),
+        Skeleton::render(
+            SkeletonProps::default()
+                .shape(SkeletonShape::Rect)
+                .width("100%")
+                .height("100px"),
+        ),
     ];
 
     let circular_progress = vec![
-        CircularProgress::render(CircularProgressProps::default().value(35.0).show_percentage(true)),
-        CircularProgress::render(CircularProgressProps::default().value(70.0).color("#22c55e").show_percentage(true)),
-        CircularProgress::render(CircularProgressProps::default().indeterminate().color("#f59e0b")),
+        CircularProgress::render(
+            CircularProgressProps::default()
+                .value(35.0)
+                .show_percentage(true),
+        ),
+        CircularProgress::render(
+            CircularProgressProps::default()
+                .value(70.0)
+                .color("#22c55e")
+                .show_percentage(true),
+        ),
+        CircularProgress::render(
+            CircularProgressProps::default()
+                .indeterminate()
+                .color("#f59e0b"),
+        ),
     ];
 
-    let empty_state = vec![
-        EmptyState::render(EmptyStateProps::default()
+    let empty_state = vec![EmptyState::render(
+        EmptyStateProps::default()
             .icon("\u{1F50D}")
             .title("No results found")
             .description("Try adjusting your search or filters.")
-            .action("Clear Filters")),
-    ];
+            .action("Clear Filters"),
+    )];
 
     let notifications = vec![
-        Notification::render(NotificationProps::default().title("Success").body("Your changes have been saved.").variant(NotificationVariant::Success)),
-        Notification::render(NotificationProps::default().title("Warning").body("Your session expires in 5 minutes.").variant(NotificationVariant::Warning)),
-        Notification::render(NotificationProps::default().title("Info").body("A new version is available.").variant(NotificationVariant::Info)),
+        Notification::render(
+            NotificationProps::default()
+                .title("Success")
+                .body("Your changes have been saved.")
+                .variant(NotificationVariant::Success),
+        ),
+        Notification::render(
+            NotificationProps::default()
+                .title("Warning")
+                .body("Your session expires in 5 minutes.")
+                .variant(NotificationVariant::Warning),
+        ),
+        Notification::render(
+            NotificationProps::default()
+                .title("Info")
+                .body("A new version is available.")
+                .variant(NotificationVariant::Info),
+        ),
     ];
 
-    let breadcrumb = vec![
-        Breadcrumb::render(BreadcrumbProps::default()
-            .items(vec![
-                BreadcrumbItem::new("Home").href("#"),
-                BreadcrumbItem::new("Settings").href("#"),
-                BreadcrumbItem::new("Profile").current(),
-            ])),
-    ];
+    let breadcrumb = vec![Breadcrumb::render(BreadcrumbProps::default().items(vec![
+        BreadcrumbItem::new("Home").href("#"),
+        BreadcrumbItem::new("Settings").href("#"),
+        BreadcrumbItem::new("Profile").current(),
+    ]))];
 
-    let timeline = vec![
-        Timeline::render(TimelineProps::default()
-            .items(vec![
-                TimelineItem::new("Project created").timestamp("Jan 1").variant(TimelineVariant::Success),
-                TimelineItem::new("Development started").description("Initial commit").timestamp("Jan 5").variant(TimelineVariant::Info),
-                TimelineItem::new("Beta release").timestamp("Feb 10").variant(TimelineVariant::Warning),
-                TimelineItem::new("Production deploy").timestamp("Mar 1").variant(TimelineVariant::Default),
-            ])),
-    ];
+    let timeline = vec![Timeline::render(TimelineProps::default().items(vec![
+            TimelineItem::new("Project created")
+                .timestamp("Jan 1")
+                .variant(TimelineVariant::Success),
+            TimelineItem::new("Development started")
+                .description("Initial commit")
+                .timestamp("Jan 5")
+                .variant(TimelineVariant::Info),
+            TimelineItem::new("Beta release")
+                .timestamp("Feb 10")
+                .variant(TimelineVariant::Warning),
+            TimelineItem::new("Production deploy")
+                .timestamp("Mar 1")
+                .variant(TimelineVariant::Default),
+        ]))];
 
-    let code_block = vec![
-        CodeBlock::render(CodeBlockProps::default()
+    let code_block = vec![CodeBlock::render(
+        CodeBlockProps::default()
             .code("fn main() {\n    println!(\"Hello from rye!\");\n}")
             .language(CodeLanguage::Rust)
-            .title("main.rs")),
-    ];
+            .title("main.rs"),
+    )];
 
     let accordion_signal = Signal::new(0usize);
-    let accordion_items = ["Section 1: Getting Started", "Section 2: Configuration", "Section 3: Advanced Usage"];
+    let accordion_items = [
+        "Section 1: Getting Started",
+        "Section 2: Configuration",
+        "Section 3: Advanced Usage",
+    ];
     let accordion_children: Vec<Template> = accordion_items
         .iter()
         .enumerate()
@@ -1164,7 +1397,11 @@ fn components_page() -> Element {
 
     let accordion = vec![Template::new_element(
         "div",
-        vec![("style".to_string(), "border:1px solid var(--border);border-radius:var(--radius);padding:0 16px;".to_string())],
+        vec![(
+            "style".to_string(),
+            "border:1px solid var(--border);border-radius:var(--radius);padding:0 16px;"
+                .to_string(),
+        )],
         Vec::new(),
         accordion_children,
     )];
@@ -1183,7 +1420,11 @@ fn components_page() -> Element {
         .map(|(i, label)| {
             let sig = tab_signal.clone();
             let class_fn: ReactiveFn = Rc::new(move || {
-                if sig.get() == i { "rye-tab active".to_string() } else { "rye-tab".to_string() }
+                if sig.get() == i {
+                    "rye-tab active".to_string()
+                } else {
+                    "rye-tab".to_string()
+                }
             });
             let sig2 = tab_signal.clone();
             let click_handler: SharedEventHandler = shared_event_handler(move |_| {
@@ -1206,8 +1447,12 @@ fn components_page() -> Element {
         .map(|(i, content)| {
             let sig = tab_signal.clone();
             let style_fn: ReactiveFn = Rc::new(move || {
-                if sig.get() == i { "display:block;padding:16px 0;color:var(--text-muted);font-size:0.85rem;".to_string() }
-                else { "display:none;".to_string() }
+                if sig.get() == i {
+                    "display:block;padding:16px 0;color:var(--text-muted);font-size:0.85rem;"
+                        .to_string()
+                } else {
+                    "display:none;".to_string()
+                }
             });
             Template::new_element_reactive(
                 "div",
@@ -1226,7 +1471,11 @@ fn components_page() -> Element {
         vec![
             Template::new_element(
                 "div",
-                vec![("style".to_string(), "display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:4px;".to_string())],
+                vec![(
+                    "style".to_string(),
+                    "display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:4px;"
+                        .to_string(),
+                )],
                 Vec::new(),
                 tab_headers,
             ),
@@ -1239,11 +1488,19 @@ fn components_page() -> Element {
         .map(|i| {
             let sig = rating_signal.clone();
             let star_fn: ReactiveFn = Rc::new(move || {
-                if sig.get() > i { "\u{2605}".to_string() } else { "\u{2606}".to_string() }
+                if sig.get() > i {
+                    "\u{2605}".to_string()
+                } else {
+                    "\u{2606}".to_string()
+                }
             });
             let sig2 = rating_signal.clone();
             let star_color_fn: ReactiveFn = Rc::new(move || {
-                if sig2.get() > i { "color:var(--warning);".to_string() } else { "color:var(--text-dim);".to_string() }
+                if sig2.get() > i {
+                    "color:var(--warning);".to_string()
+                } else {
+                    "color:var(--text-dim);".to_string()
+                }
             });
             let sig3 = rating_signal.clone();
             let click_handler: SharedEventHandler = shared_event_handler(move |_| {
@@ -1252,12 +1509,13 @@ fn components_page() -> Element {
 
             Template::new_element_reactive(
                 "span",
-                vec![("style".to_string(), "font-size:1.5rem;cursor:pointer;transition:color 0.15s;".to_string())],
+                vec![(
+                    "style".to_string(),
+                    "font-size:1.5rem;cursor:pointer;transition:color 0.15s;".to_string(),
+                )],
                 vec![("style".to_string(), star_color_fn)],
                 vec![("click".to_string(), click_handler)],
-                vec![
-                    Template::new(vec![TemplateNode::Reactive(star_fn)]),
-                ],
+                vec![Template::new(vec![TemplateNode::Reactive(star_fn)])],
             )
         })
         .collect();
@@ -1269,13 +1527,19 @@ fn components_page() -> Element {
 
     let rating = vec![Template::new_element(
         "div",
-        vec![("style".to_string(), "display:flex;flex-direction:column;gap:8px;".to_string())],
+        vec![(
+            "style".to_string(),
+            "display:flex;flex-direction:column;gap:8px;".to_string(),
+        )],
         Vec::new(),
         vec![
             Template::new_element("div", Vec::new(), Vec::new(), rating_stars),
             Template::new_element_reactive(
                 "span",
-                vec![("style".to_string(), "font-size:0.8rem;color:var(--text-muted);".to_string())],
+                vec![(
+                    "style".to_string(),
+                    "font-size:0.8rem;color:var(--text-muted);".to_string(),
+                )],
                 Vec::new(),
                 Vec::new(),
                 vec![Template::new(vec![TemplateNode::Reactive(rating_value_fn)])],
@@ -1283,19 +1547,33 @@ fn components_page() -> Element {
         ],
     )];
 
-    let list = vec![
-        List::render(ListProps::default()
+    let list = vec![List::render(
+        ListProps::default()
             .items(vec![
                 ListItem::new("First item"),
                 ListItem::new("Second item"),
                 ListItem::new("Third item"),
             ])
-            .variant(ListVariant::Unordered)),
-    ];
+            .variant(ListVariant::Unordered),
+    )];
 
     let stats = vec![
-        Stat::render(StatProps::default().label("Users").value("1,234").trend(StatTrend::Up).trend_value("+12%").icon("\u{1F465}")),
-        Stat::render(StatProps::default().label("Revenue").value("$9.8K").trend(StatTrend::Up).trend_value("+5%").icon("\u{1F4B0}")),
+        Stat::render(
+            StatProps::default()
+                .label("Users")
+                .value("1,234")
+                .trend(StatTrend::Up)
+                .trend_value("+12%")
+                .icon("\u{1F465}"),
+        ),
+        Stat::render(
+            StatProps::default()
+                .label("Revenue")
+                .value("$9.8K")
+                .trend(StatTrend::Up)
+                .trend_value("+5%")
+                .icon("\u{1F4B0}"),
+        ),
     ];
 
     // ── Layout ───────────────────────────────────────────────────────────────
@@ -1305,8 +1583,20 @@ fn components_page() -> Element {
         vec![("class".to_string(), "page-header".to_string())],
         Vec::new(),
         vec![
-            Template::new_element("h1", Vec::new(), Vec::new(), vec![Template::text("Components")]),
-            Template::new_element("p", Vec::new(), Vec::new(), vec![Template::text("Showcase of all rye-ui components \u{2014} built with the template system")]),
+            Template::new_element(
+                "h1",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text("Components")],
+            ),
+            Template::new_element(
+                "p",
+                Vec::new(),
+                Vec::new(),
+                vec![Template::text(
+                    "Showcase of all rye-ui components \u{2014} built with the template system",
+                )],
+            ),
         ],
     );
 
@@ -1348,7 +1638,10 @@ fn components_page() -> Element {
     let badges_section = section("Badges", to_templates(Element::Fragment(badges)));
     let buttons_section = section("Buttons", to_templates(Element::Fragment(buttons)));
     let switches_section = section_col("Switches (Interactive)", switches);
-    let progress_section = section_col("Progress Bars", to_templates(Element::Fragment(progress_bars)));
+    let progress_section = section_col(
+        "Progress Bars",
+        to_templates(Element::Fragment(progress_bars)),
+    );
     let alerts_section = section_col("Alerts", to_templates(Element::Fragment(alerts)));
     let spinners_section = section("Spinners", to_templates(Element::Fragment(spinners)));
     let avatars_section = section("Avatars", to_templates(Element::Fragment(avatars)));
@@ -1362,9 +1655,15 @@ fn components_page() -> Element {
     let labels_section = section("Labels", to_templates(Element::Fragment(labels)));
     let links_section = section("Links", to_templates(Element::Fragment(links)));
     let skeletons_section = section_col("Skeletons", to_templates(Element::Fragment(skeletons)));
-    let circular_section = section("Circular Progress", to_templates(Element::Fragment(circular_progress)));
+    let circular_section = section(
+        "Circular Progress",
+        to_templates(Element::Fragment(circular_progress)),
+    );
     let empty_section = section_col("Empty State", to_templates(Element::Fragment(empty_state)));
-    let notifications_section = section_col("Notifications", to_templates(Element::Fragment(notifications)));
+    let notifications_section = section_col(
+        "Notifications",
+        to_templates(Element::Fragment(notifications)),
+    );
     let breadcrumb_section = section_col("Breadcrumb", to_templates(Element::Fragment(breadcrumb)));
     let timeline_section = section_col("Timeline", to_templates(Element::Fragment(timeline)));
     let code_section = section_col("Code Block", to_templates(Element::Fragment(code_block)));
@@ -1374,9 +1673,12 @@ fn components_page() -> Element {
     let list_section = section_col("List", to_templates(Element::Fragment(list)));
     let stats_section = section("Stats", to_templates(Element::Fragment(stats)));
 
-    let mut card_children = vec![
-        Template::new_element("h2", Vec::new(), Vec::new(), vec![Template::text("Card")]),
-    ];
+    let mut card_children = vec![Template::new_element(
+        "h2",
+        Vec::new(),
+        Vec::new(),
+        vec![Template::text("Card")],
+    )];
     card_children.extend(to_templates(card));
     let card_section = Template::new_element(
         "div",
@@ -1441,7 +1743,11 @@ pub fn build_app() -> Element {
 
     let dm_clone = dark_mode.clone();
     let theme_fn: ReactiveFn = Rc::new(move || {
-        if dm_clone.get() { "dark".to_string() } else { "light".to_string() }
+        if dm_clone.get() {
+            "dark".to_string()
+        } else {
+            "light".to_string()
+        }
     });
 
     let layout = Template::new_element_reactive(
@@ -1478,8 +1784,8 @@ pub fn start() {
 pub fn run_desktop() -> Result<(), Box<dyn std::error::Error>> {
     use rye_core::mount;
     use rye_core::RenderBackend;
-    use rye_desktop::NativeRenderer;
     use rye_desktop::window::{run, WindowConfig};
+    use rye_desktop::NativeRenderer;
 
     let config = WindowConfig {
         title: "rye — Demo".to_string(),
@@ -1492,7 +1798,7 @@ pub fn run_desktop() -> Result<(), Box<dyn std::error::Error>> {
         mount(|| build_app(), NativeRenderer::new());
     };
 
-    let input_callback = move |_event| {};
+    let input_callback = move |_event: &rye_desktop::input::InputEvent| {};
 
     run(config, render_callback, input_callback)
 }
@@ -1500,13 +1806,19 @@ pub fn run_desktop() -> Result<(), Box<dyn std::error::Error>> {
 /// Get the active render backend for this build.
 pub fn backend() -> rye_core::RenderBackend {
     #[cfg(target_arch = "wasm32")]
-    { rye_core::RenderBackend::WebView }
+    {
+        rye_core::RenderBackend::WebView
+    }
 
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
-    { rye_core::RenderBackend::Native }
+    {
+        rye_core::RenderBackend::Native
+    }
 
     #[cfg(all(not(feature = "native"), not(target_arch = "wasm32")))]
-    { rye_core::RenderBackend::WebView }
+    {
+        rye_core::RenderBackend::WebView
+    }
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
@@ -1518,7 +1830,7 @@ mod tests {
     #[test]
     fn test_build_app_renders() {
         let el = build_app();
-        assert!(matches!(el, Element::Fragment(_)));
+        assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
@@ -1548,7 +1860,8 @@ mod tests {
     #[test]
     fn test_sidebar_renders() {
         let page = Signal::new(Page::Dashboard);
-        let el = sidebar(&page);
+        let dark_mode = Signal::new(false);
+        let el = sidebar(&page, &dark_mode);
         assert!(el.nodes.len() == 1);
     }
 

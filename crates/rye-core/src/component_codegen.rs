@@ -47,7 +47,10 @@ impl PropType {
 
     /// Check if this is a primitive type (can be inlined).
     pub fn is_primitive(&self) -> bool {
-        matches!(self, PropType::String | PropType::Int | PropType::Float | PropType::Bool)
+        matches!(
+            self,
+            PropType::String | PropType::Int | PropType::Float | PropType::Bool
+        )
     }
 }
 
@@ -125,8 +128,13 @@ impl TemplatePart {
         match self {
             TemplatePart::Static(_) => true,
             TemplatePart::Dynamic(_) => false,
-            TemplatePart::Conditional { then_parts, else_parts, .. } => {
-                then_parts.iter().all(|p| p.is_fully_static()) && else_parts.iter().all(|p| p.is_fully_static())
+            TemplatePart::Conditional {
+                then_parts,
+                else_parts,
+                ..
+            } => {
+                then_parts.iter().all(|p| p.is_fully_static())
+                    && else_parts.iter().all(|p| p.is_fully_static())
             }
             TemplatePart::Loop { body, .. } => body.iter().all(|p| p.is_fully_static()),
         }
@@ -197,7 +205,11 @@ impl ComponentGenDef {
             improvement += 0.05;
         }
         if self.inline_props {
-            let primitive_count = self.props.iter().filter(|p| p.prop_type.is_primitive()).count();
+            let primitive_count = self
+                .props
+                .iter()
+                .filter(|p| p.prop_type.is_primitive())
+                .count();
             improvement += 0.02 * primitive_count as f64;
         }
         let static_count = self.template.iter().filter(|p| p.is_fully_static()).count();
@@ -222,7 +234,10 @@ impl ComponentCodeGenerator {
 
     /// Register a component for code generation.
     pub fn register(&self, component: ComponentGenDef) {
-        self.components.lock().unwrap().insert(component.name.clone(), component);
+        self.components
+            .lock()
+            .unwrap()
+            .insert(component.name.clone(), component);
     }
 
     /// Get a component by name.
@@ -250,10 +265,20 @@ impl ComponentCodeGenerator {
         let mut code = String::new();
 
         // Generate the props struct
-        code.push_str(&format!("// Auto-generated component: {}\n", component.name));
-        code.push_str(&format!("#[derive(Clone, Default)]\npub struct {}Props {{\n", component.name));
+        code.push_str(&format!(
+            "// Auto-generated component: {}\n",
+            component.name
+        ));
+        code.push_str(&format!(
+            "#[derive(Clone, Default)]\npub struct {}Props {{\n",
+            component.name
+        ));
         for prop in &component.props {
-            code.push_str(&format!("    pub {}: {},\n", prop.name, prop.prop_type.rust_type()));
+            code.push_str(&format!(
+                "    pub {}: {},\n",
+                prop.name,
+                prop.prop_type.rust_type()
+            ));
         }
         code.push_str("}\n\n");
 
@@ -279,7 +304,10 @@ impl ComponentCodeGenerator {
             for part in &component.template {
                 match part {
                     TemplatePart::Static(text) => {
-                        code.push_str(&format!("    let _s = \"{}\";\n", text.replace('"', "\\\"")));
+                        code.push_str(&format!(
+                            "    let _s = \"{}\";\n",
+                            text.replace('"', "\\\"")
+                        ));
                     }
                     TemplatePart::Dynamic(expr) => {
                         if component.inline_props {
@@ -288,7 +316,11 @@ impl ComponentCodeGenerator {
                             code.push_str(&format!("    let _d = format!(\"{{}}\", {});\n", expr));
                         }
                     }
-                    TemplatePart::Conditional { condition, then_parts, .. } => {
+                    TemplatePart::Conditional {
+                        condition,
+                        then_parts,
+                        ..
+                    } => {
                         code.push_str(&format!("    if {} {{\n", condition));
                         for tp in then_parts {
                             if let TemplatePart::Static(t) = tp {
@@ -297,7 +329,11 @@ impl ComponentCodeGenerator {
                         }
                         code.push_str("    }\n");
                     }
-                    TemplatePart::Loop { iterable, item_var, body } => {
+                    TemplatePart::Loop {
+                        iterable,
+                        item_var,
+                        body,
+                    } => {
                         code.push_str(&format!("    for {} in {} {{\n", item_var, iterable));
                         for bp in body {
                             if let TemplatePart::Static(t) = bp {

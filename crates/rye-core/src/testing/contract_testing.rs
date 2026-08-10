@@ -62,7 +62,14 @@ impl ContractType {
 
     /// Whether this is a primitive type.
     pub fn is_primitive(&self) -> bool {
-        matches!(self, ContractType::String | ContractType::Int | ContractType::Float | ContractType::Bool | ContractType::Unit)
+        matches!(
+            self,
+            ContractType::String
+                | ContractType::Int
+                | ContractType::Float
+                | ContractType::Bool
+                | ContractType::Unit
+        )
     }
 }
 
@@ -116,18 +123,25 @@ impl ContractTestResult {
     /// Generate a summary.
     pub fn summary(&self) -> String {
         if self.passed {
-            format!("Contract test PASSED: {} actions verified, 0 violations", self.actions_tested)
+            format!(
+                "Contract test PASSED: {} actions verified, 0 violations",
+                self.actions_tested
+            )
         } else {
             format!(
                 "Contract test FAILED: {} actions tested, {} violations",
-                self.actions_tested, self.violations.len()
+                self.actions_tested,
+                self.violations.len()
             )
         }
     }
 }
 
 /// Compare two action contracts for compatibility.
-pub fn compare_contracts(server: &ActionContract, client: &ActionContract) -> Vec<ContractViolation> {
+pub fn compare_contracts(
+    server: &ActionContract,
+    client: &ActionContract,
+) -> Vec<ContractViolation> {
     let mut violations = Vec::new();
 
     // Check argument count
@@ -137,7 +151,8 @@ pub fn compare_contracts(server: &ActionContract, client: &ActionContract) -> Ve
             violation: ViolationKind::ArgCountMismatch,
             description: format!(
                 "Server expects {} args, client sends {}",
-                server.args.len(), client.args.len()
+                server.args.len(),
+                client.args.len()
             ),
         });
     }
@@ -150,7 +165,9 @@ pub fn compare_contracts(server: &ActionContract, client: &ActionContract) -> Ve
                 violation: ViolationKind::ArgTypeMismatch,
                 description: format!(
                     "Arg {}: server expects {}, client sends {}",
-                    i, s_arg.type_name(), c_arg.type_name()
+                    i,
+                    s_arg.type_name(),
+                    c_arg.type_name()
                 ),
             });
         }
@@ -163,7 +180,8 @@ pub fn compare_contracts(server: &ActionContract, client: &ActionContract) -> Ve
             violation: ViolationKind::ReturnTypeMismatch,
             description: format!(
                 "Server returns {}, client expects {}",
-                server.return_type.type_name(), client.return_type.type_name()
+                server.return_type.type_name(),
+                client.return_type.type_name()
             ),
         });
     }
@@ -275,8 +293,14 @@ mod tests {
     fn test_contract_type_names() {
         assert_eq!(ContractType::String.type_name(), "String");
         assert_eq!(ContractType::Int.type_name(), "i64");
-        assert_eq!(ContractType::Vec(Box::new(ContractType::String)).type_name(), "Vec<String>");
-        assert_eq!(ContractType::Option(Box::new(ContractType::Int)).type_name(), "Option<i64>");
+        assert_eq!(
+            ContractType::Vec(Box::new(ContractType::String)).type_name(),
+            "Vec<String>"
+        );
+        assert_eq!(
+            ContractType::Option(Box::new(ContractType::Int)).type_name(),
+            "Option<i64>"
+        );
     }
 
     #[test]
@@ -324,9 +348,15 @@ mod tests {
     #[test]
     fn test_test_contracts_pass() {
         let mut server = HashMap::new();
-        server.insert("action1".to_string(), action("action1", vec![ContractType::String], ContractType::Bool));
+        server.insert(
+            "action1".to_string(),
+            action("action1", vec![ContractType::String], ContractType::Bool),
+        );
         let mut client = HashMap::new();
-        client.insert("action1".to_string(), action("action1", vec![ContractType::String], ContractType::Bool));
+        client.insert(
+            "action1".to_string(),
+            action("action1", vec![ContractType::String], ContractType::Bool),
+        );
 
         let result = test_contracts(&server, &client);
         assert!(result.passed);
@@ -336,7 +366,10 @@ mod tests {
     #[test]
     fn test_test_contracts_missing_on_client() {
         let mut server = HashMap::new();
-        server.insert("action1".to_string(), action("action1", vec![], ContractType::Unit));
+        server.insert(
+            "action1".to_string(),
+            action("action1", vec![], ContractType::Unit),
+        );
         let client = HashMap::new();
 
         let result = test_contracts(&server, &client);
@@ -349,11 +382,17 @@ mod tests {
     fn test_test_contracts_missing_on_server() {
         let server = HashMap::new();
         let mut client = HashMap::new();
-        client.insert("action1".to_string(), action("action1", vec![], ContractType::Unit));
+        client.insert(
+            "action1".to_string(),
+            action("action1", vec![], ContractType::Unit),
+        );
 
         let result = test_contracts(&server, &client);
         assert!(!result.passed);
-        assert!(result.violations.iter().any(|v| v.violation == ViolationKind::MissingAction));
+        assert!(result
+            .violations
+            .iter()
+            .any(|v| v.violation == ViolationKind::MissingAction));
     }
 
     #[test]

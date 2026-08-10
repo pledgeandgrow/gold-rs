@@ -40,7 +40,10 @@ impl StorageType {
     pub fn is_persistent(&self) -> bool {
         matches!(
             self,
-            StorageType::UserDefaults | StorageType::SharedPreferences | StorageType::IndexedDb | StorageType::LocalStorage
+            StorageType::UserDefaults
+                | StorageType::SharedPreferences
+                | StorageType::IndexedDb
+                | StorageType::LocalStorage
         )
     }
 }
@@ -109,7 +112,13 @@ impl StateSnapshot {
         let signals: Vec<String> = self
             .signals
             .iter()
-            .map(|(k, v)| format!("\"{}\":\"{}\"", k, v.replace('\\', "\\\\").replace('"', "\\\"")))
+            .map(|(k, v)| {
+                format!(
+                    "\"{}\":\"{}\"",
+                    k,
+                    v.replace('\\', "\\\\").replace('"', "\\\"")
+                )
+            })
             .collect();
 
         format!(
@@ -181,7 +190,9 @@ impl StateSnapshot {
                                 in_key = false;
                             } else if in_value {
                                 in_value = false;
-                                snapshot.signals.insert(current_key.clone(), current_value.clone());
+                                snapshot
+                                    .signals
+                                    .insert(current_key.clone(), current_value.clone());
                                 current_key.clear();
                                 current_value.clear();
                                 found_colon = false;
@@ -274,7 +285,11 @@ impl LifecyclePersistenceManager {
 
     /// Get a signal value from the current snapshot.
     pub fn get_signal(&self, id: &str) -> Option<String> {
-        self.current_snapshot.lock().unwrap().get_signal(id).map(|s| s.to_string())
+        self.current_snapshot
+            .lock()
+            .unwrap()
+            .get_signal(id)
+            .map(|s| s.to_string())
     }
 
     /// Get the current snapshot.

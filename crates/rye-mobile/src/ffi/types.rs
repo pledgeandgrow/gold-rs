@@ -346,6 +346,9 @@ mod tests {
     #[test]
     fn test_platform_detection() {
         let p = Platform::current();
-        assert!(matches!(p, Platform::Android | Platform::Ios | Platform::Other));
+        assert!(matches!(
+            p,
+            Platform::Android | Platform::Ios | Platform::Other
+        ));
     }
 }

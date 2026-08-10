@@ -95,7 +95,11 @@ impl<T: Clone + PartialEq + 'static> Selector<T> {
         runtime::pop_scope();
         inner.borrow_mut().value = Some(value);
 
-        Self { inner, scope_id, signal_id }
+        Self {
+            inner,
+            scope_id,
+            signal_id,
+        }
     }
 
     /// Create a new selector using `PartialEq` for change detection.

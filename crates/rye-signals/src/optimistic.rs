@@ -75,9 +75,7 @@ impl<T: Clone + PartialEq + 'static> OptimisticUpdate<T> {
         match &*self.state.borrow() {
             OptimisticState::Pending => OptimisticResult::Confirmed, // not fully done but optimistic
             OptimisticState::Confirmed => OptimisticResult::Confirmed,
-            OptimisticState::RolledBack(e) => OptimisticResult::RolledBack {
-                error: e.clone(),
-            },
+            OptimisticState::RolledBack(e) => OptimisticResult::RolledBack { error: e.clone() },
         }
     }
 
@@ -182,7 +180,8 @@ mod tests {
     #[test]
     fn test_optimistic_update_rollback() {
         let sig = Signal::new(5);
-        let result = optimistic_update_sync(&sig, 10, || Err::<(), String>("network error".to_string()));
+        let result =
+            optimistic_update_sync(&sig, 10, || Err::<(), String>("network error".to_string()));
         assert_eq!(sig.get(), 5); // rolled back
         assert!(matches!(result, OptimisticResult::RolledBack { .. }));
     }

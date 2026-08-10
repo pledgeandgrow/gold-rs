@@ -8,6 +8,6 @@ pub mod pool;
 pub mod query;
 pub mod reactive;
 
-pub use pool::{ConnectionPool, PooledConnection, PoolConfig};
-pub use query::{QueryBuilder, Query, QueryResult, ValueType, Condition, OrderDirection};
-pub use reactive::{use_query_db, ReactiveQuery, QueryState};
+pub use pool::{ConnectionPool, PoolConfig, PooledConnection};
+pub use query::{Condition, OrderDirection, Query, QueryBuilder, QueryResult, ValueType};
+pub use reactive::{use_query_db, QueryState, ReactiveQuery};

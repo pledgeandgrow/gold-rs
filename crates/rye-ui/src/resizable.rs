@@ -1,8 +1,8 @@
 //! Resizable — user-resizable panel.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ResizeDirection {
@@ -13,7 +13,11 @@ pub enum ResizeDirection {
 
 impl ResizeDirection {
     pub fn as_str(&self) -> &'static str {
-        match self { Self::Horizontal => "horizontal", Self::Vertical => "vertical", Self::Both => "both" }
+        match self {
+            Self::Horizontal => "horizontal",
+            Self::Vertical => "vertical",
+            Self::Both => "both",
+        }
     }
 }
 
@@ -32,19 +36,41 @@ pub struct ResizableProps {
 
 impl Default for ResizableProps {
     fn default() -> Self {
-        Self { direction: ResizeDirection::Both, width: "300px".to_string(), height: "200px".to_string(),
-               min_width: "100px".to_string(), min_height: "80px".to_string(),
-               max_width: "800px".to_string(), max_height: "600px".to_string(),
-               class: None, style: None }
+        Self {
+            direction: ResizeDirection::Both,
+            width: "300px".to_string(),
+            height: "200px".to_string(),
+            min_width: "100px".to_string(),
+            min_height: "80px".to_string(),
+            max_width: "800px".to_string(),
+            max_height: "600px".to_string(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ResizableProps {
-    pub fn direction(mut self, d: ResizeDirection) -> Self { self.direction = d; self }
-    pub fn width(mut self, w: impl Into<String>) -> Self { self.width = w.into(); self }
-    pub fn height(mut self, h: impl Into<String>) -> Self { self.height = h.into(); self }
-    pub fn min_width(mut self, w: impl Into<String>) -> Self { self.min_width = w.into(); self }
-    pub fn min_height(mut self, h: impl Into<String>) -> Self { self.min_height = h.into(); self }
+    pub fn direction(mut self, d: ResizeDirection) -> Self {
+        self.direction = d;
+        self
+    }
+    pub fn width(mut self, w: impl Into<String>) -> Self {
+        self.width = w.into();
+        self
+    }
+    pub fn height(mut self, h: impl Into<String>) -> Self {
+        self.height = h.into();
+        self
+    }
+    pub fn min_width(mut self, w: impl Into<String>) -> Self {
+        self.min_width = w.into();
+        self
+    }
+    pub fn min_height(mut self, h: impl Into<String>) -> Self {
+        self.min_height = h.into();
+        self
+    }
 }
 
 pub struct Resizable;
@@ -67,10 +93,22 @@ impl Resizable {
             props.style.as_deref().unwrap_or(""),
         );
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-resizable rye-resizable-{} {}", props.direction.as_str(), props.class.as_deref().unwrap_or("")))],
-            Vec::new(), Vec::new()))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!(
+                        "rye-resizable rye-resizable-{} {}",
+                        props.direction.as_str(),
+                        props.class.as_deref().unwrap_or("")
+                    ),
+                ),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ))
     }
 }
 
@@ -93,7 +131,10 @@ mod tests {
 
     #[test]
     fn test_resizable_builder() {
-        let p = ResizableProps::default().direction(ResizeDirection::Horizontal).width("500px").min_width("200px");
+        let p = ResizableProps::default()
+            .direction(ResizeDirection::Horizontal)
+            .width("500px")
+            .min_width("200px");
         assert_eq!(p.direction, ResizeDirection::Horizontal);
         assert_eq!(p.width, "500px");
     }

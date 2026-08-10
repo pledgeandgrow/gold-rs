@@ -16,18 +16,18 @@
 //! - **Goal 193**: SSR compression with Brotli/Zstd
 //! - **Goal 195**: Cron / scheduled tasks
 
-pub mod edge;
-pub mod progressive_hydration;
-pub mod prefetch;
-pub mod realtime;
-pub mod middleware;
-pub mod ssg;
-pub mod loader;
 pub mod api_routes;
-pub mod typed_sse;
-pub mod session_affinity;
-pub mod partial_rerender;
-pub mod signal_hydration;
-pub mod request_context;
 pub mod compression;
 pub mod cron;
+pub mod edge;
+pub mod loader;
+pub mod middleware;
+pub mod partial_rerender;
+pub mod prefetch;
+pub mod progressive_hydration;
+pub mod realtime;
+pub mod request_context;
+pub mod session_affinity;
+pub mod signal_hydration;
+pub mod ssg;
+pub mod typed_sse;

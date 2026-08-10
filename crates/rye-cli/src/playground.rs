@@ -65,10 +65,11 @@ fn generate_id() -> String {
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
     let mut id = String::new();
-    let mut hash: u64 = 0xdeadbeef_u64
-        .wrapping_add(COUNTER.fetch_add(1, Ordering::SeqCst));
+    let mut hash: u64 = 0xdeadbeef_u64.wrapping_add(COUNTER.fetch_add(1, Ordering::SeqCst));
     for i in 0..8 {
-        hash = hash.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        hash = hash
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let idx = ((hash >> (i * 4)) as usize) % chars.len();
         id.push(chars[idx]);
     }
@@ -196,7 +197,10 @@ render();
 </body>
 </html>"#,
             code = initial_code.replace('<', "&lt;").replace('>', "&gt;"),
-            default_code = default_snippet_code().replace('<', "&lt;").replace('>', "&gt;").replace('\n', "\\n"),
+            default_code = default_snippet_code()
+                .replace('<', "&lt;")
+                .replace('>', "&gt;")
+                .replace('\n', "\\n"),
         )
     }
 }
@@ -215,7 +219,8 @@ fn Counter() {
         button { onclick: move |_| count.set(count.get() - 1); "-" }
     }
 }
-"#.to_string()
+"#
+    .to_string()
 }
 
 /// Run the playground command.

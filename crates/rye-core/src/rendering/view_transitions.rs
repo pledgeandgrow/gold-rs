@@ -48,9 +48,13 @@ pub fn is_view_transitions_supported() -> bool {
     // On Wasm: 'startViewTransition' in document
     // On native: false (fallback to manual transitions)
     #[cfg(not(target_arch = "wasm32"))]
-    { false }
+    {
+        false
+    }
     #[cfg(target_arch = "wasm32")]
-    { false }
+    {
+        false
+    }
 }
 
 /// Generate the JS for view transitions.
@@ -78,7 +82,10 @@ pub fn view_transition_script() -> &'static str {
 pub fn view_transition_css(names: &[(&str, &str)]) -> String {
     let mut css = String::new();
     for (selector, name) in names {
-        css.push_str(&format!("{} {{\n  view-transition-name: {};\n}}\n", selector, name));
+        css.push_str(&format!(
+            "{} {{\n  view-transition-name: {};\n}}\n",
+            selector, name
+        ));
     }
 
     // Default transition animation

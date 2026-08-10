@@ -2,9 +2,9 @@
 //!
 //! Procedural macros for rye — `template!`, `#[component]`, custom diagnostics.
 
-mod template;
 mod component;
 mod server;
+mod template;
 
 use proc_macro::TokenStream;
 

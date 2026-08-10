@@ -51,14 +51,15 @@ impl PrerenderCache {
             consumed: false,
         };
 
-        self.entries
-            .borrow_mut()
-            .insert(key.to_string(), PrerenderedNode {
+        self.entries.borrow_mut().insert(
+            key.to_string(),
+            PrerenderedNode {
                 content: node.content.clone(),
                 key: node.key.clone(),
                 created_at: node.created_at,
                 consumed: false,
-            });
+            },
+        );
 
         node
     }
@@ -169,7 +170,9 @@ impl PrerenderScheduler {
             priority,
         });
         // Sort by priority (highest first)
-        self.queue.borrow_mut().sort_by(|a, b| b.priority.cmp(&a.priority));
+        self.queue
+            .borrow_mut()
+            .sort_by(|a, b| b.priority.cmp(&a.priority));
     }
 
     /// Process the next prerender request in the queue.

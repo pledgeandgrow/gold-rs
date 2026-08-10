@@ -3,23 +3,23 @@
 //! Command-line tool for rye — new, dev, build, test, deploy, add, upgrade.
 //! Binary name is `rpg` (rye project generator).
 
+mod build;
+mod bundle;
 mod dev_server;
+mod doctor;
+mod doctor_ext;
+mod ecosystem;
+mod editor_ext;
 mod explain;
+mod generate;
+mod init_wizard;
+mod lint;
+mod playground;
+mod profile;
 mod scaffold;
 mod test;
 mod test_gen;
-mod lint;
-mod doctor;
-mod doctor_ext;
-mod playground;
 mod upgrade_ext;
-mod profile;
-mod bundle;
-mod init_wizard;
-mod generate;
-mod editor_ext;
-mod ecosystem;
-mod build;
 
 use std::env;
 use std::fs;
@@ -122,7 +122,10 @@ fn cmd_new(args: &[String]) {
         .map(|a| &a[11..])
         .unwrap_or("web");
     let name = args.iter().last().map(|s| s.as_str()).unwrap_or("my-app");
-    println!("Creating new rye project: {} (template: {})", name, template);
+    println!(
+        "Creating new rye project: {} (template: {})",
+        name, template
+    );
     // TODO: scaffold project from template
 }
 
@@ -179,7 +182,10 @@ fn cmd_add(args: &[String]) {
             // TODO: add from registry
         }
         other => {
-            eprintln!("Unknown add target: {}. Use 'component', 'plugin', or a package name.", other);
+            eprintln!(
+                "Unknown add target: {}. Use 'component', 'plugin', or a package name.",
+                other
+            );
         }
     }
 }

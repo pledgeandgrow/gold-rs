@@ -71,7 +71,10 @@ fn cmd_explain(code: &str, json: bool) {
         }
         None => {
             if json {
-                println!(r#"{{"error":"unknown_code","code":"{}","message":"No error code found for '{}'. Use 'rpg explain --list' to see all codes."}}"#, code, code);
+                println!(
+                    r#"{{"error":"unknown_code","code":"{}","message":"No error code found for '{}'. Use 'rpg explain --list' to see all codes."}}"#,
+                    code, code
+                );
             } else {
                 eprintln!("Unknown error code: {}", code);
                 eprintln!("Use 'rpg explain --list' to see all error codes.");

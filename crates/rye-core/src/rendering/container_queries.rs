@@ -15,12 +15,18 @@ pub struct ContainerQuery {
 impl ContainerQuery {
     /// Create a container query with a condition.
     pub fn new(condition: impl Into<String>) -> Self {
-        Self { name: None, condition: condition.into() }
+        Self {
+            name: None,
+            condition: condition.into(),
+        }
     }
 
     /// Create a named container query.
     pub fn named(name: impl Into<String>, condition: impl Into<String>) -> Self {
-        Self { name: Some(name.into()), condition: condition.into() }
+        Self {
+            name: Some(name.into()),
+            condition: condition.into(),
+        }
     }
 
     /// Min width container query.
@@ -67,7 +73,11 @@ impl ContainerType {
 
 /// Generate CSS for a container with the given type and optional name.
 pub fn container_css(selector: &str, container_type: ContainerType, name: Option<&str>) -> String {
-    let mut css = format!("{} {{\n  container-type: {};\n", selector, container_type.as_str());
+    let mut css = format!(
+        "{} {{\n  container-type: {};\n",
+        selector,
+        container_type.as_str()
+    );
     if let Some(name) = name {
         css.push_str(&format!("  container-name: {};\n", name));
     }

@@ -27,12 +27,19 @@ pub enum SagaState {
     /// Failed at the given step index, compensation was run.
     Failed { step: usize, error: String },
     /// Failed and compensation also failed.
-    CompensationFailed { step: usize, error: String, comp_error: String },
+    CompensationFailed {
+        step: usize,
+        error: String,
+        comp_error: String,
+    },
 }
 
 impl SagaState {
     pub fn is_done(&self) -> bool {
-        matches!(self, SagaState::Completed | SagaState::Failed { .. } | SagaState::CompensationFailed { .. })
+        matches!(
+            self,
+            SagaState::Completed | SagaState::Failed { .. } | SagaState::CompensationFailed { .. }
+        )
     }
 
     pub fn is_success(&self) -> bool {
@@ -200,11 +207,19 @@ mod tests {
         let comp_clone = Rc::clone(&compensated);
 
         let saga = Saga::<i32, String>::new()
-            .step("step1", || StepResult::Success(1), move || {
-                comp_clone.set(true);
-                Ok(())
-            })
-            .step("step2", || StepResult::Failure("oops".to_string()), || Ok(()));
+            .step(
+                "step1",
+                || StepResult::Success(1),
+                move || {
+                    comp_clone.set(true);
+                    Ok(())
+                },
+            )
+            .step(
+                "step2",
+                || StepResult::Failure("oops".to_string()),
+                || Ok(()),
+            );
 
         let state = saga.run();
         assert!(matches!(state, SagaState::Failed { step: 1, .. }));
@@ -214,8 +229,16 @@ mod tests {
     #[test]
     fn test_saga_compensation_failure() {
         let saga = Saga::<i32, String>::new()
-            .step("step1", || StepResult::Success(1), || Err("comp failed".to_string()))
-            .step("step2", || StepResult::Failure("step failed".to_string()), || Ok(()));
+            .step(
+                "step1",
+                || StepResult::Success(1),
+                || Err("comp failed".to_string()),
+            )
+            .step(
+                "step2",
+                || StepResult::Failure("step failed".to_string()),
+                || Ok(()),
+            );
 
         let state = saga.run();
         assert!(matches!(state, SagaState::CompensationFailed { .. }));
@@ -236,7 +259,10 @@ mod tests {
             .step("charge_card", || StepResult::Success(2), || Ok(()))
             .step("ship", || StepResult::Success(3), || Ok(()));
 
-        assert_eq!(saga.step_names(), vec!["create_order", "charge_card", "ship"]);
+        assert_eq!(
+            saga.step_names(),
+            vec!["create_order", "charge_card", "ship"]
+        );
         assert_eq!(saga.step_count(), 3);
     }
 
@@ -254,8 +280,7 @@ mod tests {
 
     #[test]
     fn test_saga_state_is_done() {
-        let saga = Saga::<i32, String>::new()
-            .step("step1", || StepResult::Success(1), || Ok(()));
+        let saga = Saga::<i32, String>::new().step("step1", || StepResult::Success(1), || Ok(()));
 
         assert!(!saga.state().is_done());
         saga.run();
@@ -275,9 +300,36 @@ mod tests {
         let comp2 = Rc::clone(&order);
 
         let saga = Saga::<i32, String>::new()
-            .step("s1", move || { order1.borrow_mut().push("s1"); StepResult::Success(1) }, move || { comp1.borrow_mut().push("c1"); Ok(()) })
-            .step("s2", move || { order2.borrow_mut().push("s2"); StepResult::Success(2) }, move || { comp2.borrow_mut().push("c2"); Ok(()) })
-            .step("s3", move || { order3.borrow_mut().push("s3"); StepResult::Failure("fail".to_string()) }, || Ok(()));
+            .step(
+                "s1",
+                move || {
+                    order1.borrow_mut().push("s1");
+                    StepResult::Success(1)
+                },
+                move || {
+                    comp1.borrow_mut().push("c1");
+                    Ok(())
+                },
+            )
+            .step(
+                "s2",
+                move || {
+                    order2.borrow_mut().push("s2");
+                    StepResult::Success(2)
+                },
+                move || {
+                    comp2.borrow_mut().push("c2");
+                    Ok(())
+                },
+            )
+            .step(
+                "s3",
+                move || {
+                    order3.borrow_mut().push("s3");
+                    StepResult::Failure("fail".to_string())
+                },
+                || Ok(()),
+            );
 
         saga.run();
 

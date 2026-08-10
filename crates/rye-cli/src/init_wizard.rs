@@ -112,8 +112,16 @@ impl ProjectConfig {
         Self {
             name: name.to_string(),
             template,
-            features: template.recommended_features().iter().map(|s| s.to_string()).collect(),
-            dependencies: template.recommended_deps().iter().map(|s| s.to_string()).collect(),
+            features: template
+                .recommended_features()
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            dependencies: template
+                .recommended_deps()
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
             use_strict_types: true,
             generate_tests: true,
             setup_ci: false,
@@ -174,19 +182,13 @@ impl ProjectWizard {
             questions: vec![
                 WizardQuestion::new(
                     "What type of project?",
-                    vec!["web", "desktop", "mobile", "ssr", "ssg", "library", "monorepo"],
+                    vec![
+                        "web", "desktop", "mobile", "ssr", "ssg", "library", "monorepo",
+                    ],
                     0,
                 ),
-                WizardQuestion::new(
-                    "Generate tests?",
-                    vec!["yes", "no"],
-                    0,
-                ),
-                WizardQuestion::new(
-                    "Set up CI/CD?",
-                    vec!["yes", "no"],
-                    1,
-                ),
+                WizardQuestion::new("Generate tests?", vec!["yes", "no"], 0),
+                WizardQuestion::new("Set up CI/CD?", vec!["yes", "no"], 1),
             ],
         }
     }
@@ -227,7 +229,11 @@ impl Default for ProjectWizard {
 
 /// Run the init command.
 pub fn run(args: &[String]) {
-    let name = args.iter().find(|a| !a.starts_with("--")).map(|s| s.as_str()).unwrap_or("my-app");
+    let name = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map(|s| s.as_str())
+        .unwrap_or("my-app");
     let template = args
         .iter()
         .find(|a| a.starts_with("--template"))
@@ -245,7 +251,11 @@ pub fn run(args: &[String]) {
     };
 
     let config = ProjectConfig::from_template(name, proj_template);
-    println!("Creating project: {} ({})", config.name, config.template.display_name());
+    println!(
+        "Creating project: {} ({})",
+        config.name,
+        config.template.display_name()
+    );
     println!("Features: {}", config.features.join(", "));
     println!("Dependencies: {}", config.dependencies.join(", "));
     println!("\nProject structure:");

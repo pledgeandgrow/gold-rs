@@ -141,7 +141,14 @@ impl MemoryTracker {
             }
 
             if growing && prev > 0 {
-                let first = self.snapshots.first().unwrap().by_category.get(category).copied().unwrap_or(0);
+                let first = self
+                    .snapshots
+                    .first()
+                    .unwrap()
+                    .by_category
+                    .get(category)
+                    .copied()
+                    .unwrap_or(0);
                 leaks.push(LeakReport {
                     category: category.clone(),
                     growth_bytes: prev.saturating_sub(first),
@@ -164,7 +171,10 @@ impl MemoryTracker {
             report.push_str(&format!("Total freed: {}\n", latest.total_freed));
             report.push_str(&format!("Allocations: {}\n", latest.alloc_count));
             report.push_str(&format!("Frees: {}\n", latest.free_count));
-            report.push_str(&format!("Avg alloc size: {:.1} bytes\n", latest.avg_alloc_size()));
+            report.push_str(&format!(
+                "Avg alloc size: {:.1} bytes\n",
+                latest.avg_alloc_size()
+            ));
 
             report.push_str("\nBy category:\n");
             let mut cats: Vec<_> = latest.by_category.iter().collect();

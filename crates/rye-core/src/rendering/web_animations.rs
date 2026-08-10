@@ -185,7 +185,11 @@ pub fn fade_in(duration_ms: u32) -> (Vec<Keyframe>, AnimationOptions) {
 }
 
 /// Generate a slide-in animation.
-pub fn slide_in(direction: &str, distance: f32, duration_ms: u32) -> (Vec<Keyframe>, AnimationOptions) {
+pub fn slide_in(
+    direction: &str,
+    distance: f32,
+    duration_ms: u32,
+) -> (Vec<Keyframe>, AnimationOptions) {
     let transform_start = match direction {
         "left" => format!("translateX(-{}px)", distance),
         "right" => format!("translateX({}px)", distance),
@@ -195,8 +199,12 @@ pub fn slide_in(direction: &str, distance: f32, duration_ms: u32) -> (Vec<Keyfra
     };
 
     let keyframes = vec![
-        Keyframe::at(0.0).prop("transform", transform_start).prop("opacity", "0"),
-        Keyframe::at(1.0).prop("transform", "translateX(0)").prop("opacity", "1"),
+        Keyframe::at(0.0)
+            .prop("transform", transform_start)
+            .prop("opacity", "0"),
+        Keyframe::at(1.0)
+            .prop("transform", "translateX(0)")
+            .prop("opacity", "1"),
     ];
     let options = AnimationOptions {
         duration: AnimationDuration::Ms(duration_ms),
@@ -236,7 +244,10 @@ mod tests {
         assert_eq!(AnimationDirection::Normal.as_str(), "normal");
         assert_eq!(AnimationDirection::Reverse.as_str(), "reverse");
         assert_eq!(AnimationDirection::Alternate.as_str(), "alternate");
-        assert_eq!(AnimationDirection::AlternateReverse.as_str(), "alternate-reverse");
+        assert_eq!(
+            AnimationDirection::AlternateReverse.as_str(),
+            "alternate-reverse"
+        );
     }
 
     #[test]
@@ -258,7 +269,10 @@ mod tests {
     fn test_slide_in() {
         let (kf, opts) = slide_in("left", 100.0, 300);
         assert_eq!(kf.len(), 2);
-        assert!(kf[0].properties.iter().any(|(k, v)| k == "transform" && v.contains("translateX(-100px)")));
+        assert!(kf[0]
+            .properties
+            .iter()
+            .any(|(k, v)| k == "transform" && v.contains("translateX(-100px)")));
         assert_eq!(opts.easing, "ease-out");
     }
 

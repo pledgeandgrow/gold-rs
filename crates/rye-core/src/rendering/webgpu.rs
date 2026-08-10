@@ -54,7 +54,10 @@ pub struct WebGpuContext {
 impl WebGpuContext {
     /// Create a new WebGPU context.
     pub fn new(config: WebGpuConfig) -> Self {
-        Self { config, active: false }
+        Self {
+            config,
+            active: false,
+        }
     }
 
     /// Initialize the GPU context.
@@ -67,9 +70,13 @@ impl WebGpuContext {
         // On Wasm: typeof navigator.gpu !== 'undefined'
         // On native: wgpu is always available
         #[cfg(not(target_arch = "wasm32"))]
-        { true }
+        {
+            true
+        }
         #[cfg(target_arch = "wasm32")]
-        { false }
+        {
+            false
+        }
     }
 }
 
@@ -133,12 +140,19 @@ pub struct BufferUsage {
 impl BufferUsage {
     /// Vertex buffer usage.
     pub fn vertex() -> Self {
-        Self { vertex: true, ..Default::default() }
+        Self {
+            vertex: true,
+            ..Default::default()
+        }
     }
 
     /// Uniform buffer usage.
     pub fn uniform() -> Self {
-        Self { uniform: true, copy_dst: true, ..Default::default() }
+        Self {
+            uniform: true,
+            copy_dst: true,
+            ..Default::default()
+        }
     }
 }
 

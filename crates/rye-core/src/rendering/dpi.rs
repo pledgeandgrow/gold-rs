@@ -82,9 +82,13 @@ pub fn detect_device_pixel_ratio() -> f32 {
     // On Wasm: window.devicePixelRatio
     // On native: query the window/surface
     #[cfg(not(target_arch = "wasm32"))]
-    { 1.0 }
+    {
+        1.0
+    }
     #[cfg(target_arch = "wasm32")]
-    { 1.0 }
+    {
+        1.0
+    }
 }
 
 /// Generate the JS for DPI detection and canvas sizing.

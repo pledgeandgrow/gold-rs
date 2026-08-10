@@ -6,7 +6,46 @@ A UI framework that combines Rust's safety, React's ergonomics, Vue's simplicity
 
 ## Status
 
-**250/250 goals implemented.** All 150 V1 goals (Phases 1–14) and all 100 post-V1 goals (Phases 15–23) are complete. The framework spans 17 crates with comprehensive module coverage across rendering, reactivity, server-side rendering, native mobile, testing, CLI tooling, AI integration, and ecosystem interop.
+**Early-stage / experimental.** This is not a production-ready framework. The
+codebase compiles and has a test suite (~1,900 tests passing), but many
+features are scaffolds or stubs rather than working implementations. Treat the
+feature list below as a **design roadmap**, not a list of proven capabilities.
+
+### What actually works (verified by build + tests)
+
+- **`rye-signals`** — Signal, Memo, Effect, Resource, GlobalSignal with
+  automatic dependency tracking. This is the most complete crate.
+- **`rye-core`** — Component trait, Renderer trait, Template type, context/DI,
+  suspense/error boundaries, hydration markers, server actions, islands.
+  Compiles and is unit-tested, but not yet proven in a real app.
+- **`rye-macros`** — `template!` and `#[component]` proc macros. Basic parsing
+  works; see known limitations below.
+- **`rye-html`** — WASM/DOM renderer via `web-sys`. The demo app targets this.
+- **`rye-ssr`** — String-based SSR renderer with hydration markers.
+- **`rye-cli` (`rpg`)** — CLI binary with 21 subcommands. Builds and runs.
+- **`rye-desktop`** — Native GPU renderer (wgpu + taffy + cosmic-text) with
+  real WGSL shaders. Compiles on desktop; not yet wired to a working app.
+- **`rye-testing`** — In-memory TestRenderer for unit tests.
+
+### Known limitations (being fixed)
+
+- **`template!` macro is undertested.** The demo app (`rye-demo`) currently
+  builds template trees by hand via `Template::new_element(...)` instead of
+  using the `template!` macro. Dogfooding the macro is a top priority.
+- **`rye-mobile` has FFI bindings but is untested on devices.** The crate
+  includes ~2,000 LOC of JNI (Android) and ObjC (iOS) bindings in `src/ffi/`,
+  plus ~7,000 LOC of config types and manager APIs. It compiles on desktop
+  (FFI is cfg-gated), but has never been run on an actual Android or iOS
+  device. Treat mobile as **unproven**, not non-existent.
+- **No real-world app has been shipped.** The demo renders in a browser via
+  WASM, but no app has been deployed or used in production.
+- **Clippy has ~240 warnings.** The CI clippy job is advisory (non-blocking)
+  until these are cleaned up.
+- **`goal.md` marks 250/250 goals as complete.** This is aspirational, not
+  verified. The goals are being re-audited against actual implementations.
+- **Five crates are minimal stubs** (55–87 LOC each, 0 tests):
+  `rye-router`, `rye-forms`, `rye-animations`, `rye-i18n`, `rye-devtools`.
+  They define types and module structure but have no real implementation.
 
 ## What rye Offers
 

@@ -30,9 +30,9 @@
 //!     .tokens(DesignTokens::light().primary("#7c3aed")));
 //! ```
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::tokens::DesignTokens;
+use rye_core::template::Template;
+use rye_core::Element;
 
 /// Which theme mode to use.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,7 +46,9 @@ pub enum ThemeMode {
 }
 
 impl Default for ThemeMode {
-    fn default() -> Self { Self::Light }
+    fn default() -> Self {
+        Self::Light
+    }
 }
 
 /// Props for the [`ThemeProvider`] component.
@@ -68,23 +70,56 @@ pub struct ThemeProviderProps {
 
 impl Default for ThemeProviderProps {
     fn default() -> Self {
-        Self { mode: ThemeMode::Light, tokens: None, dark_tokens: None,
-               set_data_attr: true, class: None, style: None }
+        Self {
+            mode: ThemeMode::Light,
+            tokens: None,
+            dark_tokens: None,
+            set_data_attr: true,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ThemeProviderProps {
     /// Light theme.
-    pub fn light() -> Self { Self { mode: ThemeMode::Light, ..Default::default() } }
+    pub fn light() -> Self {
+        Self {
+            mode: ThemeMode::Light,
+            ..Default::default()
+        }
+    }
     /// Dark theme.
-    pub fn dark() -> Self { Self { mode: ThemeMode::Dark, ..Default::default() } }
+    pub fn dark() -> Self {
+        Self {
+            mode: ThemeMode::Dark,
+            ..Default::default()
+        }
+    }
     /// Auto-switching (light + dark via media query).
-    pub fn auto() -> Self { Self { mode: ThemeMode::Auto, ..Default::default() } }
+    pub fn auto() -> Self {
+        Self {
+            mode: ThemeMode::Auto,
+            ..Default::default()
+        }
+    }
 
-    pub fn mode(mut self, m: ThemeMode) -> Self { self.mode = m; self }
-    pub fn tokens(mut self, t: DesignTokens) -> Self { self.tokens = Some(t); self }
-    pub fn dark_tokens(mut self, t: DesignTokens) -> Self { self.dark_tokens = Some(t); self }
-    pub fn class(mut self, c: impl Into<String>) -> Self { self.class = Some(c.into()); self }
+    pub fn mode(mut self, m: ThemeMode) -> Self {
+        self.mode = m;
+        self
+    }
+    pub fn tokens(mut self, t: DesignTokens) -> Self {
+        self.tokens = Some(t);
+        self
+    }
+    pub fn dark_tokens(mut self, t: DesignTokens) -> Self {
+        self.dark_tokens = Some(t);
+        self
+    }
+    pub fn class(mut self, c: impl Into<String>) -> Self {
+        self.class = Some(c.into());
+        self
+    }
 }
 
 /// ThemeProvider component — injects CSS variables and wraps children.
@@ -95,9 +130,12 @@ impl ThemeProvider {
         let css = generate_css(&props);
 
         // <style> tag with all CSS variables
-        let style_tag = Template::new_element("style",
+        let style_tag = Template::new_element(
+            "style",
             vec![("id".to_string(), "rye-theme".to_string())],
-            Vec::new(), vec![Template::text(&css)]);
+            Vec::new(),
+            vec![Template::text(&css)],
+        );
 
         // Wrapper div with data-theme attribute
         let (data_attr, wrapper_style) = match props.mode {
@@ -117,7 +155,13 @@ impl ThemeProvider {
 
         let mut wrapper_attrs = vec![
             ("style".to_string(), wrapper_style),
-            ("class".to_string(), format!("rye-theme-provider {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "class".to_string(),
+                format!(
+                    "rye-theme-provider {}",
+                    props.class.as_deref().unwrap_or("")
+                ),
+            ),
         ];
         if let Some((k, v)) = data_attr {
             wrapper_attrs.push((k, v));
@@ -125,8 +169,12 @@ impl ThemeProvider {
 
         let wrapper = Template::new_element("div", wrapper_attrs, Vec::new(), Vec::new());
 
-        Element::Template(Template::new_element("div",
-            Vec::new(), Vec::new(), vec![style_tag, wrapper]))
+        Element::Template(Template::new_element(
+            "div",
+            Vec::new(),
+            Vec::new(),
+            vec![style_tag, wrapper],
+        ))
     }
 
     /// Generate only the CSS string (useful for SSR or head injection).
@@ -191,7 +239,11 @@ fn write_dark_overrides(css: &mut String, dark: &DesignTokens) {
     let _ = writeln!(css, "    --rye-border-subtle: {};", c.border_subtle);
     let _ = writeln!(css, "    --rye-input-bg: {};", c.input_bg);
     let _ = writeln!(css, "    --rye-input-border: {};", c.input_border);
-    let _ = writeln!(css, "    --rye-input-border-focus: {};", c.input_border_focus);
+    let _ = writeln!(
+        css,
+        "    --rye-input-border-focus: {};",
+        c.input_border_focus
+    );
     let _ = writeln!(css, "    --rye-overlay: {};", c.overlay);
     let _ = writeln!(css, "    --rye-ring: {};", c.ring);
 }
@@ -225,8 +277,7 @@ mod tests {
 
     #[test]
     fn test_props_custom_tokens() {
-        let p = ThemeProviderProps::light()
-            .tokens(DesignTokens::light().primary("#ff0000"));
+        let p = ThemeProviderProps::light().tokens(DesignTokens::light().primary("#ff0000"));
         assert_eq!(p.tokens.as_ref().unwrap().colors.primary, "#ff0000");
     }
 
@@ -279,8 +330,7 @@ mod tests {
 
     #[test]
     fn test_css_only_custom_tokens() {
-        let p = ThemeProviderProps::light()
-            .tokens(DesignTokens::light().primary("#7c3aed"));
+        let p = ThemeProviderProps::light().tokens(DesignTokens::light().primary("#7c3aed"));
         let css = ThemeProvider::css_only(&p);
         assert!(css.contains("--rye-primary: #7c3aed;"));
     }

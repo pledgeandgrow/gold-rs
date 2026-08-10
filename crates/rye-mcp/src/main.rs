@@ -11,8 +11,7 @@ use std::io::{self, BufRead, Write};
 use std::sync::Mutex;
 
 use rye_core::ai::{
-    code_review, context_optimizer, error_recovery, nl_search, prompt_templates,
-    usage_analytics,
+    code_review, context_optimizer, error_recovery, nl_search, prompt_templates, usage_analytics,
 };
 use rye_core::component_registry;
 use rye_core::error_codes;
@@ -236,19 +235,26 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
             let category = args.get("category").and_then(|v| v.as_str());
             let codes = match category {
                 Some(cat) => {
-                    let cat_enum = parse_category(cat).ok_or(format!("Unknown category: {}", cat))?;
+                    let cat_enum =
+                        parse_category(cat).ok_or(format!("Unknown category: {}", cat))?;
                     error_codes::list_category(cat_enum)
                 }
                 None => error_codes::all_codes().iter().collect(),
             };
             let entries: Vec<String> = codes.iter().map(|c| c.format_json()).collect();
-            Ok(serde_json::Value::String(format!("[{}]", entries.join(","))))
+            Ok(serde_json::Value::String(format!(
+                "[{}]",
+                entries.join(",")
+            )))
         }
         "rye_search_error_codes" => {
             let query = args["query"].as_str().ok_or("Missing 'query' parameter")?;
             let results = error_codes::search(query);
             let entries: Vec<String> = results.iter().map(|c| c.format_json()).collect();
-            Ok(serde_json::Value::String(format!("[{}]", entries.join(","))))
+            Ok(serde_json::Value::String(format!(
+                "[{}]",
+                entries.join(",")
+            )))
         }
         "rye_get_recovery_plan" => {
             let code = args["code"].as_str().ok_or("Missing 'code' parameter")?;
@@ -257,9 +263,9 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
                 None => Err(format!("No recovery plan for error code: {}", code)),
             }
         }
-        "rye_list_components" => {
-            Ok(serde_json::Value::String(component_registry::format_all_json()))
-        }
+        "rye_list_components" => Ok(serde_json::Value::String(
+            component_registry::format_all_json(),
+        )),
         "rye_find_component" => {
             let name = args["name"].as_str().ok_or("Missing 'name' parameter")?;
             match component_registry::find(name) {
@@ -271,20 +277,25 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
             let query = args["query"].as_str().ok_or("Missing 'query' parameter")?;
             let results = component_registry::search(query);
             let entries: Vec<String> = results.iter().map(|c| c.format_json()).collect();
-            Ok(serde_json::Value::String(format!("[{}]", entries.join(","))))
+            Ok(serde_json::Value::String(format!(
+                "[{}]",
+                entries.join(",")
+            )))
         }
         "rye_nl_search_components" => {
             let query = args["query"].as_str().ok_or("Missing 'query' parameter")?;
             let results = nl_search::search_nl(query);
-            Ok(serde_json::Value::String(nl_search::format_results_json(&results)))
+            Ok(serde_json::Value::String(nl_search::format_results_json(
+                &results,
+            )))
         }
-        "rye_list_prompt_templates" => {
-            Ok(serde_json::Value::String(prompt_templates::format_all_json()))
-        }
+        "rye_list_prompt_templates" => Ok(serde_json::Value::String(
+            prompt_templates::format_all_json(),
+        )),
         "rye_get_prompt_template" => {
             let id = args["id"].as_str().ok_or("Missing 'id' parameter")?;
-            let template = prompt_templates::get_template(id)
-                .ok_or(format!("Template not found: {}", id))?;
+            let template =
+                prompt_templates::get_template(id).ok_or(format!("Template not found: {}", id))?;
             let values_map: std::collections::HashMap<&str, String> = args
                 .get("values")
                 .and_then(|v| v.as_object())
@@ -297,19 +308,30 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
             Ok(serde_json::Value::String(template.fill(&values_map)))
         }
         "rye_review_code" => {
-            let source = args["source"].as_str().ok_or("Missing 'source' parameter")?;
-            let file_path = args.get("file_path").and_then(|v| v.as_str()).unwrap_or("anonymous");
+            let source = args["source"]
+                .as_str()
+                .ok_or("Missing 'source' parameter")?;
+            let file_path = args
+                .get("file_path")
+                .and_then(|v| v.as_str())
+                .unwrap_or("anonymous");
             let result = code_review::review_source(file_path, source);
             Ok(serde_json::Value::String(result.format_json()))
         }
         "rye_get_context" => {
-            let max_tokens = args.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(4000) as usize;
+            let max_tokens = args
+                .get("max_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(4000) as usize;
             let context = context_optimizer::generate_context_package(max_tokens);
             Ok(serde_json::Value::String(context))
         }
         "rye_get_focused_context" => {
             let query = args["query"].as_str().ok_or("Missing 'query' parameter")?;
-            let max_tokens = args.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(4000) as usize;
+            let max_tokens = args
+                .get("max_tokens")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(4000) as usize;
             let context = context_optimizer::generate_focused_context(query, max_tokens);
             Ok(serde_json::Value::String(context))
         }
@@ -317,7 +339,10 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
             let name = args["name"].as_str().ok_or("Missing 'name' parameter")?;
             let props_str = args.get("props").and_then(|v| v.as_str()).unwrap_or("");
             let with_style = args.get("style").and_then(|v| v.as_bool()).unwrap_or(false);
-            let is_island = args.get("island").and_then(|v| v.as_bool()).unwrap_or(false);
+            let is_island = args
+                .get("island")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
             let with_test = args.get("test").and_then(|v| v.as_bool()).unwrap_or(false);
 
             let props = scaffold_gen::parse_props(props_str);
@@ -331,7 +356,9 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
             }
         }
         "rye_scaffold_test" => {
-            let source = args["source"].as_str().ok_or("Missing 'source' parameter")?;
+            let source = args["source"]
+                .as_str()
+                .ok_or("Missing 'source' parameter")?;
             let test_code = test_gen_mcp::generate_test_from_source(source);
             Ok(serde_json::Value::String(test_code))
         }
@@ -342,7 +369,10 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
                 "most_used" => {
                     let stats = usage_analytics::most_used(limit);
                     let entries: Vec<String> = stats.iter().map(|s| s.format_json()).collect();
-                    Ok(serde_json::Value::String(format!("[{}]", entries.join(","))))
+                    Ok(serde_json::Value::String(format!(
+                        "[{}]",
+                        entries.join(",")
+                    )))
                 }
                 "unused" => {
                     let unused = usage_analytics::unused_components();
@@ -351,7 +381,10 @@ fn handle_tool_call(name: &str, args: &serde_json::Value) -> Result<serde_json::
                 _ => {
                     let stats = usage_analytics::all_stats();
                     let entries: Vec<String> = stats.iter().map(|s| s.format_json()).collect();
-                    Ok(serde_json::Value::String(format!("[{}]", entries.join(","))))
+                    Ok(serde_json::Value::String(format!(
+                        "[{}]",
+                        entries.join(",")
+                    )))
                 }
             }
         }
@@ -389,11 +422,13 @@ fn process_request(request: &serde_json::Value) -> Option<serde_json::Value> {
         "tools/list" => {
             let tools_list: Vec<serde_json::Value> = tools()
                 .iter()
-                .map(|t| serde_json::json!({
-                    "name": t.name,
-                    "description": t.description,
-                    "inputSchema": t.input_schema,
-                }))
+                .map(|t| {
+                    serde_json::json!({
+                        "name": t.name,
+                        "description": t.description,
+                        "inputSchema": t.input_schema,
+                    })
+                })
                 .collect();
             Some(serde_json::json!({
                 "jsonrpc": "2.0",
@@ -409,7 +444,9 @@ fn process_request(request: &serde_json::Value) -> Option<serde_json::Value> {
             match handle_tool_call(tool_name, arguments) {
                 Ok(result) => {
                     let content = match result {
-                        serde_json::Value::String(s) => vec![serde_json::json!({ "type": "text", "text": s })],
+                        serde_json::Value::String(s) => {
+                            vec![serde_json::json!({ "type": "text", "text": s })]
+                        }
                         other => vec![serde_json::json!({
                             "type": "text",
                             "text": serde_json::to_string_pretty(&other).unwrap_or_default()

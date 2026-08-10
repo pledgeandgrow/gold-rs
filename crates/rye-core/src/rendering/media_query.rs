@@ -13,7 +13,9 @@ pub struct MediaQuery {
 impl MediaQuery {
     /// Create a media query from a string.
     pub fn new(query: impl Into<String>) -> Self {
-        Self { query: query.into() }
+        Self {
+            query: query.into(),
+        }
     }
 
     /// Print media query.
@@ -60,7 +62,9 @@ pub struct MediaQueryTracker {
 impl MediaQueryTracker {
     /// Create a new media query tracker.
     pub fn new() -> Self {
-        Self { queries: Vec::new() }
+        Self {
+            queries: Vec::new(),
+        }
     }
 
     /// Register a media query.
@@ -84,7 +88,11 @@ impl MediaQueryTracker {
 
     /// Get all matching queries.
     pub fn matching_queries(&self) -> Vec<&MediaQuery> {
-        self.queries.iter().filter(|(_, m)| *m).map(|(q, _)| q).collect()
+        self.queries
+            .iter()
+            .filter(|(_, m)| *m)
+            .map(|(q, _)| q)
+            .collect()
     }
 }
 
@@ -145,8 +153,14 @@ mod tests {
         assert_eq!(MediaQuery::print().query, "print");
         assert_eq!(MediaQuery::max_width(768).query, "(max-width: 768px)");
         assert_eq!(MediaQuery::min_width(1024).query, "(min-width: 1024px)");
-        assert_eq!(MediaQuery::dark_mode().query, "(prefers-color-scheme: dark)");
-        assert_eq!(MediaQuery::reduced_motion().query, "(prefers-reduced-motion: reduce)");
+        assert_eq!(
+            MediaQuery::dark_mode().query,
+            "(prefers-color-scheme: dark)"
+        );
+        assert_eq!(
+            MediaQuery::reduced_motion().query,
+            "(prefers-reduced-motion: reduce)"
+        );
     }
 
     #[test]
@@ -161,10 +175,7 @@ mod tests {
 
     #[test]
     fn test_print_css() {
-        let css = print_css(&[
-            (".nav", "display: none;"),
-            (".content", "width: 100%;"),
-        ]);
+        let css = print_css(&[(".nav", "display: none;"), (".content", "width: 100%;")]);
         assert!(css.contains("@media print"));
         assert!(css.contains(".nav"));
         assert!(css.contains("display: none;"));

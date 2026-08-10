@@ -98,7 +98,9 @@ pub struct FeatureFlags {
 impl FeatureFlags {
     /// Create a new empty flag manager.
     pub fn new() -> Self {
-        Self { flags: HashMap::new() }
+        Self {
+            flags: HashMap::new(),
+        }
     }
 
     /// Register a flag.
@@ -113,7 +115,8 @@ impl FeatureFlags {
 
     /// Check if a flag is enabled for a specific user.
     pub fn is_on_for(&self, key: &str, user_id: &str) -> bool {
-        self.flags.get(key)
+        self.flags
+            .get(key)
             .map(|f| f.is_enabled_for(user_id))
             .unwrap_or(false)
     }
@@ -169,7 +172,9 @@ impl FeatureFlags {
 
     /// Export flags to JSON.
     pub fn to_json(&self) -> String {
-        let entries: Vec<String> = self.flags.iter()
+        let entries: Vec<String> = self
+            .flags
+            .iter()
             .map(|(k, f)| format!(r#""{}":{}"#, k, f.enabled))
             .collect();
         format!("{{{}}}", entries.join(","))

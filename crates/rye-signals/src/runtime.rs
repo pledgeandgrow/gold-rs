@@ -84,7 +84,8 @@ pub(crate) fn unregister_scope(id: ScopeId) {
     });
     // Get the set of signals this scope subscribed to, then remove only those entries.
     let signal_ids: Vec<SignalId> = SCOPE_SUBSCRIPTIONS.with(|ss| {
-        ss.borrow_mut().remove(&id)
+        ss.borrow_mut()
+            .remove(&id)
             .map(|set| set.into_iter().collect())
             .unwrap_or_default()
     });
@@ -168,9 +169,8 @@ pub(crate) fn notify(signal_id: SignalId) {
 /// Swaps the buffer out so re-entrant notify calls (from within callbacks) get a fresh buffer.
 fn run_subscribers(signal_id: SignalId) {
     // Swap out the buffer to release the borrow before running callbacks.
-    let mut buffer: Vec<Callback> = CALLBACK_BUFFER.with(|buf| {
-        std::mem::take(&mut *buf.borrow_mut())
-    });
+    let mut buffer: Vec<Callback> =
+        CALLBACK_BUFFER.with(|buf| std::mem::take(&mut *buf.borrow_mut()));
 
     SUBSCRIBERS.with(|subs| {
         if let Some(list) = subs.borrow().get(&signal_id) {
@@ -288,7 +288,5 @@ pub fn remove_subscriber_entry(signal_id: SignalId) {
 
 /// Get the subscriber count for a signal.
 pub fn subscriber_count(signal_id: SignalId) -> usize {
-    SUBSCRIBERS.with(|subs| {
-        subs.borrow().get(&signal_id).map(|l| l.len()).unwrap_or(0)
-    })
+    SUBSCRIBERS.with(|subs| subs.borrow().get(&signal_id).map(|l| l.len()).unwrap_or(0))
 }

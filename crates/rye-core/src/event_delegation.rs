@@ -42,12 +42,7 @@ impl EventDelegator {
     /// Returns a handler ID that can be used to remove the handler later.
     /// The element should have a `data-rye-event-id` attribute set to
     /// the returned ID for the delegation to work.
-    pub fn add_handler(
-        &self,
-        element_id: &str,
-        event: &str,
-        handler: Handler,
-    ) -> HandlerId {
+    pub fn add_handler(&self, element_id: &str, event: &str, handler: Handler) -> HandlerId {
         // Remove existing handler for this element+event
         let key = (element_id.to_string(), event.to_string());
         if let Some(old_id) = self.element_handlers.borrow().get(&key).copied() {
@@ -63,7 +58,9 @@ impl EventDelegator {
 
         self.handlers.borrow_mut().insert(id, handler);
         self.element_handlers.borrow_mut().insert(key, id);
-        self.registered_events.borrow_mut().insert(event.to_string());
+        self.registered_events
+            .borrow_mut()
+            .insert(event.to_string());
 
         id
     }
@@ -159,9 +156,8 @@ pub mod events {
 
     /// All commonly delegated event types.
     pub const ALL: &[&str] = &[
-        CLICK, INPUT, CHANGE, KEYDOWN, KEYUP, KEYPRESS,
-        SUBMIT, FOCUS, BLUR, MOUSEENTER, MOUSELEAVE,
-        SCROLL, RESIZE,
+        CLICK, INPUT, CHANGE, KEYDOWN, KEYUP, KEYPRESS, SUBMIT, FOCUS, BLUR, MOUSEENTER,
+        MOUSELEAVE, SCROLL, RESIZE,
     ];
 }
 
@@ -177,9 +173,13 @@ mod tests {
         let counter = Rc::new(Cell::new(0));
         let counter_clone = Rc::clone(&counter);
 
-        let id = delegator.add_handler("elem1", "click", Box::new(move |_| {
-            counter_clone.set(counter_clone.get() + 1);
-        }));
+        let id = delegator.add_handler(
+            "elem1",
+            "click",
+            Box::new(move |_| {
+                counter_clone.set(counter_clone.get() + 1);
+            }),
+        );
 
         delegator.dispatch("elem1", "click", &());
         assert_eq!(counter.get(), 1);
@@ -203,14 +203,22 @@ mod tests {
         let result = Rc::new(Cell::new(0));
 
         let r1 = Rc::clone(&result);
-        delegator.add_handler("elem1", "click", Box::new(move |_| {
-            r1.set(1);
-        }));
+        delegator.add_handler(
+            "elem1",
+            "click",
+            Box::new(move |_| {
+                r1.set(1);
+            }),
+        );
 
         let r2 = Rc::clone(&result);
-        delegator.add_handler("elem1", "click", Box::new(move |_| {
-            r2.set(2);
-        }));
+        delegator.add_handler(
+            "elem1",
+            "click",
+            Box::new(move |_| {
+                r2.set(2);
+            }),
+        );
 
         delegator.dispatch("elem1", "click", &());
         assert_eq!(result.get(), 2); // Second handler replaced first
@@ -250,10 +258,14 @@ mod tests {
 
         // Register via delegator using a forwarding closure (like render_loop does)
         let shared_clone = Rc::clone(&shared);
-        let id = delegator.add_handler("btn1", "click", Box::new(move |payload| {
-            let mut h = shared_clone.borrow_mut();
-            h(payload);
-        }));
+        let id = delegator.add_handler(
+            "btn1",
+            "click",
+            Box::new(move |payload| {
+                let mut h = shared_clone.borrow_mut();
+                h(payload);
+            }),
+        );
 
         // Dispatch should call the shared handler
         delegator.dispatch("btn1", "click", &());
@@ -278,14 +290,22 @@ mod tests {
         let inputs = Rc::new(Cell::new(0));
 
         let c = Rc::clone(&clicks);
-        delegator.add_handler("elem1", "click", Box::new(move |_| {
-            c.set(c.get() + 1);
-        }));
+        delegator.add_handler(
+            "elem1",
+            "click",
+            Box::new(move |_| {
+                c.set(c.get() + 1);
+            }),
+        );
 
         let i = Rc::clone(&inputs);
-        delegator.add_handler("elem1", "input", Box::new(move |_| {
-            i.set(i.get() + 1);
-        }));
+        delegator.add_handler(
+            "elem1",
+            "input",
+            Box::new(move |_| {
+                i.set(i.get() + 1);
+            }),
+        );
 
         delegator.dispatch("elem1", "click", &());
         assert_eq!(clicks.get(), 1);
@@ -309,9 +329,13 @@ mod tests {
         let counter = Rc::new(Cell::new(0));
 
         let c = Rc::clone(&counter);
-        delegator.add_handler("e1", "click", Box::new(move |_| {
-            c.set(c.get() + 1);
-        }));
+        delegator.add_handler(
+            "e1",
+            "click",
+            Box::new(move |_| {
+                c.set(c.get() + 1);
+            }),
+        );
 
         delegator.dispatch("e1", "click", &());
         assert_eq!(counter.get(), 1);

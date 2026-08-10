@@ -1,8 +1,8 @@
 //! MaskedInput — phone/date/SSN formatted input.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct MaskPattern {
@@ -12,19 +12,34 @@ pub struct MaskPattern {
 
 impl MaskPattern {
     pub fn phone() -> Self {
-        Self { mask: "(###) ###-####".to_string(), placeholder_char: '#' }
+        Self {
+            mask: "(###) ###-####".to_string(),
+            placeholder_char: '#',
+        }
     }
     pub fn date() -> Self {
-        Self { mask: "##/##/####".to_string(), placeholder_char: '#' }
+        Self {
+            mask: "##/##/####".to_string(),
+            placeholder_char: '#',
+        }
     }
     pub fn ssn() -> Self {
-        Self { mask: "###-##-####".to_string(), placeholder_char: '#' }
+        Self {
+            mask: "###-##-####".to_string(),
+            placeholder_char: '#',
+        }
     }
     pub fn zip() -> Self {
-        Self { mask: "#####".to_string(), placeholder_char: '#' }
+        Self {
+            mask: "#####".to_string(),
+            placeholder_char: '#',
+        }
     }
     pub fn custom(mask: impl Into<String>) -> Self {
-        Self { mask: mask.into(), placeholder_char: '#' }
+        Self {
+            mask: mask.into(),
+            placeholder_char: '#',
+        }
     }
 
     pub fn apply(&self, value: &str) -> String {
@@ -66,17 +81,39 @@ pub struct MaskedInputProps {
 
 impl Default for MaskedInputProps {
     fn default() -> Self {
-        Self { pattern: MaskPattern::phone(), value: String::new(), label: None,
-               disabled: false, error: None, class: None, style: None }
+        Self {
+            pattern: MaskPattern::phone(),
+            value: String::new(),
+            label: None,
+            disabled: false,
+            error: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl MaskedInputProps {
-    pub fn pattern(mut self, p: MaskPattern) -> Self { self.pattern = p; self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn error(mut self, e: impl Into<String>) -> Self { self.error = Some(e.into()); self }
+    pub fn pattern(mut self, p: MaskPattern) -> Self {
+        self.pattern = p;
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn error(mut self, e: impl Into<String>) -> Self {
+        self.error = Some(e.into());
+        self
+    }
 }
 
 pub struct MaskedInput;
@@ -91,7 +128,11 @@ impl MaskedInput {
                 Vec::new(), vec![Template::text(label)]));
         }
 
-        let border_color = if props.error.is_some() { vars::DANGER } else { vars::INPUT_BORDER };
+        let border_color = if props.error.is_some() {
+            vars::DANGER
+        } else {
+            vars::INPUT_BORDER
+        };
         let input_style = format!(
             "width:100%;padding:8px 16px;font-size:var(--rye-font-size-md);border:1px solid {};border-radius:var(--rye-radius-md);\
              background:{};opacity:{};cursor:{};font-family:var(--rye-font-family);box-sizing:border-box;{}",
@@ -109,7 +150,10 @@ impl MaskedInput {
             ("type".to_string(), "text".to_string()),
             ("style".to_string(), input_style),
             ("placeholder".to_string(), placeholder),
-            ("class".to_string(), format!("rye-masked-input {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "class".to_string(),
+                format!("rye-masked-input {}", props.class.as_deref().unwrap_or("")),
+            ),
         ];
         if !masked_value.is_empty() {
             attrs.push(("value".to_string(), masked_value));
@@ -118,17 +162,34 @@ impl MaskedInput {
             attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        children.push(Template::new_element("input", attrs, Vec::new(), Vec::new()));
+        children.push(Template::new_element(
+            "input",
+            attrs,
+            Vec::new(),
+            Vec::new(),
+        ));
 
         if let Some(error) = &props.error {
-            children.push(Template::new_element("span",
-                vec![("style".to_string(), format!("display:block;margin-top:4px;font-size:var(--rye-font-size-sm);color:{};", vars::DANGER))],
-                Vec::new(), vec![Template::text(error)]));
+            children.push(Template::new_element(
+                "span",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "display:block;margin-top:4px;font-size:var(--rye-font-size-sm);color:{};",
+                        vars::DANGER
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(error)],
+            ));
         }
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-masked-input-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -178,7 +239,11 @@ mod tests {
 
     #[test]
     fn test_masked_input_render() {
-        let el = MaskedInput::render(MaskedInputProps::default().value("5551234567").label("Phone"));
+        let el = MaskedInput::render(
+            MaskedInputProps::default()
+                .value("5551234567")
+                .label("Phone"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

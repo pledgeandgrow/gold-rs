@@ -49,7 +49,10 @@ impl RenderContext {
 
     /// Get an attribute value.
     pub fn get_attr(&self, name: &str) -> Option<&str> {
-        self.attrs.iter().find(|(k, _)| k == name).map(|(_, v)| v.as_str())
+        self.attrs
+            .iter()
+            .find(|(k, _)| k == name)
+            .map(|(_, v)| v.as_str())
     }
 }
 
@@ -195,9 +198,9 @@ mod tests {
     #[test]
     fn test_registry_modify_attrs() {
         let registry = RenderHookRegistry::new();
-        registry.register(|_| RenderHookResult::ModifyAttrs(vec![
-            ("data-analytics".to_string(), "true".to_string()),
-        ]));
+        registry.register(|_| {
+            RenderHookResult::ModifyAttrs(vec![("data-analytics".to_string(), "true".to_string())])
+        });
         let ctx = RenderContext::new("Counter", "div", "<div>Hello</div>");
         let result = registry.apply(ctx);
         assert!(result.contains("data-analytics=\"true\""));

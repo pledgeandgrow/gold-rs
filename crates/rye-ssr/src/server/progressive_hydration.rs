@@ -228,7 +228,8 @@ mod tests {
 
     #[test]
     fn test_progressive_config_on_interaction() {
-        let config = ProgressiveHydrationConfig::on_interaction(vec!["click".into(), "mouseover".into()]);
+        let config =
+            ProgressiveHydrationConfig::on_interaction(vec!["click".into(), "mouseover".into()]);
         assert_eq!(config.priority, HydrationPriority::OnInteraction);
         assert_eq!(config.interaction_events, vec!["click", "mouseover"]);
     }

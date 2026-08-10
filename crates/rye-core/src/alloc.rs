@@ -261,7 +261,9 @@ mod tests {
     fn test_arena_growth() {
         let mut arena = RenderArena::with_capacity(16);
         // This should trigger a growth
-        let s = arena.alloc_str("this is a much longer string than 16 bytes").to_string();
+        let s = arena
+            .alloc_str("this is a much longer string than 16 bytes")
+            .to_string();
         assert_eq!(s, "this is a much longer string than 16 bytes");
         assert!(arena.capacity() > 16);
     }

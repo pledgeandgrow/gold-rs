@@ -112,7 +112,12 @@ pub struct PrecompilationResult {
 
 impl PrecompilationResult {
     /// Create a successful result.
-    pub fn success(output_path: &str, original_size: u64, precompiled_size: u64, strategy: PrecompilationStrategy) -> Self {
+    pub fn success(
+        output_path: &str,
+        original_size: u64,
+        precompiled_size: u64,
+        strategy: PrecompilationStrategy,
+    ) -> Self {
         let speedup_ms = (strategy.estimated_speedup() * 100.0) as u64;
         Self {
             output_path: output_path.to_string(),
@@ -148,7 +153,8 @@ impl PrecompilationResult {
         if self.original_size == 0 {
             return 0.0;
         }
-        (self.precompiled_size as f64 - self.original_size as f64) / self.original_size as f64 * 100.0
+        (self.precompiled_size as f64 - self.original_size as f64) / self.original_size as f64
+            * 100.0
     }
 }
 
@@ -208,9 +214,16 @@ impl PrecompilationReport {
     pub fn to_text(&self) -> String {
         let mut text = String::new();
         text.push_str("=== Wasm Precompilation Report ===\n\n");
-        text.push_str(&format!("Strategy: {}\n", self.config.strategy.display_name()));
-        text.push_str(&format!("Modules: {} total, {} succeeded, {} failed\n\n",
-            self.results.len(), self.success_count(), self.failure_count()));
+        text.push_str(&format!(
+            "Strategy: {}\n",
+            self.config.strategy.display_name()
+        ));
+        text.push_str(&format!(
+            "Modules: {} total, {} succeeded, {} failed\n\n",
+            self.results.len(),
+            self.success_count(),
+            self.failure_count()
+        ));
 
         for result in &self.results {
             if result.success {
@@ -223,14 +236,20 @@ impl PrecompilationReport {
                     result.estimated_speedup_ms,
                 ));
             } else if let Some(error) = &result.error {
-                text.push_str(&format!("  ✗ {} — {}\n", result.strategy.display_name(), error));
+                text.push_str(&format!(
+                    "  ✗ {} — {}\n",
+                    result.strategy.display_name(),
+                    error
+                ));
             }
         }
 
-        text.push_str(&format!("\nTotal: {}KB → {}KB ({}ms estimated speedup)\n",
+        text.push_str(&format!(
+            "\nTotal: {}KB → {}KB ({}ms estimated speedup)\n",
             self.total_original_size / 1024,
             self.total_precompiled_size / 1024,
-            self.total_speedup_ms));
+            self.total_speedup_ms
+        ));
 
         text
     }
@@ -266,7 +285,12 @@ impl WasmPrecompiler {
         let precompiled_size = (original_size as f64 * 1.05) as u64;
         let output_path = wasm_path.replace(".wasm", ".precompiled.wasm");
 
-        PrecompilationResult::success(&output_path, original_size, precompiled_size, self.config.strategy)
+        PrecompilationResult::success(
+            &output_path,
+            original_size,
+            precompiled_size,
+            self.config.strategy,
+        )
     }
 
     /// Precompile multiple modules and generate a report.
@@ -298,14 +322,12 @@ impl WasmPrecompiler {
                     "rye_app.wasm", self.config.init_function
                 )
             }
-            PrecompilationStrategy::WasmerAot => {
-                "# Precompilation step (wasmer)\n\
-                 wasmer create exe rye_app.wasm --output rye_app.native\n".to_string()
-            }
-            PrecompilationStrategy::WasmtimeCranelift => {
-                "# Precompilation step (wasmtime)\n\
-                 wasmtime compile rye_app.wasm --output rye_app.cwasm\n".to_string()
-            }
+            PrecompilationStrategy::WasmerAot => "# Precompilation step (wasmer)\n\
+                 wasmer create exe rye_app.wasm --output rye_app.native\n"
+                .to_string(),
+            PrecompilationStrategy::WasmtimeCranelift => "# Precompilation step (wasmtime)\n\
+                 wasmtime compile rye_app.wasm --output rye_app.cwasm\n"
+                .to_string(),
             PrecompilationStrategy::None => {
                 "# No precompilation — using streaming compilation\n".to_string()
             }
@@ -327,7 +349,10 @@ mod tests {
     fn test_precompilation_strategy_estimated_speedup() {
         assert_eq!(PrecompilationStrategy::Wizer.estimated_speedup(), 0.40);
         assert_eq!(PrecompilationStrategy::None.estimated_speedup(), 0.0);
-        assert!(PrecompilationStrategy::WasmerAot.estimated_speedup() > PrecompilationStrategy::Wizer.estimated_speedup());
+        assert!(
+            PrecompilationStrategy::WasmerAot.estimated_speedup()
+                > PrecompilationStrategy::Wizer.estimated_speedup()
+        );
     }
 
     #[test]
@@ -347,7 +372,12 @@ mod tests {
 
     #[test]
     fn test_precompilation_result_success() {
-        let result = PrecompilationResult::success("out.wasm", 100000, 105000, PrecompilationStrategy::Wizer);
+        let result = PrecompilationResult::success(
+            "out.wasm",
+            100000,
+            105000,
+            PrecompilationStrategy::Wizer,
+        );
         assert!(result.success);
         assert_eq!(result.original_size, 100000);
         assert_eq!(result.precompiled_size, 105000);
@@ -364,7 +394,12 @@ mod tests {
 
     #[test]
     fn test_precompilation_result_size_change() {
-        let result = PrecompilationResult::success("out.wasm", 100000, 105000, PrecompilationStrategy::Wizer);
+        let result = PrecompilationResult::success(
+            "out.wasm",
+            100000,
+            105000,
+            PrecompilationStrategy::Wizer,
+        );
         assert_eq!(result.size_change(), 5000);
         assert!((result.size_change_percent() - 5.0).abs() < 0.01);
     }
@@ -379,7 +414,12 @@ mod tests {
     #[test]
     fn test_precompilation_report_add_result() {
         let mut report = PrecompilationReport::new(PrecompilationConfig::default());
-        report.add_result(PrecompilationResult::success("a.wasm", 100, 105, PrecompilationStrategy::Wizer));
+        report.add_result(PrecompilationResult::success(
+            "a.wasm",
+            100,
+            105,
+            PrecompilationStrategy::Wizer,
+        ));
         assert_eq!(report.success_count(), 1);
         assert_eq!(report.total_original_size, 100);
         assert_eq!(report.total_precompiled_size, 105);
@@ -388,7 +428,10 @@ mod tests {
     #[test]
     fn test_precompilation_report_failure() {
         let mut report = PrecompilationReport::new(PrecompilationConfig::default());
-        report.add_result(PrecompilationResult::failure("err", PrecompilationStrategy::Wizer));
+        report.add_result(PrecompilationResult::failure(
+            "err",
+            PrecompilationStrategy::Wizer,
+        ));
         assert_eq!(report.failure_count(), 1);
         assert_eq!(report.success_count(), 0);
     }
@@ -396,7 +439,12 @@ mod tests {
     #[test]
     fn test_precompilation_report_to_text() {
         let mut report = PrecompilationReport::new(PrecompilationConfig::default());
-        report.add_result(PrecompilationResult::success("a.wasm", 1024, 1075, PrecompilationStrategy::Wizer));
+        report.add_result(PrecompilationResult::success(
+            "a.wasm",
+            1024,
+            1075,
+            PrecompilationStrategy::Wizer,
+        ));
         let text = report.to_text();
         assert!(text.contains("Precompilation Report"));
         assert!(text.contains("wizer"));

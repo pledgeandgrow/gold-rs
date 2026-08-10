@@ -159,7 +159,10 @@ impl BuildConfig {
                     config.out_dir = s[10..].to_string();
                 }
                 "--features" if i + 1 < args.len() => {
-                    config.features = args[i + 1].split(',').map(|s| s.trim().to_string()).collect();
+                    config.features = args[i + 1]
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect();
                     i += 1;
                 }
                 s if s.starts_with("--features=") => {
@@ -203,7 +206,14 @@ pub fn run(args: &[String]) {
     let config = BuildConfig::from_args(args);
 
     println!("  rye build — target: {}", config.target.name());
-    println!("  mode:  {}", if config.is_release() { "release" } else { "debug" });
+    println!(
+        "  mode:  {}",
+        if config.is_release() {
+            "release"
+        } else {
+            "debug"
+        }
+    );
     if !config.features.is_empty() {
         println!("  features: {}", config.features.join(", "));
     }
@@ -270,17 +280,14 @@ fn build(config: &BuildConfig) -> BuildResult {
 }
 
 /// Build for web using `wasm-pack`.
-fn build_web(
-    project_root: &Path,
-    pkg_name: &str,
-    config: &BuildConfig,
-) -> BuildResult {
+fn build_web(project_root: &Path, pkg_name: &str, config: &BuildConfig) -> BuildResult {
     // Check if wasm-pack is installed.
     if !is_tool_installed("wasm-pack") {
         return BuildResult {
             success: false,
             output_path: None,
-            warnings: "wasm-pack is not installed. Install it with: cargo install wasm-pack".to_string(),
+            warnings: "wasm-pack is not installed. Install it with: cargo install wasm-pack"
+                .to_string(),
         };
     }
 
@@ -305,12 +312,17 @@ fn build_web(
         cmd.arg("--features").arg(config.features.join(","));
     }
 
-    println!("  Running: wasm-pack build --target web --out-dir {} {}", out_dir, if config.is_release() { "--release" } else { "--dev" });
+    println!(
+        "  Running: wasm-pack build --target web --out-dir {} {}",
+        out_dir,
+        if config.is_release() {
+            "--release"
+        } else {
+            "--dev"
+        }
+    );
 
-    let output = cmd
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::piped())
-        .output();
+    let output = cmd.stdout(Stdio::inherit()).stderr(Stdio::piped()).output();
 
     match output {
         Ok(result) => {
@@ -340,20 +352,12 @@ fn build_web(
 }
 
 /// Build for desktop using `cargo build`.
-fn build_desktop(
-    project_root: &Path,
-    pkg_name: &str,
-    config: &BuildConfig,
-) -> BuildResult {
+fn build_desktop(project_root: &Path, pkg_name: &str, config: &BuildConfig) -> BuildResult {
     build_cargo(project_root, pkg_name, config, None, &["desktop"])
 }
 
 /// Build for Android using `cargo build` with the NDK target.
-fn build_android(
-    project_root: &Path,
-    pkg_name: &str,
-    config: &BuildConfig,
-) -> BuildResult {
+fn build_android(project_root: &Path, pkg_name: &str, config: &BuildConfig) -> BuildResult {
     let triple = BuildTarget::Android.cargo_target_triple().unwrap();
 
     // Check if the target is installed.
@@ -372,11 +376,7 @@ fn build_android(
 }
 
 /// Build for iOS using `cargo build` with the iOS target.
-fn build_ios(
-    project_root: &Path,
-    pkg_name: &str,
-    config: &BuildConfig,
-) -> BuildResult {
+fn build_ios(project_root: &Path, pkg_name: &str, config: &BuildConfig) -> BuildResult {
     let triple = BuildTarget::Ios.cargo_target_triple().unwrap();
 
     if !is_rust_target_installed(triple) {
@@ -394,11 +394,7 @@ fn build_ios(
 }
 
 /// Build for SSR using `cargo build`.
-fn build_ssr(
-    project_root: &Path,
-    pkg_name: &str,
-    config: &BuildConfig,
-) -> BuildResult {
+fn build_ssr(project_root: &Path, pkg_name: &str, config: &BuildConfig) -> BuildResult {
     build_cargo(project_root, pkg_name, config, None, &["ssr"])
 }
 
@@ -442,17 +438,15 @@ fn build_cargo(
     }
     println!("  Running: {}", display);
 
-    let output = cmd
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::piped())
-        .output();
+    let output = cmd.stdout(Stdio::inherit()).stderr(Stdio::piped()).output();
 
     match output {
         Ok(result) => {
             let stderr = String::from_utf8_lossy(&result.stderr).to_string();
             if result.status.success() {
                 // Determine the output binary path.
-                let output_path = determine_binary_path(project_root, pkg_name, config, target_triple);
+                let output_path =
+                    determine_binary_path(project_root, pkg_name, config, target_triple);
                 println!("  cargo build completed for '{}'", pkg_name);
                 BuildResult {
                     success: true,
@@ -561,7 +555,11 @@ fn determine_binary_path(
     config: &BuildConfig,
     target_triple: Option<&str>,
 ) -> Option<PathBuf> {
-    let profile = if config.is_release() { "release" } else { "debug" };
+    let profile = if config.is_release() {
+        "release"
+    } else {
+        "debug"
+    };
 
     let target_dir = if let Some(triple) = target_triple {
         project_root.join("target").join(triple).join(profile)
@@ -583,9 +581,15 @@ fn determine_binary_path(
         // For library builds (e.g. mobile), the output is a .so/.a/.dylib.
         let lib_name = if cfg!(windows) {
             format!("{}.dll", pkg_name.replace('-', "_"))
-        } else if target_triple.map(|t| t.contains("android")).unwrap_or(false) {
+        } else if target_triple
+            .map(|t| t.contains("android"))
+            .unwrap_or(false)
+        {
             format!("lib{}.so", pkg_name.replace('-', "_"))
-        } else if target_triple.map(|t| t.contains("apple-ios")).unwrap_or(false) {
+        } else if target_triple
+            .map(|t| t.contains("apple-ios"))
+            .unwrap_or(false)
+        {
             format!("lib{}.a", pkg_name.replace('-', "_"))
         } else {
             format!("lib{}.so", pkg_name.replace('-', "_"))
@@ -682,8 +686,14 @@ mod tests {
 
     #[test]
     fn test_build_target_triple() {
-        assert_eq!(BuildTarget::Android.cargo_target_triple(), Some("aarch64-linux-android"));
-        assert_eq!(BuildTarget::Ios.cargo_target_triple(), Some("aarch64-apple-ios"));
+        assert_eq!(
+            BuildTarget::Android.cargo_target_triple(),
+            Some("aarch64-linux-android")
+        );
+        assert_eq!(
+            BuildTarget::Ios.cargo_target_triple(),
+            Some("aarch64-apple-ios")
+        );
         assert_eq!(BuildTarget::Web.cargo_target_triple(), None);
         assert_eq!(BuildTarget::Desktop.cargo_target_triple(), None);
     }

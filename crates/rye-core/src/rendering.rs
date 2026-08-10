@@ -11,12 +11,12 @@
 //! - **Goal 119**: High-DPI / Retina rendering
 //! - **Goal 120**: Multi-window support (web)
 
-pub mod webgpu;
-pub mod virtual_scroll;
-pub mod observers;
-pub mod media_query;
-pub mod view_transitions;
 pub mod container_queries;
-pub mod web_animations;
 pub mod dpi;
+pub mod media_query;
 pub mod multi_window;
+pub mod observers;
+pub mod view_transitions;
+pub mod virtual_scroll;
+pub mod web_animations;
+pub mod webgpu;

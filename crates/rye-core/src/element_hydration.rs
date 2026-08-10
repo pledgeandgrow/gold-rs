@@ -132,7 +132,12 @@ impl ElementHydrationManager {
     }
 
     /// Register an element for lazy hydration.
-    pub fn register(&self, element_id: usize, config: ElementHydrationConfig, component_name: &str) {
+    pub fn register(
+        &self,
+        element_id: usize,
+        config: ElementHydrationConfig,
+        component_name: &str,
+    ) {
         self.entries.borrow_mut().insert(
             element_id,
             LazyHydrationEntry {

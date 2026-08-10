@@ -95,7 +95,9 @@ impl Contact {
     /// Get the full name.
     pub fn full_name(&self) -> String {
         if !self.given_name.is_empty() || !self.family_name.is_empty() {
-            format!("{} {}", self.given_name, self.family_name).trim().to_string()
+            format!("{} {}", self.given_name, self.family_name)
+                .trim()
+                .to_string()
         } else {
             self.display_name.clone()
         }
@@ -292,7 +294,12 @@ impl ContactsManager {
 
     /// Get a contact by ID.
     pub fn get_by_id(&self, id: &str) -> Option<Contact> {
-        self.contacts.lock().unwrap().iter().find(|c| c.id == id).cloned()
+        self.contacts
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|c| c.id == id)
+            .cloned()
     }
 
     /// Get the total number of contacts.

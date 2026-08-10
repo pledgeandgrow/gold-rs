@@ -1,8 +1,8 @@
 //! Query helpers — find elements in the test render tree.
 
 use crate::test_renderer::{TestElement, TestNode, TestNodeKind};
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 /// Get all text content from a render tree.
 pub fn get_all_text(node: &TestNode) -> String {
@@ -53,7 +53,12 @@ fn find_by_attribute(
     value: &str,
     results: &mut Vec<Rc<RefCell<TestElement>>>,
 ) {
-    if el.borrow().attrs.iter().any(|(n, v)| n == name && v == value) {
+    if el
+        .borrow()
+        .attrs
+        .iter()
+        .any(|(n, v)| n == name && v == value)
+    {
         results.push(Rc::clone(el));
     }
     let children: Vec<TestNode> = el.borrow().children.clone();
@@ -93,7 +98,10 @@ fn find_by_class(
 }
 
 /// Find elements by test_id attribute.
-pub fn get_by_test_id(root: &Rc<RefCell<TestElement>>, test_id: &str) -> Vec<Rc<RefCell<TestElement>>> {
+pub fn get_by_test_id(
+    root: &Rc<RefCell<TestElement>>,
+    test_id: &str,
+) -> Vec<Rc<RefCell<TestElement>>> {
     get_by_attribute(root, "data-testid", test_id)
 }
 

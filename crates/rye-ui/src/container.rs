@@ -1,7 +1,7 @@
 //! Container — max-width centered container.
 
-use rye_core::Element;
 use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContainerSize {
@@ -33,15 +33,29 @@ pub struct ContainerProps {
 
 impl Default for ContainerProps {
     fn default() -> Self {
-        Self { size: ContainerSize::Medium, padding: "16px".to_string(),
-               centered: true, class: None, style: None }
+        Self {
+            size: ContainerSize::Medium,
+            padding: "16px".to_string(),
+            centered: true,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ContainerProps {
-    pub fn size(mut self, s: ContainerSize) -> Self { self.size = s; self }
-    pub fn padding(mut self, p: impl Into<String>) -> Self { self.padding = p.into(); self }
-    pub fn centered(mut self, c: bool) -> Self { self.centered = c; self }
+    pub fn size(mut self, s: ContainerSize) -> Self {
+        self.size = s;
+        self
+    }
+    pub fn padding(mut self, p: impl Into<String>) -> Self {
+        self.padding = p.into();
+        self
+    }
+    pub fn centered(mut self, c: bool) -> Self {
+        self.centered = c;
+        self
+    }
 }
 
 pub struct Container;
@@ -56,13 +70,23 @@ impl Container {
             parts.push("margin-left:auto".to_string());
             parts.push("margin-right:auto".to_string());
         }
-        if let Some(s) = &props.style { parts.push(s.clone()); }
+        if let Some(s) = &props.style {
+            parts.push(s.clone());
+        }
         let style = parts.join(";");
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-container {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), Vec::new()))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-container {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ))
     }
 }
 
@@ -87,7 +111,10 @@ mod tests {
 
     #[test]
     fn test_container_builder() {
-        let p = ContainerProps::default().size(ContainerSize::Large).padding("24px").centered(false);
+        let p = ContainerProps::default()
+            .size(ContainerSize::Large)
+            .padding("24px")
+            .centered(false);
         assert_eq!(p.size, ContainerSize::Large);
         assert!(!p.centered);
     }

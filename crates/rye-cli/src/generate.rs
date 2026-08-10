@@ -298,24 +298,48 @@ impl CodeGenerator {
 
     /// Generate all type definitions.
     pub fn generate_types(&self) -> String {
-        self.types.iter().map(|t| t.to_rust_struct()).collect::<Vec<_>>().join("\n")
+        self.types
+            .iter()
+            .map(|t| t.to_rust_struct())
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// Generate all API client functions.
     pub fn generate_api_client(&self) -> String {
-        self.endpoints.iter().map(|e| e.to_client_fn()).collect::<Vec<_>>().join("\n")
+        self.endpoints
+            .iter()
+            .map(|e| e.to_client_fn())
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// Generate all server actions.
     pub fn generate_server_actions(&self) -> String {
-        self.endpoints.iter().map(|e| e.to_server_action()).collect::<Vec<_>>().join("\n")
+        self.endpoints
+            .iter()
+            .map(|e| e.to_server_action())
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// Generate CRUD code from tables.
     pub fn generate_crud(&self) -> String {
-        let mut code = self.tables.iter().map(|t| t.to_type().to_rust_struct()).collect::<Vec<_>>().join("\n");
+        let mut code = self
+            .tables
+            .iter()
+            .map(|t| t.to_type().to_rust_struct())
+            .collect::<Vec<_>>()
+            .join("\n");
         code.push_str("\n\n");
-        code.push_str(&self.tables.iter().map(|t| t.to_crud_code()).collect::<Vec<_>>().join("\n"));
+        code.push_str(
+            &self
+                .tables
+                .iter()
+                .map(|t| t.to_crud_code())
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
         code
     }
 
@@ -372,7 +396,10 @@ pub fn run(args: &[String]) {
             let path = args.get(1).map(|s| s.as_str()).unwrap_or("openapi.yaml");
             println!("Generating from OpenAPI spec: {}", path);
             let mut gen = CodeGenerator::new();
-            gen.add_type(GeneratedType::new("User").add_field(GeneratedField::new("id", "i64").primary_key()));
+            gen.add_type(
+                GeneratedType::new("User")
+                    .add_field(GeneratedField::new("id", "i64").primary_key()),
+            );
             gen.add_endpoint(ApiEndpoint::new("GET", "/users", "list_users", "Vec<User>"));
             println!("{}", gen.generate_all());
         }
@@ -384,12 +411,19 @@ pub fn run(args: &[String]) {
                 DbTable::new("users")
                     .add_column(GeneratedField::new("id", "i64").primary_key())
                     .add_column(GeneratedField::new("name", "String").with_max_length(255))
-                    .add_column(GeneratedField::new("email", "String").unique().with_max_length(255)),
+                    .add_column(
+                        GeneratedField::new("email", "String")
+                            .unique()
+                            .with_max_length(255),
+                    ),
             );
             println!("{}", gen.generate_crud());
         }
         other => {
-            eprintln!("Unknown generate source: {}. Use 'openapi' or 'schema'.", other);
+            eprintln!(
+                "Unknown generate source: {}. Use 'openapi' or 'schema'.",
+                other
+            );
         }
     }
 }

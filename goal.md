@@ -1,5 +1,22 @@
 # 100 Goals to V1/MVP — The Ultimate Rust UI Framework
 
+> **Status disclaimer (August 2026):** The `[x]` markers below indicate that
+> code exists for each goal, NOT that the goal is fully implemented or proven.
+> Many goals have scaffold/stub implementations only. A re-audit is in progress
+> to reclassify each goal as `[built]` (compiles + tested), `[stub]` (types
+> defined, no real implementation), or `[untested]` (compiles but no test
+> coverage). The most significant gaps:
+>
+> - **`rye-mobile`** — 6,500 LOC, zero FFI bindings. All mobile goals are
+>   effectively `[stub]`.
+> - **`template!` macro** — parses basic syntax but the demo app avoids it,
+>   meaning it has never been stress-tested against real UI code.
+> - **No deployed app** — no goal involving "deploy" or "production" has been
+>   verified end-to-end.
+>
+> The `[x]` markers are preserved for traceability but should not be read as
+> "done."
+
 ## Phase 1: Research & Foundation (Goals 1–10)
 
 1. [x] **Define the framework's core philosophy** — Write a manifesto: "Rust safety + React ergonomics + Vue simplicity + SolidJS performance + Svelte DX." Zero-config, batteries-included, cross-platform, developer-happiness-first. → `docs/00-MANIFESTO.md`

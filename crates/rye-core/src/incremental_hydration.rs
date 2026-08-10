@@ -121,7 +121,10 @@ impl PartialOrd for HydrationTask {
 impl Ord for HydrationTask {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // Reverse so that lower scores come first (higher priority)
-        other.score().partial_cmp(&self.score()).unwrap_or(std::cmp::Ordering::Equal)
+        other
+            .score()
+            .partial_cmp(&self.score())
+            .unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
@@ -188,7 +191,10 @@ impl IncrementalHydrationScheduler {
         let mut remaining = Vec::new();
 
         while let Some(task) = queue.pop() {
-            if !task.hydrated && (task.priority == HydrationPriority::Critical || task.priority == HydrationPriority::High) {
+            if !task.hydrated
+                && (task.priority == HydrationPriority::Critical
+                    || task.priority == HydrationPriority::High)
+            {
                 batch.push(task.component_id.clone());
             } else {
                 remaining.push(task);
@@ -293,12 +299,30 @@ mod tests {
 
     #[test]
     fn test_hydration_priority_from_proximity() {
-        assert_eq!(HydrationPriority::from_viewport_proximity(-1.0), HydrationPriority::Critical);
-        assert_eq!(HydrationPriority::from_viewport_proximity(0.05), HydrationPriority::Critical);
-        assert_eq!(HydrationPriority::from_viewport_proximity(0.2), HydrationPriority::High);
-        assert_eq!(HydrationPriority::from_viewport_proximity(0.5), HydrationPriority::Normal);
-        assert_eq!(HydrationPriority::from_viewport_proximity(0.8), HydrationPriority::Low);
-        assert_eq!(HydrationPriority::from_viewport_proximity(1.5), HydrationPriority::Background);
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(-1.0),
+            HydrationPriority::Critical
+        );
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(0.05),
+            HydrationPriority::Critical
+        );
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(0.2),
+            HydrationPriority::High
+        );
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(0.5),
+            HydrationPriority::Normal
+        );
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(0.8),
+            HydrationPriority::Low
+        );
+        assert_eq!(
+            HydrationPriority::from_viewport_proximity(1.5),
+            HydrationPriority::Background
+        );
     }
 
     #[test]

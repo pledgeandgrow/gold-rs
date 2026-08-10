@@ -13,7 +13,7 @@ use std::ffi::c_void;
 use std::sync::OnceLock;
 
 use jni::objects::{JClass, JObject, JString, JValue};
-use jni::sys::{jint, jlong, jfloat, jdouble, jobject, jstring};
+use jni::sys::{jdouble, jfloat, jint, jlong, jobject, jstring};
 use jni::JNIEnv;
 
 use super::types::*;
@@ -52,7 +52,11 @@ pub extern "C" fn JNI_OnLoad(vm: *mut jni::sys::JavaVM, _reserved: *mut c_void) 
     let mut env_ptr: *mut jni::sys::JNIEnv = std::ptr::null_mut();
     unsafe {
         let get_env_fn = (*vm).GetEnv;
-        let ret = get_env_fn(vm, &mut env_ptr as *mut *mut jni::sys::JNIEnv, jni::sys::JNI_VERSION_1_8);
+        let ret = get_env_fn(
+            vm,
+            &mut env_ptr as *mut *mut jni::sys::JNIEnv,
+            jni::sys::JNI_VERSION_1_8,
+        );
         if ret != jni::sys::JNI_OK {
             return jni::sys::JNI_ERR;
         }
@@ -427,7 +431,9 @@ pub fn call_java_string(
 /// Internal helper — provides access to the bridge's element/text vectors.
 impl super::bridge::FfiRendererBridge {
     /// Get a snapshot of elements for JNI lookup.
-    pub(crate) fn elements_lock(&self) -> std::sync::MutexGuard<'_, Vec<super::bridge::FfiElement>> {
+    pub(crate) fn elements_lock(
+        &self,
+    ) -> std::sync::MutexGuard<'_, Vec<super::bridge::FfiElement>> {
         self.elements.lock().unwrap()
     }
 

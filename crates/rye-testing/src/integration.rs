@@ -335,32 +335,29 @@ mod tests {
 
     #[test]
     fn test_integration_test_case_run_pass() {
-        let tc = IntegrationTestCase::new("home", TestRequest::get("/"))
-            .expect_contains("Welcome");
+        let tc = IntegrationTestCase::new("home", TestRequest::get("/")).expect_contains("Welcome");
         let res = TestResponse::ok("<h1>Welcome</h1>");
         assert!(tc.run(&res));
     }
 
     #[test]
     fn test_integration_test_case_run_fail_status() {
-        let tc = IntegrationTestCase::new("home", TestRequest::get("/"))
-            .expect_status(200);
+        let tc = IntegrationTestCase::new("home", TestRequest::get("/")).expect_status(200);
         let res = TestResponse::with_status(500, "error");
         assert!(!tc.run(&res));
     }
 
     #[test]
     fn test_integration_test_case_run_fail_contains() {
-        let tc = IntegrationTestCase::new("home", TestRequest::get("/"))
-            .expect_contains("Welcome");
+        let tc = IntegrationTestCase::new("home", TestRequest::get("/")).expect_contains("Welcome");
         let res = TestResponse::ok("Goodbye");
         assert!(!tc.run(&res));
     }
 
     #[test]
     fn test_integration_test_case_run_fail_not_contains() {
-        let tc = IntegrationTestCase::new("home", TestRequest::get("/"))
-            .expect_not_contains("Error");
+        let tc =
+            IntegrationTestCase::new("home", TestRequest::get("/")).expect_not_contains("Error");
         let res = TestResponse::ok("Error occurred");
         assert!(!tc.run(&res));
     }
@@ -372,12 +369,10 @@ mod tests {
 
         let mut runner = IntegrationTestRunner::new(server);
         runner.add_test(
-            IntegrationTestCase::new("home_page", TestRequest::get("/"))
-                .expect_contains("Welcome"),
+            IntegrationTestCase::new("home_page", TestRequest::get("/")).expect_contains("Welcome"),
         );
         runner.add_test(
-            IntegrationTestCase::new("api_404", TestRequest::get("/api"))
-                .expect_status(404),
+            IntegrationTestCase::new("api_404", TestRequest::get("/api")).expect_status(404),
         );
 
         let (passed, failed) = runner.run_all();

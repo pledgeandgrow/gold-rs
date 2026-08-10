@@ -28,29 +28,37 @@ pub struct PrefetchContext {
 impl PrefetchContext {
     /// Create a new empty prefetch context.
     pub fn new() -> Self {
-        Self { data: HashMap::new() }
+        Self {
+            data: HashMap::new(),
+        }
     }
 
     /// Add prefetched data.
     pub fn insert(&mut self, key: impl Into<String>, data: impl Into<String>) {
         let key = key.into();
-        self.data.insert(key.clone(), PrefetchedData {
-            key,
-            data: data.into(),
-            success: true,
-            error: None,
-        });
+        self.data.insert(
+            key.clone(),
+            PrefetchedData {
+                key,
+                data: data.into(),
+                success: true,
+                error: None,
+            },
+        );
     }
 
     /// Add a prefetch error.
     pub fn insert_error(&mut self, key: impl Into<String>, error: impl Into<String>) {
         let key = key.into();
-        self.data.insert(key.clone(), PrefetchedData {
-            key,
-            data: String::new(),
-            success: false,
-            error: Some(error.into()),
-        });
+        self.data.insert(
+            key.clone(),
+            PrefetchedData {
+                key,
+                data: String::new(),
+                success: false,
+                error: Some(error.into()),
+            },
+        );
     }
 
     /// Get prefetched data by key.
@@ -67,7 +75,10 @@ impl PrefetchContext {
                 format!(r#""{}":{{"data":"{}","success":true}}"#, key, escaped_data)
             } else if let Some(err) = &data.error {
                 let escaped_err = err.replace('\\', "\\\\").replace('"', "\\\"");
-                format!(r#""{}":{{"data":"","success":false,"error":"{}"}}"#, key, escaped_err)
+                format!(
+                    r#""{}":{{"data":"","success":false,"error":"{}"}}"#,
+                    key, escaped_err
+                )
             } else {
                 format!(r#""{}":{{"data":"","success":false}}"#, key)
             };

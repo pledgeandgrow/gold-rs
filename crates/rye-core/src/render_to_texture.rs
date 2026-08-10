@@ -106,7 +106,12 @@ impl RenderedTexture {
         if idx + 4 > self.pixels.len() {
             return None;
         }
-        Some([self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2], self.pixels[idx + 3]])
+        Some([
+            self.pixels[idx],
+            self.pixels[idx + 1],
+            self.pixels[idx + 2],
+            self.pixels[idx + 3],
+        ])
     }
 }
 
@@ -246,7 +251,11 @@ impl DragPreview {
     }
 
     /// Start a drag preview with the given render function.
-    pub fn start<F: FnOnce(&TextureConfig) -> Vec<u8>>(&mut self, config: TextureConfig, render_fn: F) {
+    pub fn start<F: FnOnce(&TextureConfig) -> Vec<u8>>(
+        &mut self,
+        config: TextureConfig,
+        render_fn: F,
+    ) {
         if let Some(id) = self.texture_id.take() {
             self.renderer.dispose(id);
         }
@@ -293,7 +302,11 @@ mod tests {
     #[test]
     fn test_texture_renderer_basic() {
         let renderer = TextureRenderer::new();
-        let config = TextureConfig { width: 4, height: 4, ..Default::default() };
+        let config = TextureConfig {
+            width: 4,
+            height: 4,
+            ..Default::default()
+        };
         let id = renderer.render_to_texture(config, |c| solid_color_texture(c, 255, 0, 0, 255));
         let tex = renderer.get_texture(id).unwrap();
         assert_eq!(tex.dimensions(), (4, 4));
@@ -303,7 +316,9 @@ mod tests {
     #[test]
     fn test_texture_dispose() {
         let renderer = TextureRenderer::new();
-        let id = renderer.render_to_texture(TextureConfig::default(), |c| solid_color_texture(c, 0, 255, 0, 255));
+        let id = renderer.render_to_texture(TextureConfig::default(), |c| {
+            solid_color_texture(c, 0, 255, 0, 255)
+        });
         assert_eq!(renderer.texture_count(), 1);
         renderer.dispose(id);
         assert_eq!(renderer.texture_count(), 0);
@@ -313,7 +328,9 @@ mod tests {
     #[test]
     fn test_texture_update() {
         let renderer = TextureRenderer::new();
-        let id = renderer.render_to_texture(TextureConfig::default(), |c| solid_color_texture(c, 0, 0, 0, 255));
+        let id = renderer.render_to_texture(TextureConfig::default(), |c| {
+            solid_color_texture(c, 0, 0, 0, 255)
+        });
         assert!(renderer.update_texture(id, |c| solid_color_texture(c, 255, 255, 255, 255)));
         let tex = renderer.get_texture(id).unwrap();
         assert_eq!(tex.pixel(0, 0), Some([255, 255, 255, 255]));
@@ -335,7 +352,11 @@ mod tests {
     #[test]
     fn test_create_thumbnail() {
         let renderer = TextureRenderer::new();
-        let config = TextureConfig { width: 100, height: 100, ..Default::default() };
+        let config = TextureConfig {
+            width: 100,
+            height: 100,
+            ..Default::default()
+        };
         let id = renderer.render_to_texture(config, |c| solid_color_texture(c, 0, 0, 255, 255));
         let thumb_id = renderer.create_thumbnail(id, 50).unwrap();
         let thumb = renderer.get_texture(thumb_id).unwrap();
@@ -348,9 +369,14 @@ mod tests {
         let renderer = Rc::new(TextureRenderer::new());
         let mut preview = DragPreview::new(Rc::clone(&renderer));
 
-        preview.start(TextureConfig { width: 64, height: 64, ..Default::default() }, |c| {
-            solid_color_texture(c, 128, 128, 128, 255)
-        });
+        preview.start(
+            TextureConfig {
+                width: 64,
+                height: 64,
+                ..Default::default()
+            },
+            |c| solid_color_texture(c, 128, 128, 128, 255),
+        );
         assert!(preview.texture_id().is_some());
         assert_eq!(renderer.texture_count(), 1);
 
@@ -363,9 +389,14 @@ mod tests {
     fn test_drag_preview_update() {
         let renderer = Rc::new(TextureRenderer::new());
         let mut preview = DragPreview::new(Rc::clone(&renderer));
-        preview.start(TextureConfig { width: 8, height: 8, ..Default::default() }, |c| {
-            solid_color_texture(c, 0, 0, 0, 255)
-        });
+        preview.start(
+            TextureConfig {
+                width: 8,
+                height: 8,
+                ..Default::default()
+            },
+            |c| solid_color_texture(c, 0, 0, 0, 255),
+        );
         assert!(preview.update(|c| solid_color_texture(c, 255, 0, 0, 255)));
         let tex = renderer.get_texture(preview.texture_id().unwrap()).unwrap();
         assert_eq!(tex.pixel(0, 0), Some([255, 0, 0, 255]));
@@ -374,9 +405,14 @@ mod tests {
     #[test]
     fn test_rendered_texture_pixel_out_of_bounds() {
         let renderer = TextureRenderer::new();
-        let id = renderer.render_to_texture(TextureConfig { width: 2, height: 2, ..Default::default() }, |c| {
-            solid_color_texture(c, 0, 0, 0, 255)
-        });
+        let id = renderer.render_to_texture(
+            TextureConfig {
+                width: 2,
+                height: 2,
+                ..Default::default()
+            },
+            |c| solid_color_texture(c, 0, 0, 0, 255),
+        );
         let tex = renderer.get_texture(id).unwrap();
         assert!(tex.pixel(5, 5).is_none());
     }
@@ -384,8 +420,12 @@ mod tests {
     #[test]
     fn test_dispose_all() {
         let renderer = TextureRenderer::new();
-        renderer.render_to_texture(TextureConfig::default(), |c| solid_color_texture(c, 1, 2, 3, 4));
-        renderer.render_to_texture(TextureConfig::default(), |c| solid_color_texture(c, 5, 6, 7, 8));
+        renderer.render_to_texture(TextureConfig::default(), |c| {
+            solid_color_texture(c, 1, 2, 3, 4)
+        });
+        renderer.render_to_texture(TextureConfig::default(), |c| {
+            solid_color_texture(c, 5, 6, 7, 8)
+        });
         assert_eq!(renderer.texture_count(), 2);
         renderer.dispose_all();
         assert_eq!(renderer.texture_count(), 0);

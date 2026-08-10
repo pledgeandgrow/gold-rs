@@ -8,13 +8,13 @@
 //! - **cosmic-text**: Font system, text shaping, and glyph rasterization
 //! - **winit**: Window creation and event loop
 
-pub mod native_renderer;
-pub mod render_tree;
 pub mod glyph_atlas;
 pub mod gpu;
-pub mod window;
 pub mod input;
+pub mod native_renderer;
+pub mod render_tree;
+pub mod window;
 
 pub use native_renderer::NativeRenderer;
-pub use render_tree::{RenderElement, RenderText, RenderNode};
+pub use render_tree::{RenderElement, RenderNode, RenderText};
 pub use window::run;

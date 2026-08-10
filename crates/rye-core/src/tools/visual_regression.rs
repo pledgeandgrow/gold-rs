@@ -115,9 +115,21 @@ pub fn generate_diff_image(
         }
 
         let is_diff = {
-            let dr = if baseline[offset] >= current[offset] { baseline[offset] - current[offset] } else { current[offset] - baseline[offset] };
-            let dg = if baseline[offset+1] >= current[offset+1] { baseline[offset+1] - current[offset+1] } else { current[offset+1] - baseline[offset+1] };
-            let db = if baseline[offset+2] >= current[offset+2] { baseline[offset+2] - current[offset+2] } else { current[offset+2] - baseline[offset+2] };
+            let dr = if baseline[offset] >= current[offset] {
+                baseline[offset] - current[offset]
+            } else {
+                current[offset] - baseline[offset]
+            };
+            let dg = if baseline[offset + 1] >= current[offset + 1] {
+                baseline[offset + 1] - current[offset + 1]
+            } else {
+                current[offset + 1] - baseline[offset + 1]
+            };
+            let db = if baseline[offset + 2] >= current[offset + 2] {
+                baseline[offset + 2] - current[offset + 2]
+            } else {
+                current[offset + 2] - baseline[offset + 2]
+            };
             dr > 10 || dg > 10 || db > 10
         };
 
@@ -186,7 +198,9 @@ impl VisualTestSuite {
             let status = if result.passed { "PASS" } else { "FAIL" };
             report.push_str(&format!(
                 "  [{}] {} ({:.2}% diff)\n",
-                status, result.name, result.diff_ratio * 100.0
+                status,
+                result.name,
+                result.diff_ratio * 100.0
             ));
         }
 

@@ -33,7 +33,10 @@ pub fn run(args: &[String]) {
         "store" => scaffold_store(&args[1..]),
         "action" => scaffold_action(&args[1..]),
         other => {
-            eprintln!("Unknown scaffold target: {}. Use 'component', 'page', 'store', or 'action'.", other);
+            eprintln!(
+                "Unknown scaffold target: {}. Use 'component', 'page', 'store', or 'action'.",
+                other
+            );
             print_scaffold_help();
         }
     }
@@ -178,7 +181,10 @@ fn scaffold_page(args: &[String]) {
 
     match fs::write(&path, &code) {
         Ok(_) => {
-            println!("Created page: {} -> {} (route: {})", pascal, file_path, route);
+            println!(
+                "Created page: {} -> {} (route: {})",
+                pascal, file_path, route
+            );
             register_in_mod_file(&snake, "src/pages/mod.rs");
         }
         Err(e) => {
@@ -245,7 +251,9 @@ fn scaffold_action(args: &[String]) {
         eprintln!("Usage: rpg scaffold action <Name> [options]");
         eprintln!("Options:");
         eprintln!("  --params <field:type,...>  Action parameters");
-        eprintln!("  --returns <type>           Return type (default: Result<String, ServerError>)");
+        eprintln!(
+            "  --returns <type>           Return type (default: Result<String, ServerError>)"
+        );
         eprintln!("  --path <path>              Custom output path");
         return;
     }
@@ -307,11 +315,7 @@ fn generate_component_code(
     with_style: bool,
     is_island: bool,
 ) -> String {
-    let island_attr = if is_island {
-        "#[rye::island]\n"
-    } else {
-        ""
-    };
+    let island_attr = if is_island { "#[rye::island]\n" } else { "" };
 
     let props_struct = if props.is_empty() {
         String::new()
@@ -367,11 +371,7 @@ fn {pascal}({props_param}) {{
     )
 }
 
-fn generate_component_test(
-    pascal: &str,
-    snake: &str,
-    props: &[(String, String)],
-) -> String {
+fn generate_component_test(pascal: &str, snake: &str, props: &[(String, String)]) -> String {
     let props_init = if props.is_empty() {
         String::new()
     } else {
@@ -471,16 +471,10 @@ fn {pascal}({props_param}) {{
     )
 }
 
-fn generate_store_code(
-    pascal: &str,
-    snake: &str,
-    fields: &[(String, String)],
-) -> String {
+fn generate_store_code(pascal: &str, snake: &str, fields: &[(String, String)]) -> String {
     let field_defs: Vec<String> = fields
         .iter()
-        .map(|(name, ty)| {
-            format!("    pub {}: Signal<{}>,", name, ty)
-        })
+        .map(|(name, ty)| format!("    pub {}: Signal<{}>,", name, ty))
         .collect();
 
     let field_inits: Vec<String> = fields
@@ -539,7 +533,10 @@ fn generate_action_code(
     params: &[(String, String)],
     returns: &str,
 ) -> String {
-    let params_str: Vec<String> = params.iter().map(|(n, t)| format!("{}: {}", n, t)).collect();
+    let params_str: Vec<String> = params
+        .iter()
+        .map(|(n, t)| format!("{}: {}", n, t))
+        .collect();
     let param_names: Vec<String> = params.iter().map(|(n, _)| n.clone()).collect();
 
     let body = if returns.starts_with("Result") {
@@ -724,7 +721,10 @@ mod tests {
 
     #[test]
     fn test_generate_component_code_with_props() {
-        let props = vec![("label".to_string(), "String".to_string()), ("disabled".to_string(), "bool".to_string())];
+        let props = vec![
+            ("label".to_string(), "String".to_string()),
+            ("disabled".to_string(), "bool".to_string()),
+        ];
         let code = generate_component_code("Button", "button", &props, false, false);
         assert!(code.contains("ButtonProps"));
         assert!(code.contains("label: String"));
@@ -766,7 +766,10 @@ mod tests {
 
     #[test]
     fn test_generate_store_code() {
-        let fields = vec![("name".to_string(), "String".to_string()), ("count".to_string(), "i32".to_string())];
+        let fields = vec![
+            ("name".to_string(), "String".to_string()),
+            ("count".to_string(), "i32".to_string()),
+        ];
         let code = generate_store_code("UserStore", "user_store", &fields);
         assert!(code.contains("pub struct UserStore"));
         assert!(code.contains("pub name: Signal<String>"));
@@ -780,7 +783,12 @@ mod tests {
     #[test]
     fn test_generate_action_code() {
         let params = vec![("id".to_string(), "u32".to_string())];
-        let code = generate_action_code("GetUser", "get_user", &params, "Result<String, ServerError>");
+        let code = generate_action_code(
+            "GetUser",
+            "get_user",
+            &params,
+            "Result<String, ServerError>",
+        );
         assert!(code.contains("#[server]"));
         assert!(code.contains("pub async fn get_user(id: u32) -> Result<String, ServerError>"));
         assert!(code.contains("Ok(\"get_user\".to_string())"));

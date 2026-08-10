@@ -441,16 +441,22 @@ mod tests {
 
     #[test]
     fn test_serialize_deserialize_f64() {
-        assert_eq!(serialize(&3.14f64), "3.14");
-        assert_eq!(deserialize::<f64>("3.14"), Some(3.14));
+        assert_eq!(serialize(&1.5f64), "1.5");
+        assert_eq!(deserialize::<f64>("1.5"), Some(1.5));
     }
 
     #[test]
     fn test_serialize_deserialize_string() {
         assert_eq!(serialize(&"hello".to_string()), "\"hello\"");
-        assert_eq!(deserialize::<String>("\"hello\""), Some("hello".to_string()));
+        assert_eq!(
+            deserialize::<String>("\"hello\""),
+            Some("hello".to_string())
+        );
         assert_eq!(serialize(&"a\"b".to_string()), "\"a\\\"b\"");
-        assert_eq!(deserialize::<String>("\"a\\\"b\""), Some("a\"b".to_string()));
+        assert_eq!(
+            deserialize::<String>("\"a\\\"b\""),
+            Some("a\"b".to_string())
+        );
     }
 
     #[test]
@@ -483,7 +489,10 @@ mod tests {
 
         let err: Result<i32, String> = Err("fail".to_string());
         assert_eq!(serialize(&err), "err(\"fail\")");
-        assert_eq!(deserialize::<Result<i32, String>>("err(\"fail\")"), Some(Err("fail".to_string())));
+        assert_eq!(
+            deserialize::<Result<i32, String>>("err(\"fail\")"),
+            Some(Err("fail".to_string()))
+        );
     }
 
     #[test]
@@ -497,6 +506,9 @@ mod tests {
     fn test_serialize_deserialize_nested() {
         let data: (Vec<i32>, Option<String>) = (vec![1, 2], Some("hi".to_string()));
         let serialized = serialize(&data);
-        assert_eq!(deserialize::<(Vec<i32>, Option<String>)>(&serialized), Some(data));
+        assert_eq!(
+            deserialize::<(Vec<i32>, Option<String>)>(&serialized),
+            Some(data)
+        );
     }
 }

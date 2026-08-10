@@ -84,7 +84,10 @@ pub fn generate_component_code(
     };
 
     let style_block = if with_style {
-        format!("style! {{\n    .{} {{\n        /* TODO: add styles */\n    }}\n}}\n\n", snake)
+        format!(
+            "style! {{\n    .{} {{\n        /* TODO: add styles */\n    }}\n}}\n\n",
+            snake
+        )
     } else {
         String::new()
     };
@@ -120,10 +123,7 @@ fn {pascal}({props_param}) {{
     )
 }
 
-pub fn generate_component_test(
-    name: &str,
-    props: &[(String, String)],
-) -> String {
+pub fn generate_component_test(name: &str, props: &[(String, String)]) -> String {
     let pascal = to_pascal_case(name);
     let snake = to_snake_case(name);
 

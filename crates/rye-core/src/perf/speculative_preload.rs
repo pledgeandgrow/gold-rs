@@ -133,13 +133,23 @@ impl SpeculativePreloader {
     /// Register a preload candidate.
     pub fn register(&self, candidate: PreloadCandidate) {
         let route = candidate.route.clone();
-        self.candidates.lock().unwrap().insert(route.clone(), candidate);
-        self.statuses.lock().unwrap().insert(route, PreloadStatus::NotPreloaded);
+        self.candidates
+            .lock()
+            .unwrap()
+            .insert(route.clone(), candidate);
+        self.statuses
+            .lock()
+            .unwrap()
+            .insert(route, PreloadStatus::NotPreloaded);
     }
 
     /// Check if a route should be preloaded based on its priority.
     pub fn should_preload(&self, route: &str) -> bool {
-        self.should_preload_inner(route, &self.candidates.lock().unwrap(), &self.statuses.lock().unwrap())
+        self.should_preload_inner(
+            route,
+            &self.candidates.lock().unwrap(),
+            &self.statuses.lock().unwrap(),
+        )
     }
 
     /// Inner check that accepts pre-locked guards to avoid re-entrant locking.
@@ -190,14 +200,20 @@ impl SpeculativePreloader {
 
     /// Mark a preload as complete.
     pub fn mark_ready(&self, route: &str) {
-        self.statuses.lock().unwrap().insert(route.to_string(), PreloadStatus::Ready);
+        self.statuses
+            .lock()
+            .unwrap()
+            .insert(route.to_string(), PreloadStatus::Ready);
         let mut active = self.active_preloads.lock().unwrap();
         *active = active.saturating_sub(1);
     }
 
     /// Mark a preload as failed.
     pub fn mark_failed(&self, route: &str) {
-        self.statuses.lock().unwrap().insert(route.to_string(), PreloadStatus::Failed);
+        self.statuses
+            .lock()
+            .unwrap()
+            .insert(route.to_string(), PreloadStatus::Failed);
         let mut active = self.active_preloads.lock().unwrap();
         *active = active.saturating_sub(1);
     }
@@ -206,7 +222,10 @@ impl SpeculativePreloader {
     pub fn check_hit(&self, route: &str) -> bool {
         let is_ready = {
             let statuses = self.statuses.lock().unwrap();
-            statuses.get(route).map(|s| *s == PreloadStatus::Ready).unwrap_or(false)
+            statuses
+                .get(route)
+                .map(|s| *s == PreloadStatus::Ready)
+                .unwrap_or(false)
         };
         if is_ready {
             *self.hit_count.lock().unwrap() += 1;
@@ -217,7 +236,12 @@ impl SpeculativePreloader {
 
     /// Get the preload status for a route.
     pub fn status(&self, route: &str) -> PreloadStatus {
-        self.statuses.lock().unwrap().get(route).copied().unwrap_or(PreloadStatus::NotPreloaded)
+        self.statuses
+            .lock()
+            .unwrap()
+            .get(route)
+            .copied()
+            .unwrap_or(PreloadStatus::NotPreloaded)
     }
 
     /// Get all routes that should be preloaded.
@@ -295,8 +319,14 @@ mod tests {
 
     #[test]
     fn test_preload_trigger_priority_weight() {
-        assert!(PreloadTrigger::Hover.priority_weight() > PreloadTrigger::ViewportProximity.priority_weight());
-        assert!(PreloadTrigger::Explicit.priority_weight() > PreloadTrigger::AppFlowPrediction.priority_weight());
+        assert!(
+            PreloadTrigger::Hover.priority_weight()
+                > PreloadTrigger::ViewportProximity.priority_weight()
+        );
+        assert!(
+            PreloadTrigger::Explicit.priority_weight()
+                > PreloadTrigger::AppFlowPrediction.priority_weight()
+        );
     }
 
     #[test]
@@ -324,7 +354,11 @@ mod tests {
     #[test]
     fn test_preloader_register() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         assert_eq!(preloader.candidate_count(), 1);
         assert_eq!(preloader.status("/about"), PreloadStatus::NotPreloaded);
     }
@@ -332,21 +366,33 @@ mod tests {
     #[test]
     fn test_preloader_should_preload() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         assert!(preloader.should_preload("/about"));
     }
 
     #[test]
     fn test_preloader_should_not_preload_low_confidence() {
         let preloader = SpeculativePreloader::new().with_threshold(0.95);
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::ViewportProximity));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::ViewportProximity,
+        ));
         assert!(!preloader.should_preload("/about"));
     }
 
     #[test]
     fn test_preloader_should_not_preload_already_preloaded() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         preloader.preload("/about");
         assert!(!preloader.should_preload("/about"));
     }
@@ -354,7 +400,11 @@ mod tests {
     #[test]
     fn test_preloader_preload() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         assert!(preloader.preload("/about"));
         assert_eq!(preloader.status("/about"), PreloadStatus::Preloading);
         assert_eq!(preloader.preload_count(), 1);
@@ -382,7 +432,11 @@ mod tests {
     #[test]
     fn test_preloader_mark_ready() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         preloader.preload("/about");
         preloader.mark_ready("/about");
         assert_eq!(preloader.status("/about"), PreloadStatus::Ready);
@@ -392,7 +446,11 @@ mod tests {
     #[test]
     fn test_preloader_mark_failed() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         preloader.preload("/about");
         preloader.mark_failed("/about");
         assert_eq!(preloader.status("/about"), PreloadStatus::Failed);
@@ -401,7 +459,11 @@ mod tests {
     #[test]
     fn test_preloader_check_hit() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         preloader.preload("/about");
         preloader.mark_ready("/about");
 
@@ -412,7 +474,11 @@ mod tests {
     #[test]
     fn test_preloader_check_hit_not_ready() {
         let preloader = SpeculativePreloader::new();
-        preloader.register(PreloadCandidate::new("/about", "chunk", PreloadTrigger::Hover));
+        preloader.register(PreloadCandidate::new(
+            "/about",
+            "chunk",
+            PreloadTrigger::Hover,
+        ));
         preloader.preload("/about");
         assert!(!preloader.check_hit("/about"));
     }
@@ -435,7 +501,11 @@ mod tests {
     fn test_preloader_routes_to_preload() {
         let preloader = SpeculativePreloader::new();
         preloader.register(PreloadCandidate::new("/a", "c1", PreloadTrigger::Hover));
-        preloader.register(PreloadCandidate::new("/b", "c2", PreloadTrigger::AppFlowPrediction));
+        preloader.register(PreloadCandidate::new(
+            "/b",
+            "c2",
+            PreloadTrigger::AppFlowPrediction,
+        ));
         let routes = preloader.routes_to_preload();
         assert!(routes.contains(&"/a".to_string()));
     }

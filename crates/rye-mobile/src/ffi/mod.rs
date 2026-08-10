@@ -9,9 +9,9 @@
 //! trait calls into FFI calls, and the `types` submodule defines shared
 //! C-compatible types.
 
-pub mod types;
-pub mod bridge;
 pub mod bindings_gen;
+pub mod bridge;
+pub mod types;
 
 #[cfg(target_os = "android")]
 pub mod jni;

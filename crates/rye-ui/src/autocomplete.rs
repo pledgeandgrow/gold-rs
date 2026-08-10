@@ -1,8 +1,8 @@
 //! AutoComplete / Combobox — searchable select with free text.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct AutoCompleteOption {
@@ -12,7 +12,10 @@ pub struct AutoCompleteOption {
 
 impl AutoCompleteOption {
     pub fn new(value: impl Into<String>, label: impl Into<String>) -> Self {
-        Self { value: value.into(), label: label.into() }
+        Self {
+            value: value.into(),
+            label: label.into(),
+        }
     }
 }
 
@@ -32,21 +35,54 @@ pub struct AutoCompleteProps {
 
 impl Default for AutoCompleteProps {
     fn default() -> Self {
-        Self { options: Vec::new(), value: String::new(), query: String::new(),
-               open: false, placeholder: "Search...".to_string(), label: None,
-               disabled: false, allow_free_text: false, class: None, style: None }
+        Self {
+            options: Vec::new(),
+            value: String::new(),
+            query: String::new(),
+            open: false,
+            placeholder: "Search...".to_string(),
+            label: None,
+            disabled: false,
+            allow_free_text: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl AutoCompleteProps {
-    pub fn options(mut self, o: Vec<AutoCompleteOption>) -> Self { self.options = o; self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn query(mut self, q: impl Into<String>) -> Self { self.query = q.into(); self }
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
-    pub fn placeholder(mut self, p: impl Into<String>) -> Self { self.placeholder = p.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn allow_free_text(mut self, a: bool) -> Self { self.allow_free_text = a; self }
+    pub fn options(mut self, o: Vec<AutoCompleteOption>) -> Self {
+        self.options = o;
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn query(mut self, q: impl Into<String>) -> Self {
+        self.query = q.into();
+        self
+    }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
+    pub fn placeholder(mut self, p: impl Into<String>) -> Self {
+        self.placeholder = p.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn allow_free_text(mut self, a: bool) -> Self {
+        self.allow_free_text = a;
+        self
+    }
 }
 
 pub struct AutoComplete;
@@ -74,13 +110,23 @@ impl AutoComplete {
             props.style.as_deref().unwrap_or(""),
         );
 
-        let display_value = if props.open { props.query.clone() } else { props.value.clone() };
+        let display_value = if props.open {
+            props.query.clone()
+        } else {
+            props.value.clone()
+        };
 
         let mut input_attrs = vec![
             ("type".to_string(), "text".to_string()),
             ("style".to_string(), input_style),
             ("placeholder".to_string(), props.placeholder.clone()),
-            ("class".to_string(), format!("rye-autocomplete-input {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "class".to_string(),
+                format!(
+                    "rye-autocomplete-input {}",
+                    props.class.as_deref().unwrap_or("")
+                ),
+            ),
         ];
         if !display_value.is_empty() {
             input_attrs.push(("value".to_string(), display_value));
@@ -89,14 +135,23 @@ impl AutoComplete {
             input_attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        let mut container_children = vec![Template::new_element("input", input_attrs, Vec::new(), Vec::new())];
+        let mut container_children = vec![Template::new_element(
+            "input",
+            input_attrs,
+            Vec::new(),
+            Vec::new(),
+        )];
 
         // Dropdown
         if props.open && !props.disabled {
             let filtered: Vec<&AutoCompleteOption> = if props.query.is_empty() {
                 props.options.iter().collect()
             } else {
-                props.options.iter().filter(|o| o.label.to_lowercase().contains(&props.query.to_lowercase())).collect()
+                props
+                    .options
+                    .iter()
+                    .filter(|o| o.label.to_lowercase().contains(&props.query.to_lowercase()))
+                    .collect()
             };
 
             let dropdown_style = format!("position:absolute;top:100%;left:0;right:0;margin-top:4px;max-height:240px;overflow-y:auto;background:{};border:1px solid {};border-radius:var(--rye-radius-md);box-shadow:{};z-index:{};padding:4px;", vars::BG_ELEVATED, vars::BORDER, vars::SHADOW_MD, vars::Z_DROPDOWN);
@@ -107,9 +162,18 @@ impl AutoComplete {
                         vec![("style".to_string(), format!("padding:8px 12px;font-size:var(--rye-font-size-md);color:{};cursor:pointer;border-radius:var(--rye-radius-sm);", vars::TEXT_MUTED))],
                         Vec::new(), vec![Template::text(&format!("Press Enter to add \"{}\"", props.query))])]
                 } else {
-                    vec![Template::new_element("div",
-                        vec![("style".to_string(), format!("padding:8px 12px;font-size:var(--rye-font-size-md);color:{};", vars::TEXT_SUBTLE))],
-                        Vec::new(), vec![Template::text("No results found")])]
+                    vec![Template::new_element(
+                        "div",
+                        vec![(
+                            "style".to_string(),
+                            format!(
+                                "padding:8px 12px;font-size:var(--rye-font-size-md);color:{};",
+                                vars::TEXT_SUBTLE
+                            ),
+                        )],
+                        Vec::new(),
+                        vec![Template::text("No results found")],
+                    )]
                 }
             } else {
                 filtered.iter().map(|opt| {
@@ -127,20 +191,33 @@ impl AutoComplete {
                 }).collect()
             };
 
-            container_children.push(Template::new_element("div",
-                vec![("style".to_string(), dropdown_style.to_string()),
-                     ("class".to_string(), "rye-autocomplete-dropdown".to_string())],
-                Vec::new(), items));
+            container_children.push(Template::new_element(
+                "div",
+                vec![
+                    ("style".to_string(), dropdown_style.to_string()),
+                    ("class".to_string(), "rye-autocomplete-dropdown".to_string()),
+                ],
+                Vec::new(),
+                items,
+            ));
         }
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), container_style.to_string()),
-                 ("class".to_string(), "rye-autocomplete".to_string())],
-            Vec::new(), container_children));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), container_style.to_string()),
+                ("class".to_string(), "rye-autocomplete".to_string()),
+            ],
+            Vec::new(),
+            container_children,
+        ));
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-autocomplete-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -176,30 +253,36 @@ mod tests {
 
     #[test]
     fn test_autocomplete_render_closed() {
-        let el = AutoComplete::render(AutoCompleteProps::default()
-            .options(vec![AutoCompleteOption::new("a", "Apple")])
-            .value("Apple"));
+        let el = AutoComplete::render(
+            AutoCompleteProps::default()
+                .options(vec![AutoCompleteOption::new("a", "Apple")])
+                .value("Apple"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_autocomplete_render_open() {
-        let el = AutoComplete::render(AutoCompleteProps::default()
-            .options(vec![
-                AutoCompleteOption::new("apple", "Apple"),
-                AutoCompleteOption::new("banana", "Banana"),
-            ])
-            .query("ap")
-            .open(true));
+        let el = AutoComplete::render(
+            AutoCompleteProps::default()
+                .options(vec![
+                    AutoCompleteOption::new("apple", "Apple"),
+                    AutoCompleteOption::new("banana", "Banana"),
+                ])
+                .query("ap")
+                .open(true),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_autocomplete_render_no_results() {
-        let el = AutoComplete::render(AutoCompleteProps::default()
-            .options(vec![AutoCompleteOption::new("a", "Apple")])
-            .query("xyz")
-            .open(true));
+        let el = AutoComplete::render(
+            AutoCompleteProps::default()
+                .options(vec![AutoCompleteOption::new("a", "Apple")])
+                .query("xyz")
+                .open(true),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

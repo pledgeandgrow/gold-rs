@@ -228,7 +228,9 @@ impl NativeModule {
 
             code.push_str(&format!(
                 "func {}({}) -> {} {{\n    // Call rye native bridge\n}}\n\n",
-                func.name, params.join(", "), ret
+                func.name,
+                params.join(", "),
+                ret
             ));
         }
 
@@ -259,12 +261,16 @@ impl NativeModule {
             if func.is_async {
                 code.push_str(&format!(
                     "suspend fun {}({}): {} {{\n    // Call rye native bridge via JNI\n}}\n\n",
-                    func.name, params.join(", "), ret
+                    func.name,
+                    params.join(", "),
+                    ret
                 ));
             } else {
                 code.push_str(&format!(
                     "fun {}({}): {} {{\n    // Call rye native bridge via JNI\n}}\n\n",
-                    func.name, params.join(", "), ret
+                    func.name,
+                    params.join(", "),
+                    ret
                 ));
             }
         }
@@ -293,7 +299,13 @@ impl NativeModuleBuilder {
     }
 
     /// Add a function.
-    pub fn function(mut self, name: &str, params: Vec<NativeType>, return_type: Option<NativeType>, is_async: bool) -> Self {
+    pub fn function(
+        mut self,
+        name: &str,
+        params: Vec<NativeType>,
+        return_type: Option<NativeType>,
+        is_async: bool,
+    ) -> Self {
         self.module.functions.push(NativeFunction {
             name: name.to_string(),
             params,
@@ -325,7 +337,10 @@ impl NativeModuleRegistry {
 
     /// Register a native module.
     pub fn register(&self, module: NativeModule) {
-        self.modules.lock().unwrap().insert(module.name.clone(), module);
+        self.modules
+            .lock()
+            .unwrap()
+            .insert(module.name.clone(), module);
     }
 
     /// Get a module by name.
@@ -446,8 +461,8 @@ mod tests {
 
     #[test]
     fn test_native_module_with_doc() {
-        let module = NativeModule::new("camera", NativePlatform::Ios)
-            .with_doc("Camera access module");
+        let module =
+            NativeModule::new("camera", NativePlatform::Ios).with_doc("Camera access module");
         assert_eq!(module.doc, "Camera access module");
     }
 
@@ -455,12 +470,7 @@ mod tests {
     fn test_native_module_builder() {
         let module = NativeModuleBuilder::new("haptics", NativePlatform::Android)
             .doc("Haptic feedback module")
-            .function(
-                "vibrate",
-                vec![NativeType::Int32],
-                None,
-                false,
-            )
+            .function("vibrate", vec![NativeType::Int32], None, false)
             .build();
 
         assert_eq!(module.name, "haptics");

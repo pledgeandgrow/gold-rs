@@ -36,7 +36,11 @@ impl SearchResult {
 
     /// Format as JSON.
     pub fn format_json(&self) -> String {
-        let matched: Vec<String> = self.matched_fields.iter().map(|f| format!("\"{}\"", f)).collect();
+        let matched: Vec<String> = self
+            .matched_fields
+            .iter()
+            .map(|f| format!("\"{}\"", f))
+            .collect();
         format!(
             r#"{{"component":{},"score":{},"matched_fields":[{}]}}"#,
             self.component.format_json(),
@@ -71,7 +75,11 @@ fn tokenize(s: &str) -> Vec<String> {
 }
 
 /// Score a component against the query.
-fn score_component(comp: &ComponentMeta, query_lower: &str, query_tokens: &[String]) -> SearchResult {
+fn score_component(
+    comp: &ComponentMeta,
+    query_lower: &str,
+    query_tokens: &[String],
+) -> SearchResult {
     let mut score: u32 = 0;
     let mut matched_fields = Vec::new();
 
@@ -202,7 +210,10 @@ fn score_synonyms(
         let kw_lower = keyword.to_lowercase();
         let comp_relevant = comp.name.to_lowercase().contains(&kw_lower)
             || comp.category.to_lowercase().contains(&kw_lower)
-            || comp.tags.iter().any(|t| t.to_lowercase().contains(&kw_lower));
+            || comp
+                .tags
+                .iter()
+                .any(|t| t.to_lowercase().contains(&kw_lower));
 
         if comp_relevant {
             for related_word in related.iter() {
@@ -248,7 +259,8 @@ mod tests {
     use super::*;
     use crate::component_registry::{self, ComponentMeta, PropInfo};
 
-    fn setup_test_components() {
+    fn setup_test_components() -> std::sync::MutexGuard<'static, ()> {
+        let guard = crate::ai::REGISTRY_TEST_MUTEX.lock().unwrap();
         component_registry::clear();
         component_registry::register(ComponentMeta {
             name: "Button".to_string(),
@@ -300,11 +312,12 @@ mod tests {
             tags: vec!["modal".to_string(), "dialog".to_string()],
             example: "Modal { }".to_string(),
         });
+        guard
     }
 
     #[test]
     fn test_search_exact_name() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("Button");
         assert!(!results.is_empty());
         assert_eq!(results[0].component.name, "Button");
@@ -313,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_search_synonym() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("click");
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.component.name == "Button"));
@@ -321,7 +334,7 @@ mod tests {
 
     #[test]
     fn test_search_description() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("displaying data items");
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.component.name == "UserList"));
@@ -329,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_search_category() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("form");
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.component.name == "Button"));
@@ -338,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_search_tag() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("dialog");
         assert!(!results.is_empty());
         assert!(results.iter().any(|r| r.component.name == "Modal"));
@@ -346,14 +359,14 @@ mod tests {
 
     #[test]
     fn test_search_no_results() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("xyzabc123");
         assert!(results.is_empty());
     }
 
     #[test]
     fn test_results_sorted_by_score() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("form input");
         for i in 1..results.len() {
             assert!(results[i - 1].score >= results[i].score);
@@ -362,7 +375,7 @@ mod tests {
 
     #[test]
     fn test_format_results_text() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("button");
         let text = format_results_text(&results);
         assert!(text.contains("Button"));
@@ -371,7 +384,7 @@ mod tests {
 
     #[test]
     fn test_format_results_json() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("button");
         let json = format_results_json(&results);
         assert!(json.starts_with("["));
@@ -394,14 +407,14 @@ mod tests {
 
     #[test]
     fn test_semantic_match_popup() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("popup");
         assert!(results.iter().any(|r| r.component.name == "Modal"));
     }
 
     #[test]
     fn test_semantic_match_submit() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let results = search_nl("submit");
         assert!(results.iter().any(|r| r.component.name == "Button"));
     }

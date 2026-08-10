@@ -90,7 +90,11 @@ impl ComponentMeta {
         if !self.props.is_empty() {
             out.push_str("\nProps:\n");
             for prop in &self.props {
-                let req = if prop.required { "required" } else { "optional" };
+                let req = if prop.required {
+                    "required"
+                } else {
+                    "optional"
+                };
                 let default = prop
                     .default
                     .as_ref()
@@ -134,7 +138,11 @@ impl ComponentMeta {
             })
             .collect();
 
-        let tags: Vec<String> = self.tags.iter().map(|t| format!("\"{}\"", json_escape(t))).collect();
+        let tags: Vec<String> = self
+            .tags
+            .iter()
+            .map(|t| format!("\"{}\"", json_escape(t)))
+            .collect();
 
         format!(
             r#"{{"name":"{}","props_type":"{}","props":[{}],"is_island":{},"uses_suspense":{},"description":"{}","category":"{}","tags":[{}],"example":"{}"}}"#,
@@ -179,12 +187,7 @@ pub fn find(name: &str) -> Option<ComponentMeta> {
 
 /// List all registered components.
 pub fn list_all() -> Vec<ComponentMeta> {
-    registry()
-        .lock()
-        .unwrap()
-        .values()
-        .cloned()
-        .collect()
+    registry().lock().unwrap().values().cloned().collect()
 }
 
 /// Search components by name, tag, or category.
@@ -246,7 +249,12 @@ mod tests {
             props_type: "ButtonProps".to_string(),
             props: vec![
                 PropInfo::required("label", "String", "Button text content"),
-                PropInfo::optional("disabled", "bool", "false", "Whether the button is disabled"),
+                PropInfo::optional(
+                    "disabled",
+                    "bool",
+                    "false",
+                    "Whether the button is disabled",
+                ),
                 PropInfo::optional("variant", "String", "\"primary\"", "Visual variant"),
             ],
             is_island: false,

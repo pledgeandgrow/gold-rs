@@ -47,7 +47,12 @@ pub fn fire_submit(renderer: &mut TestRenderer, el: &Rc<RefCell<TestElement>>) {
 }
 
 /// Simulate a custom event.
-pub fn fire_event(renderer: &mut TestRenderer, el: &Rc<RefCell<TestElement>>, event: &str, payload: &dyn std::any::Any) {
+pub fn fire_event(
+    renderer: &mut TestRenderer,
+    el: &Rc<RefCell<TestElement>>,
+    event: &str,
+    payload: &dyn std::any::Any,
+) {
     let addr = Rc::as_ptr(el) as usize;
     renderer.fire_event(addr, event, payload);
 }

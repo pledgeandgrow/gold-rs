@@ -139,12 +139,15 @@ impl GpuContext {
         }))
         .expect("Failed to find a suitable GPU adapter");
 
-        let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-            label: Some("rye GPU device"),
-            required_features: wgpu::Features::empty(),
-            required_limits: wgpu::Limits::default(),
-            memory_hints: wgpu::MemoryHints::default(),
-        }, None))
+        let (device, queue) = pollster::block_on(adapter.request_device(
+            &wgpu::DeviceDescriptor {
+                label: Some("rye GPU device"),
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::default(),
+            },
+            None,
+        ))
         .expect("Failed to create GPU device");
 
         let surface_caps = surface.get_capabilities(&adapter);
@@ -284,11 +287,31 @@ impl GpuContext {
                         array_stride: std::mem::size_of::<InstanceData>() as u64,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &[
-                            wgpu::VertexAttribute { shader_location: 1, offset: 0,  format: wgpu::VertexFormat::Float32x2 },
-                            wgpu::VertexAttribute { shader_location: 2, offset: 8,  format: wgpu::VertexFormat::Float32x2 },
-                            wgpu::VertexAttribute { shader_location: 3, offset: 16, format: wgpu::VertexFormat::Float32x2 },
-                            wgpu::VertexAttribute { shader_location: 4, offset: 24, format: wgpu::VertexFormat::Float32x2 },
-                            wgpu::VertexAttribute { shader_location: 5, offset: 32, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute {
+                                shader_location: 1,
+                                offset: 0,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 2,
+                                offset: 8,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 3,
+                                offset: 16,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 4,
+                                offset: 24,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 5,
+                                offset: 32,
+                                format: wgpu::VertexFormat::Float32x4,
+                            },
                         ],
                     },
                 ],
@@ -351,11 +374,8 @@ impl GpuContext {
         // Update instance buffer.
         let count = instances.len().min(MAX_INSTANCES);
         if count > 0 {
-            self.queue.write_buffer(
-                &self.instance_buffer,
-                0,
-                cast_slice(&instances[..count]),
-            );
+            self.queue
+                .write_buffer(&self.instance_buffer, 0, cast_slice(&instances[..count]));
         }
 
         // Get the next frame texture.

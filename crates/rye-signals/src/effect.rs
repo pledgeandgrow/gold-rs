@@ -1,6 +1,6 @@
 //! Effect — side effects with automatic dependency tracking and cleanup.
 
-use crate::runtime::{self, ScopeId, Callback};
+use crate::runtime::{self, Callback, ScopeId};
 use std::cell::RefCell;
 use std::rc::Rc;
 

@@ -99,10 +99,7 @@ impl ChunkLoader {
     /// Get the status of a chunk.
     pub fn status(&self, id: &str) -> ChunkStatus {
         let statuses = self.statuses.lock().unwrap();
-        statuses
-            .get(id)
-            .cloned()
-            .unwrap_or(ChunkStatus::NotLoaded)
+        statuses.get(id).cloned().unwrap_or(ChunkStatus::NotLoaded)
     }
 
     /// Check if a chunk is loaded.

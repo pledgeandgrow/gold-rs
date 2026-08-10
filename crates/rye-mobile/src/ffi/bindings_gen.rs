@@ -95,7 +95,8 @@ class RyeNative {
         external fun elementCount(bridgePtr: Long): Int
     }
 }
-"#.to_string()
+"#
+    .to_string()
 }
 
 /// Generate the Swift bindings file for iOS.

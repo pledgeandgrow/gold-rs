@@ -16,7 +16,10 @@ pub struct Gen {
 impl Gen {
     /// Create a new generator with a seed.
     pub fn new(seed: u64) -> Self {
-        Self { state: seed, count: 0 }
+        Self {
+            state: seed,
+            count: 0,
+        }
     }
 
     /// Generate a random u64.

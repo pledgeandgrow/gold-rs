@@ -192,7 +192,11 @@ pub fn render_to_html_document(root: &rye_core::Element, css: &str, title: &str)
 }
 
 /// Render an Element to HTML string.
-fn render_element_to_html(element: &rye_core::Element, output: &mut String, id_counter: &mut usize) {
+fn render_element_to_html(
+    element: &rye_core::Element,
+    output: &mut String,
+    id_counter: &mut usize,
+) {
     match element {
         rye_core::Element::None => {}
         rye_core::Element::Template(template) => {
@@ -252,7 +256,7 @@ fn render_template_node_to_html(
             let items = items_fn();
             for (_, template) in items {
                 for node in &template.nodes {
-                    render_node(node, output, id_counter);
+                    render_template_node_to_html(node, output, id_counter);
                 }
             }
         }
@@ -269,7 +273,19 @@ fn render_template_node_to_html(
             // Void elements that don't have closing tags
             let is_void = matches!(
                 tag.as_str(),
-                "area" | "base" | "br" | "col" | "embed" | "hr" | "img" | "input" | "link" | "meta" | "source" | "track" | "wbr"
+                "area"
+                    | "base"
+                    | "br"
+                    | "col"
+                    | "embed"
+                    | "hr"
+                    | "img"
+                    | "input"
+                    | "link"
+                    | "meta"
+                    | "source"
+                    | "track"
+                    | "wbr"
             );
 
             output.push('<');
@@ -349,12 +365,8 @@ mod tests {
 
     #[test]
     fn test_render_to_string_nested() {
-        let child = Template::new_element(
-            "span",
-            vec![],
-            Vec::new(),
-            vec![Template::text("inner")],
-        );
+        let child =
+            Template::new_element("span", vec![], Vec::new(), vec![Template::text("inner")]);
         let el = Element::Template(Template::new_element(
             "div",
             vec![],
@@ -414,8 +426,7 @@ mod tests {
         use std::cell::RefCell;
         use std::rc::Rc;
         let handler: rye_core::renderer::EventHandler = Box::new(|_| {});
-        let shared: rye_core::template::SharedEventHandler =
-            Rc::new(RefCell::new(handler));
+        let shared: rye_core::template::SharedEventHandler = Rc::new(RefCell::new(handler));
         let el = Element::Template(Template::new_element(
             "button",
             Vec::new(),
@@ -429,25 +440,28 @@ mod tests {
 
     #[test]
     fn test_render_to_string_dynamic_string() {
-        let el = Element::Template(Template::new(vec![TemplateNode::Dynamic(
-            Box::new("dynamic value".to_string()),
-        )]));
+        let el = Element::Template(Template::new(vec![TemplateNode::Dynamic(Box::new(
+            "dynamic value".to_string(),
+        ))]));
         let html = render_to_string(&el);
         assert!(html.contains("dynamic value"));
     }
 
     #[test]
     fn test_render_to_string_dynamic_number() {
-        let el = Element::Template(Template::new(vec![TemplateNode::Dynamic(
-            Box::new(42i32),
-        )]));
+        let el = Element::Template(Template::new(vec![TemplateNode::Dynamic(Box::new(42i32))]));
         let html = render_to_string(&el);
         assert!(html.contains("42"));
     }
 
     #[test]
     fn test_hydration_ids_increment() {
-        let child = Template::new_element("span", Vec::new(), Vec::new(), vec![Template::text("inner")]);
+        let child = Template::new_element(
+            "span",
+            Vec::new(),
+            Vec::new(),
+            vec![Template::text("inner")],
+        );
         let el = Element::Template(Template::new_element(
             "div",
             Vec::new(),

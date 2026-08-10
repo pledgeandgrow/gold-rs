@@ -255,7 +255,10 @@ impl Renderer for FfiRendererBridge {
     }
 
     fn set_event_listener(&mut self, el: &Self::Element, event: &str, handler: EventHandler) {
-        el.handlers.lock().unwrap().insert(event.to_string(), handler);
+        el.handlers
+            .lock()
+            .unwrap()
+            .insert(event.to_string(), handler);
 
         #[cfg(target_os = "android")]
         {

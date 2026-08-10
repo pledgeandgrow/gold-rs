@@ -9,15 +9,15 @@
 //! - **Goal 108**: Memory profiling tools (allocation tracking, arena stats, leak detection)
 //! - **Goal 109**: Bridge call counter (Wasm→JS bridge call tracking per frame)
 
-pub mod streaming_wasm;
-pub mod css_reactive;
-pub mod simd;
-pub mod threading;
-pub mod memory_profiler;
 pub mod bridge_counter;
-pub mod wasm_gc;
+pub mod css_reactive;
 pub mod gpu_pooling;
-pub mod speculative_preload;
+pub mod memory_profiler;
 pub mod render_coalescing;
-pub mod wasm_precompilation;
 pub mod selective_aot;
+pub mod simd;
+pub mod speculative_preload;
+pub mod streaming_wasm;
+pub mod threading;
+pub mod wasm_gc;
+pub mod wasm_precompilation;

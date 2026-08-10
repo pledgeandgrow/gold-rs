@@ -126,12 +126,20 @@ impl DualPassRenderer {
 
     /// Get the number of filled placeholders.
     pub fn filled_count(&self) -> usize {
-        self.placeholders.borrow().values().filter(|p| p.filled).count()
+        self.placeholders
+            .borrow()
+            .values()
+            .filter(|p| p.filled)
+            .count()
     }
 
     /// Get the number of unfilled placeholders.
     pub fn unfilled_count(&self) -> usize {
-        self.placeholders.borrow().values().filter(|p| !p.filled).count()
+        self.placeholders
+            .borrow()
+            .values()
+            .filter(|p| !p.filled)
+            .count()
     }
 
     /// Get all placeholder IDs.
@@ -185,7 +193,8 @@ impl SkeletonBuilder {
 
     /// Add a placeholder to the skeleton.
     pub fn placeholder(&mut self, id: &str, fallback_html: &str) -> &mut Self {
-        self.html.push_str(&format!("<!--rye-placeholder:{}-->", id));
+        self.html
+            .push_str(&format!("<!--rye-placeholder:{}-->", id));
         self.placeholders.push(SkeletonPlaceholder {
             id: id.to_string(),
             skeleton_html: fallback_html.to_string(),

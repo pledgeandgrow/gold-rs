@@ -6,6 +6,6 @@
 
 pub mod serializer;
 
-pub use serializer::serialize;
 pub use serializer::deserialize;
-pub use serializer::{Serialize, Deserialize};
+pub use serializer::serialize;
+pub use serializer::{Deserialize, Serialize};

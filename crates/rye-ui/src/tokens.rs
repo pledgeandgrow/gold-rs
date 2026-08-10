@@ -428,7 +428,9 @@ pub struct DesignTokens {
 }
 
 impl Default for DesignTokens {
-    fn default() -> Self { Self::light() }
+    fn default() -> Self {
+        Self::light()
+    }
 }
 
 impl DesignTokens {
@@ -456,25 +458,32 @@ impl DesignTokens {
     // -- Color overrides (builder) ------------------------------------------
 
     pub fn primary(mut self, color: impl Into<String>) -> Self {
-        self.colors.primary = color.into(); self
+        self.colors.primary = color.into();
+        self
     }
     pub fn secondary(mut self, color: impl Into<String>) -> Self {
-        self.colors.secondary = color.into(); self
+        self.colors.secondary = color.into();
+        self
     }
     pub fn bg(mut self, color: impl Into<String>) -> Self {
-        self.colors.bg = color.into(); self
+        self.colors.bg = color.into();
+        self
     }
     pub fn text(mut self, color: impl Into<String>) -> Self {
-        self.colors.text = color.into(); self
+        self.colors.text = color.into();
+        self
     }
     pub fn border(mut self, color: impl Into<String>) -> Self {
-        self.colors.border = color.into(); self
+        self.colors.border = color.into();
+        self
     }
     pub fn radius(mut self, r: impl Into<String>) -> Self {
-        self.border.radius_md = r.into(); self
+        self.border.radius_md = r.into();
+        self
     }
     pub fn font_family(mut self, f: impl Into<String>) -> Self {
-        self.typography.font_family = f.into(); self
+        self.typography.font_family = f.into();
+        self
     }
 
     // -- CSS generation -----------------------------------------------------

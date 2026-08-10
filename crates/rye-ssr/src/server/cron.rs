@@ -132,12 +132,10 @@ impl ScheduledTask {
                     None => true,
                 }
             }
-            Schedule::Every(d) => {
-                match self.last_run {
-                    Some(last) => last.elapsed() >= *d,
-                    None => true,
-                }
-            }
+            Schedule::Every(d) => match self.last_run {
+                Some(last) => last.elapsed() >= *d,
+                None => true,
+            },
             Schedule::Cron(_) => false, // Cron parsing not implemented in this stub
         }
     }
@@ -167,7 +165,12 @@ impl TaskScheduler {
     }
 
     /// Register a scheduled task.
-    pub fn register<F: Fn() + Send + Sync + 'static>(&self, name: &str, schedule: Schedule, task: F) {
+    pub fn register<F: Fn() + Send + Sync + 'static>(
+        &self,
+        name: &str,
+        schedule: Schedule,
+        task: F,
+    ) {
         let mut tasks = self.tasks.lock().unwrap();
         tasks.push(ScheduledTask::new(name, schedule, task));
     }
@@ -247,7 +250,12 @@ impl TaskScheduler {
 
     /// Get all task names.
     pub fn task_names(&self) -> Vec<String> {
-        self.tasks.lock().unwrap().iter().map(|t| t.name.clone()).collect()
+        self.tasks
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|t| t.name.clone())
+            .collect()
     }
 
     /// Remove a task by name.
@@ -339,9 +347,13 @@ mod tests {
     fn test_scheduled_task_run() {
         let counter = std::sync::Arc::new(AtomicU32::new(0));
         let c = counter.clone();
-        let mut task = ScheduledTask::new("test", Schedule::Every(Duration::from_secs(60)), move || {
-            c.fetch_add(1, Ordering::SeqCst);
-        });
+        let mut task = ScheduledTask::new(
+            "test",
+            Schedule::Every(Duration::from_secs(60)),
+            move || {
+                c.fetch_add(1, Ordering::SeqCst);
+            },
+        );
 
         assert_eq!(task.run_count, 0);
         task.run();
@@ -392,9 +404,13 @@ mod tests {
         let scheduler = TaskScheduler::new();
         let counter = std::sync::Arc::new(AtomicU32::new(0));
         let c = counter.clone();
-        scheduler.register("task1", Schedule::Every(Duration::from_secs(60)), move || {
-            c.fetch_add(1, Ordering::SeqCst);
-        });
+        scheduler.register(
+            "task1",
+            Schedule::Every(Duration::from_secs(60)),
+            move || {
+                c.fetch_add(1, Ordering::SeqCst);
+            },
+        );
 
         let ran = scheduler.tick();
         assert_eq!(ran, 1);

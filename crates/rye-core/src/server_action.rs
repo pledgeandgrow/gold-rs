@@ -112,7 +112,10 @@ pub async fn invoke_action(id: &str, input: &str) -> Result<String, ServerError>
 
     match future {
         Some(fut) => fut.await,
-        None => Err(ServerError::Message(format!("Unknown server action: {}", id))),
+        None => Err(ServerError::Message(format!(
+            "Unknown server action: {}",
+            id
+        ))),
     }
 }
 
@@ -200,9 +203,7 @@ mod tests {
 
         register_action(
             "test_action",
-            Box::new(|_input: &str| {
-                Box::pin(async { Ok("42".to_string()) })
-            }),
+            Box::new(|_input: &str| Box::pin(async { Ok("42".to_string()) })),
         );
 
         let actions = list_actions();
@@ -241,7 +242,6 @@ mod tests {
                 let input = input.to_string();
                 Box::pin(async move { Ok(input) })
             }),
-
         );
 
         let result = call_server("test_call_echo", "hello").await.unwrap();

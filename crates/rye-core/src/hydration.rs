@@ -193,7 +193,9 @@ pub fn hydrate(plan: &HydrationPlan) -> HydrationResult {
     let root = match plan.root {
         Some(root) => root,
         None => {
-            result.errors.push("No root marker in hydration plan".to_string());
+            result
+                .errors
+                .push("No root marker in hydration plan".to_string());
             return result;
         }
     };

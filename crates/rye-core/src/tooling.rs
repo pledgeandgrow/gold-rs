@@ -5,7 +5,7 @@
 //! - **Goal 149**: Mobile build (iOS/Android)
 //! - **Goal 150**: Deploy pipeline
 
+pub mod deploy;
 pub mod hot_reload;
 pub mod inspect;
 pub mod mobile;
-pub mod deploy;

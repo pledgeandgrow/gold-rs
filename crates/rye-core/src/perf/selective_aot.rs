@@ -172,7 +172,9 @@ impl SelectiveAotCompiler {
     pub fn record(&self, function_name: &str, module_name: &str, time_us: u64) {
         let key = format!("{}::{}", module_name, function_name);
         let mut profiles = self.profiles.lock().unwrap();
-        let sample = profiles.entry(key).or_insert_with(|| ProfileSample::new(function_name, module_name));
+        let sample = profiles
+            .entry(key)
+            .or_insert_with(|| ProfileSample::new(function_name, module_name));
         sample.record_call(time_us);
     }
 
@@ -195,7 +197,9 @@ impl SelectiveAotCompiler {
 
         // Sort by hotness score (descending)
         candidates.sort_by(|a, b| {
-            b.hotness_score().partial_cmp(&a.hotness_score()).unwrap_or(std::cmp::Ordering::Equal)
+            b.hotness_score()
+                .partial_cmp(&a.hotness_score())
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         let selected: Vec<AotEntry> = candidates
@@ -238,7 +242,12 @@ impl SelectiveAotCompiler {
 
     /// Get the total estimated native code size.
     pub fn total_native_code_size(&self) -> u64 {
-        self.aot_entries.lock().unwrap().values().map(|e| e.native_code_size).sum()
+        self.aot_entries
+            .lock()
+            .unwrap()
+            .values()
+            .map(|e| e.native_code_size)
+            .sum()
     }
 
     /// Get the overall estimated speedup (fraction, 0.0-1.0).
@@ -268,7 +277,9 @@ impl SelectiveAotCompiler {
             let entries = self.aot_entries.lock().unwrap();
             let mut sorted: Vec<&AotEntry> = entries.values().collect();
             sorted.sort_by(|a, b| {
-                b.hotness_score.partial_cmp(&a.hotness_score).unwrap_or(std::cmp::Ordering::Equal)
+                b.hotness_score
+                    .partial_cmp(&a.hotness_score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
             sorted.iter().take(20).map(|e| (*e).clone()).collect()
         };
@@ -279,7 +290,10 @@ impl SelectiveAotCompiler {
         report.push_str(&format!("Profiled functions: {}\n", profiled));
         report.push_str(&format!("AOT-compiled functions: {}\n", aot_count));
         report.push_str(&format!("Total native code: {} bytes\n", total_native));
-        report.push_str(&format!("Overall estimated speedup: {:.1}%\n\n", speedup * 100.0));
+        report.push_str(&format!(
+            "Overall estimated speedup: {:.1}%\n\n",
+            speedup * 100.0
+        ));
 
         report.push_str("AOT-compiled functions (by hotness):\n");
 
@@ -435,9 +449,15 @@ mod tests {
         assert_eq!(compiler.execution_mode("fn", "mod"), ExecutionMode::Hybrid);
 
         compiler.select_for_aot();
-        assert_eq!(compiler.execution_mode("fn", "mod"), ExecutionMode::AotCompiled);
+        assert_eq!(
+            compiler.execution_mode("fn", "mod"),
+            ExecutionMode::AotCompiled
+        );
 
-        assert_eq!(compiler.execution_mode("unknown", "mod"), ExecutionMode::Interpreted);
+        assert_eq!(
+            compiler.execution_mode("unknown", "mod"),
+            ExecutionMode::Interpreted
+        );
     }
 
     #[test]

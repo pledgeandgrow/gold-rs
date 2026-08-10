@@ -51,7 +51,10 @@ impl FrameStats {
     pub fn record(&mut self, call: &BridgeCall) {
         self.total_calls += 1;
         *self.calls_by_op.entry(call.op.clone()).or_insert(0) += 1;
-        *self.calls_by_component.entry(call.component.clone()).or_insert(0) += 1;
+        *self
+            .calls_by_component
+            .entry(call.component.clone())
+            .or_insert(0) += 1;
         self.total_payload += call.payload_bytes;
     }
 
@@ -120,7 +123,10 @@ impl BridgeCounter {
     /// End the current frame and start a new one.
     pub fn end_frame(&mut self) {
         if self.enabled {
-            let frame = std::mem::replace(&mut self.current_frame, FrameStats::new(self.frame_number + 1));
+            let frame = std::mem::replace(
+                &mut self.current_frame,
+                FrameStats::new(self.frame_number + 1),
+            );
             self.frames.push(frame);
             self.frame_number += 1;
         }
@@ -142,7 +148,10 @@ impl BridgeCounter {
         let mut report = String::new();
 
         if let Some(frame) = self.frames.last() {
-            report.push_str(&format!("=== Frame {} Bridge Call Report ===\n\n", frame.frame));
+            report.push_str(&format!(
+                "=== Frame {} Bridge Call Report ===\n\n",
+                frame.frame
+            ));
             report.push_str(&format!("Total calls: {}\n", frame.total_calls));
             report.push_str(&format!("Total payload: {} bytes\n\n", frame.total_payload));
 

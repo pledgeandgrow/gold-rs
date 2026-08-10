@@ -1,8 +1,8 @@
 //! OTPInput — one-time password digit inputs.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct OtpInputProps {
@@ -17,17 +17,39 @@ pub struct OtpInputProps {
 
 impl Default for OtpInputProps {
     fn default() -> Self {
-        Self { length: 6, value: String::new(), label: None, disabled: false,
-               error: None, class: None, style: None }
+        Self {
+            length: 6,
+            value: String::new(),
+            label: None,
+            disabled: false,
+            error: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl OtpInputProps {
-    pub fn length(mut self, l: usize) -> Self { self.length = l; self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn error(mut self, e: impl Into<String>) -> Self { self.error = Some(e.into()); self }
+    pub fn length(mut self, l: usize) -> Self {
+        self.length = l;
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn error(mut self, e: impl Into<String>) -> Self {
+        self.error = Some(e.into());
+        self
+    }
 }
 
 pub struct OtpInput;
@@ -73,20 +95,43 @@ impl OtpInput {
             Template::new_element("input", attrs, Vec::new(), Vec::new())
         }).collect();
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "display:flex;gap:8px;".to_string()),
-                 ("class".to_string(), "rye-otp-inputs".to_string())],
-            Vec::new(), inputs));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), "display:flex;gap:8px;".to_string()),
+                ("class".to_string(), "rye-otp-inputs".to_string()),
+            ],
+            Vec::new(),
+            inputs,
+        ));
 
         if let Some(error) = &props.error {
-            children.push(Template::new_element("span",
-                vec![("style".to_string(), format!("display:block;margin-top:8px;font-size:var(--rye-font-size-sm);color:{};", vars::DANGER))],
-                Vec::new(), vec![Template::text(error)]));
+            children.push(Template::new_element(
+                "span",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "display:block;margin-top:8px;font-size:var(--rye-font-size-sm);color:{};",
+                        vars::DANGER
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(error)],
+            ));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-otp-input-wrapper {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![(
+                "class".to_string(),
+                format!(
+                    "rye-otp-input-wrapper {}",
+                    props.class.as_deref().unwrap_or("")
+                ),
+            )],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -103,7 +148,11 @@ mod tests {
 
     #[test]
     fn test_otp_input_builder() {
-        let p = OtpInputProps::default().length(4).value("1234").label("Enter code").error("Invalid");
+        let p = OtpInputProps::default()
+            .length(4)
+            .value("1234")
+            .label("Enter code")
+            .error("Invalid");
         assert_eq!(p.length, 4);
         assert_eq!(p.value, "1234");
         assert!(p.error.is_some());

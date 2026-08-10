@@ -1,6 +1,6 @@
 //! Test renderer — in-memory renderer for unit testing without a browser.
 
-use rye_core::renderer::{EventHandler, Renderer, BatchRenderer};
+use rye_core::renderer::{BatchRenderer, EventHandler, Renderer};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -207,13 +207,19 @@ impl Renderer for TestRenderer {
     fn set_event_listener(&mut self, el: &Self::Element, event: &str, handler: EventHandler) {
         let addr = element_addr(el);
         // Remove existing handler for this element+event
-        self.handlers.borrow_mut().retain(|(a, e, _)| *a != addr || e != event);
-        self.handlers.borrow_mut().push((addr, event.to_string(), handler));
+        self.handlers
+            .borrow_mut()
+            .retain(|(a, e, _)| *a != addr || e != event);
+        self.handlers
+            .borrow_mut()
+            .push((addr, event.to_string(), handler));
     }
 
     fn remove_event_listener(&mut self, el: &Self::Element, event: &str) {
         let addr = element_addr(el);
-        self.handlers.borrow_mut().retain(|(a, e, _)| *a != addr || e != event);
+        self.handlers
+            .borrow_mut()
+            .retain(|(a, e, _)| *a != addr || e != event);
     }
 
     fn root(&self) -> Self::Element {

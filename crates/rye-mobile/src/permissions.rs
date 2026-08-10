@@ -158,7 +158,12 @@ impl PermissionsManager {
 
     /// Get the current state of a permission.
     pub fn get_state(&self, permission: Permission) -> PermissionState {
-        *self.states.lock().unwrap().get(&permission).unwrap_or(&PermissionState::NotDetermined)
+        *self
+            .states
+            .lock()
+            .unwrap()
+            .get(&permission)
+            .unwrap_or(&PermissionState::NotDetermined)
     }
 
     /// Get a reactive signal for a permission state.
@@ -176,7 +181,9 @@ impl PermissionsManager {
     /// Request a permission (simulated — grants by default).
     pub fn request(&self, permission: Permission) -> PermissionRequestResult {
         let mut states = self.states.lock().unwrap();
-        let current = *states.get(&permission).unwrap_or(&PermissionState::NotDetermined);
+        let current = *states
+            .get(&permission)
+            .unwrap_or(&PermissionState::NotDetermined);
 
         if current == PermissionState::NotSupported {
             return PermissionRequestResult::NotSupported;
@@ -309,17 +316,35 @@ mod tests {
 
     #[test]
     fn test_permission_request_result_to_state() {
-        assert_eq!(PermissionRequestResult::Granted.to_state(), PermissionState::Granted);
-        assert_eq!(PermissionRequestResult::Denied.to_state(), PermissionState::Denied);
-        assert_eq!(PermissionRequestResult::Limited.to_state(), PermissionState::Limited);
-        assert_eq!(PermissionRequestResult::NotSupported.to_state(), PermissionState::NotSupported);
-        assert_eq!(PermissionRequestResult::Error("e".to_string()).to_state(), PermissionState::NotDetermined);
+        assert_eq!(
+            PermissionRequestResult::Granted.to_state(),
+            PermissionState::Granted
+        );
+        assert_eq!(
+            PermissionRequestResult::Denied.to_state(),
+            PermissionState::Denied
+        );
+        assert_eq!(
+            PermissionRequestResult::Limited.to_state(),
+            PermissionState::Limited
+        );
+        assert_eq!(
+            PermissionRequestResult::NotSupported.to_state(),
+            PermissionState::NotSupported
+        );
+        assert_eq!(
+            PermissionRequestResult::Error("e".to_string()).to_state(),
+            PermissionState::NotDetermined
+        );
     }
 
     #[test]
     fn test_manager_get_state_default() {
         let mgr = PermissionsManager::new();
-        assert_eq!(mgr.get_state(Permission::Camera), PermissionState::NotDetermined);
+        assert_eq!(
+            mgr.get_state(Permission::Camera),
+            PermissionState::NotDetermined
+        );
     }
 
     #[test]
@@ -366,7 +391,10 @@ mod tests {
     fn test_manager_request_with_result() {
         let mgr = PermissionsManager::new();
         mgr.request_with_result(Permission::Microphone, PermissionRequestResult::Denied);
-        assert_eq!(mgr.get_state(Permission::Microphone), PermissionState::Denied);
+        assert_eq!(
+            mgr.get_state(Permission::Microphone),
+            PermissionState::Denied
+        );
     }
 
     #[test]

@@ -65,11 +65,16 @@ impl PartialRenderer {
 
     /// Register a rendered subtree.
     pub fn register(&mut self, component_id: &str, html: &str) {
-        self.subtrees.insert(component_id.to_string(), html.to_string());
+        self.subtrees
+            .insert(component_id.to_string(), html.to_string());
     }
 
     /// Re-render a subtree and produce a diff.
-    pub fn rerender<F: FnOnce() -> String>(&mut self, component_id: &str, render_fn: F) -> SubtreeDiff {
+    pub fn rerender<F: FnOnce() -> String>(
+        &mut self,
+        component_id: &str,
+        render_fn: F,
+    ) -> SubtreeDiff {
         let old_html = self.subtrees.get(component_id).cloned().unwrap_or_default();
         let new_html = render_fn();
         let diff = SubtreeDiff::new(component_id, &old_html, &new_html);
@@ -80,7 +85,11 @@ impl PartialRenderer {
     }
 
     /// Re-render multiple subtrees and return all diffs.
-    pub fn rerender_batch<F: Fn(&str) -> String>(&mut self, component_ids: &[&str], render_fn: F) -> Vec<SubtreeDiff> {
+    pub fn rerender_batch<F: Fn(&str) -> String>(
+        &mut self,
+        component_ids: &[&str],
+        render_fn: F,
+    ) -> Vec<SubtreeDiff> {
         component_ids
             .iter()
             .map(|id| self.rerender(id, || render_fn(id)))
@@ -124,7 +133,11 @@ impl PartialRenderer {
 
     /// Generate a batch patch script for multiple diffs.
     pub fn batch_patch_script(diffs: &[SubtreeDiff]) -> String {
-        let scripts: Vec<String> = diffs.iter().filter(|d| d.changed).map(|d| d.to_patch_script()).collect();
+        let scripts: Vec<String> = diffs
+            .iter()
+            .filter(|d| d.changed)
+            .map(|d| d.to_patch_script())
+            .collect();
         if scripts.is_empty() {
             return String::new();
         }
@@ -133,7 +146,11 @@ impl PartialRenderer {
 
     /// Generate a batch patch JSON for multiple diffs.
     pub fn batch_patch_json(diffs: &[SubtreeDiff]) -> String {
-        let patches: Vec<String> = diffs.iter().filter(|d| d.changed).map(|d| d.to_patch_json()).collect();
+        let patches: Vec<String> = diffs
+            .iter()
+            .filter(|d| d.changed)
+            .map(|d| d.to_patch_json())
+            .collect();
         if patches.is_empty() {
             return "[]".to_string();
         }

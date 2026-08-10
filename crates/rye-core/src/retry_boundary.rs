@@ -15,10 +15,7 @@ pub enum RetryStrategy {
     /// No retry — show fallback immediately.
     None,
     /// Fixed delay between retries, up to max_retries.
-    Fixed {
-        delay: Duration,
-        max_retries: u32,
-    },
+    Fixed { delay: Duration, max_retries: u32 },
     /// Exponential backoff — delay doubles each retry.
     ExponentialBackoff {
         initial_delay: Duration,
@@ -26,18 +23,14 @@ pub enum RetryStrategy {
         max_retries: u32,
     },
     /// Fallback to cached data on error.
-    FallbackCached {
-        max_retries: u32,
-    },
+    FallbackCached { max_retries: u32 },
     /// Fallback to static content on error.
     FallbackStatic {
         static_content: String,
         max_retries: u32,
     },
     /// Custom retry logic.
-    Custom {
-        delays: Vec<Duration>,
-    },
+    Custom { delays: Vec<Duration> },
 }
 
 impl RetryStrategy {
@@ -79,9 +72,7 @@ impl RetryStrategy {
                     None
                 }
             }
-            RetryStrategy::Custom { delays } => {
-                delays.get(attempt as usize).copied()
-            }
+            RetryStrategy::Custom { delays } => delays.get(attempt as usize).copied(),
         }
     }
 
@@ -269,7 +260,11 @@ impl RetryErrorBoundary {
     }
 
     /// Render the appropriate content based on state.
-    pub fn render(&self, render_fn: &dyn Fn() -> String, fallback_fn: &dyn Fn() -> String) -> String {
+    pub fn render(
+        &self,
+        render_fn: &dyn Fn() -> String,
+        fallback_fn: &dyn Fn() -> String,
+    ) -> String {
         match self.state.get_untracked() {
             RetryState::Ok => {
                 let content = render_fn();
@@ -398,7 +393,10 @@ mod tests {
         });
         boundary.report_error("error");
         assert!(boundary.retry());
-        assert!(matches!(boundary.state_untracked(), RetryState::Retrying { .. }));
+        assert!(matches!(
+            boundary.state_untracked(),
+            RetryState::Retrying { .. }
+        ));
         boundary.succeed();
         assert_eq!(boundary.state_untracked(), RetryState::Ok);
         assert_eq!(boundary.retry_count(), 0);
@@ -416,13 +414,18 @@ mod tests {
         assert!(boundary.retry());
         boundary.fail("error");
         assert!(!boundary.retry()); // exhausted
-        assert!(matches!(boundary.state_untracked(), RetryState::Failed { .. }));
+        assert!(matches!(
+            boundary.state_untracked(),
+            RetryState::Failed { .. }
+        ));
     }
 
     #[test]
     fn test_retry_boundary_render_ok() {
         let boundary = RetryErrorBoundary::new(RetryStrategy::default());
-        let html = boundary.render(&|| "<div>Content</div>".to_string(), &|| "Error".to_string());
+        let html = boundary.render(&|| "<div>Content</div>".to_string(), &|| {
+            "Error".to_string()
+        });
         assert_eq!(html, "<div>Content</div>");
     }
 

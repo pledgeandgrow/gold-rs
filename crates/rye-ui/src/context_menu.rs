@@ -1,8 +1,8 @@
 //! ContextMenu — right-click menu.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct ContextMenuItem {
@@ -13,10 +13,20 @@ pub struct ContextMenuItem {
 
 impl ContextMenuItem {
     pub fn new(label: impl Into<String>) -> Self {
-        Self { label: label.into(), icon: None, disabled: false }
+        Self {
+            label: label.into(),
+            icon: None,
+            disabled: false,
+        }
     }
-    pub fn icon(mut self, i: impl Into<String>) -> Self { self.icon = Some(i.into()); self }
-    pub fn disabled(mut self) -> Self { self.disabled = true; self }
+    pub fn icon(mut self, i: impl Into<String>) -> Self {
+        self.icon = Some(i.into());
+        self
+    }
+    pub fn disabled(mut self) -> Self {
+        self.disabled = true;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -31,14 +41,31 @@ pub struct ContextMenuProps {
 
 impl Default for ContextMenuProps {
     fn default() -> Self {
-        Self { items: Vec::new(), open: false, x: 0, y: 0, class: None, style: None }
+        Self {
+            items: Vec::new(),
+            open: false,
+            x: 0,
+            y: 0,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ContextMenuProps {
-    pub fn items(mut self, i: Vec<ContextMenuItem>) -> Self { self.items = i; self }
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
-    pub fn position(mut self, x: u32, y: u32) -> Self { self.x = x; self.y = y; self }
+    pub fn items(mut self, i: Vec<ContextMenuItem>) -> Self {
+        self.items = i;
+        self
+    }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
+    pub fn position(mut self, x: u32, y: u32) -> Self {
+        self.x = x;
+        self.y = y;
+        self
+    }
 }
 
 pub struct ContextMenu;
@@ -53,7 +80,13 @@ impl ContextMenu {
             "position:fixed;left:{}px;top:{}px;min-width:180px;\
              background:{};border:1px solid {};border-radius:var(--rye-radius-md);\
              box-shadow:{};padding:4px;z-index:{};{}",
-            props.x, props.y, vars::BG_ELEVATED, vars::BORDER, vars::SHADOW_MD, vars::Z_DROPDOWN, props.style.as_deref().unwrap_or(""),
+            props.x,
+            props.y,
+            vars::BG_ELEVATED,
+            vars::BORDER,
+            vars::SHADOW_MD,
+            vars::Z_DROPDOWN,
+            props.style.as_deref().unwrap_or(""),
         );
 
         let items: Vec<Template> = props.items.iter().map(|item| {
@@ -77,10 +110,18 @@ impl ContextMenu {
                 Vec::new(), children)
         }).collect();
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), menu_style),
-                 ("class".to_string(), format!("rye-context-menu {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), items))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), menu_style),
+                (
+                    "class".to_string(),
+                    format!("rye-context-menu {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            items,
+        ))
     }
 }
 
@@ -103,15 +144,23 @@ mod tests {
 
     #[test]
     fn test_context_menu_closed() {
-        let el = ContextMenu::render(ContextMenuProps::default().items(vec![ContextMenuItem::new("Cut")]));
+        let el = ContextMenu::render(
+            ContextMenuProps::default().items(vec![ContextMenuItem::new("Cut")]),
+        );
         assert!(matches!(el, Element::None));
     }
 
     #[test]
     fn test_context_menu_open() {
-        let el = ContextMenu::render(ContextMenuProps::default()
-            .items(vec![ContextMenuItem::new("Copy"), ContextMenuItem::new("Paste")])
-            .open(true).position(100, 200));
+        let el = ContextMenu::render(
+            ContextMenuProps::default()
+                .items(vec![
+                    ContextMenuItem::new("Copy"),
+                    ContextMenuItem::new("Paste"),
+                ])
+                .open(true)
+                .position(100, 200),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

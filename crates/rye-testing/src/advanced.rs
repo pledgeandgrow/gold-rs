@@ -49,7 +49,11 @@ pub struct E2eTestConfig {
 impl Default for E2eTestConfig {
     fn default() -> Self {
         Self {
-            browsers: vec![PlaywrightBrowser::Chromium, PlaywrightBrowser::Firefox, PlaywrightBrowser::WebKit],
+            browsers: vec![
+                PlaywrightBrowser::Chromium,
+                PlaywrightBrowser::Firefox,
+                PlaywrightBrowser::WebKit,
+            ],
             screenshots: true,
             visual_regression: false,
             network_mock: true,
@@ -165,7 +169,11 @@ impl ComponentContract {
         // All required props in self must exist in other
         for prop in &self.props {
             if prop.required {
-                if !other.props.iter().any(|p| p.name == prop.name && p.prop_type == prop.prop_type) {
+                if !other
+                    .props
+                    .iter()
+                    .any(|p| p.name == prop.name && p.prop_type == prop.prop_type)
+                {
                     return false;
                 }
             }
@@ -192,7 +200,10 @@ impl ComponentContract {
             if prop.required {
                 if let Some(new_prop) = new.props.iter().find(|p| p.name == prop.name) {
                     if new_prop.prop_type != prop.prop_type {
-                        changes.push(format!("Prop '{}' type changed: {} → {}", prop.name, prop.prop_type, new_prop.prop_type));
+                        changes.push(format!(
+                            "Prop '{}' type changed: {} → {}",
+                            prop.name, prop.prop_type, new_prop.prop_type
+                        ));
                     }
                 } else {
                     changes.push(format!("Required prop '{}' was removed", prop.name));
@@ -258,8 +269,8 @@ impl PerfBaseline {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            max_render_time_us: 16_000, // 16ms = 1 frame
-            max_bundle_size: 500_000,  // 500KB
+            max_render_time_us: 16_000,   // 16ms = 1 frame
+            max_bundle_size: 500_000,     // 500KB
             max_memory_bytes: 50_000_000, // 50MB
         }
     }
@@ -357,12 +368,19 @@ impl SemanticNode {
     pub fn diff(&self, other: &SemanticNode) -> Vec<SemanticDiff> {
         let mut diffs = Vec::new();
         if self.tag != other.tag {
-            diffs.push(SemanticDiff::TagChanged(self.tag.clone(), other.tag.clone()));
+            diffs.push(SemanticDiff::TagChanged(
+                self.tag.clone(),
+                other.tag.clone(),
+            ));
         }
         for (key, val) in &self.props {
             match other.props.get(key) {
                 Some(other_val) if val != other_val => {
-                    diffs.push(SemanticDiff::PropChanged(key.clone(), val.clone(), other_val.clone()));
+                    diffs.push(SemanticDiff::PropChanged(
+                        key.clone(),
+                        val.clone(),
+                        other_val.clone(),
+                    ));
                 }
                 None => diffs.push(SemanticDiff::PropRemoved(key.clone(), val.clone())),
                 _ => {}
@@ -380,7 +398,10 @@ impl SemanticNode {
             ));
         }
         if self.children.len() != other.children.len() {
-            diffs.push(SemanticDiff::ChildrenCountChanged(self.children.len(), other.children.len()));
+            diffs.push(SemanticDiff::ChildrenCountChanged(
+                self.children.len(),
+                other.children.len(),
+            ));
         }
         for (i, (a, b)) in self.children.iter().zip(other.children.iter()).enumerate() {
             let child_diffs = a.diff(b);
@@ -507,7 +528,10 @@ impl A11yNode {
         if self.children.len() != expected.children.len() {
             return false;
         }
-        self.children.iter().zip(expected.children.iter()).all(|(a, b)| a.matches(b))
+        self.children
+            .iter()
+            .zip(expected.children.iter())
+            .all(|(a, b)| a.matches(b))
     }
 }
 
@@ -692,10 +716,7 @@ impl GeneratedTest {
         code.push_str("    let mut renderer = TestRenderer::new();\n");
 
         for event in events {
-            code.push_str(&format!(
-                "    // Set {} = {}\n",
-                event.signal, event.value,
-            ));
+            code.push_str(&format!("    // Set {} = {}\n", event.signal, event.value,));
             code.push_str(&format!(
                 "    renderer.set_signal(\"{}\", \"{}\");\n",
                 event.signal, event.value,
@@ -787,12 +808,15 @@ mod tests {
             .add_prop("label", "String", true)
             .add_event("click")
             .add_slot("default");
-        let new = ComponentContract::new("Button")
-            .add_prop("label", "i64", true);
+        let new = ComponentContract::new("Button").add_prop("label", "i64", true);
         let changes = old.breaking_changes(&new);
         assert!(changes.iter().any(|c| c.contains("type changed")));
-        assert!(changes.iter().any(|c| c.contains("click") && c.contains("removed")));
-        assert!(changes.iter().any(|c| c.contains("default") && c.contains("removed")));
+        assert!(changes
+            .iter()
+            .any(|c| c.contains("click") && c.contains("removed")));
+        assert!(changes
+            .iter()
+            .any(|c| c.contains("default") && c.contains("removed")));
     }
 
     // Perf tests
@@ -849,7 +873,9 @@ mod tests {
         let a = SemanticNode::element("div");
         let b = SemanticNode::element("span");
         let diffs = a.diff(&b);
-        assert!(diffs.iter().any(|d| matches!(d, SemanticDiff::TagChanged(_, _))));
+        assert!(diffs
+            .iter()
+            .any(|d| matches!(d, SemanticDiff::TagChanged(_, _))));
     }
 
     #[test]
@@ -857,7 +883,9 @@ mod tests {
         let a = SemanticNode::element("div").add_prop("class", "a");
         let b = SemanticNode::element("div").add_prop("class", "b");
         let diffs = a.diff(&b);
-        assert!(diffs.iter().any(|d| matches!(d, SemanticDiff::PropChanged(_, _, _))));
+        assert!(diffs
+            .iter()
+            .any(|d| matches!(d, SemanticDiff::PropChanged(_, _, _))));
     }
 
     #[test]
@@ -885,19 +913,34 @@ mod tests {
 
     #[test]
     fn test_fuzz_result_passed() {
-        let r = FuzzResult { input: "div {}".into(), compiled: true, valid_error: false, error: None };
+        let r = FuzzResult {
+            input: "div {}".into(),
+            compiled: true,
+            valid_error: false,
+            error: None,
+        };
         assert!(r.passed());
     }
 
     #[test]
     fn test_fuzz_result_valid_error() {
-        let r = FuzzResult { input: "invalid".into(), compiled: false, valid_error: true, error: Some("err".into()) };
+        let r = FuzzResult {
+            input: "invalid".into(),
+            compiled: false,
+            valid_error: true,
+            error: Some("err".into()),
+        };
         assert!(r.passed());
     }
 
     #[test]
     fn test_fuzz_result_failed() {
-        let r = FuzzResult { input: "invalid".into(), compiled: false, valid_error: false, error: None };
+        let r = FuzzResult {
+            input: "invalid".into(),
+            compiled: false,
+            valid_error: false,
+            error: None,
+        };
         assert!(!r.passed());
     }
 
@@ -926,7 +969,8 @@ mod tests {
     // Equivalence tests
     #[test]
     fn test_equivalence_result_equivalent() {
-        let result = EquivalenceResult::equivalent(vec![RenderPlatform::Web, RenderPlatform::Desktop]);
+        let result =
+            EquivalenceResult::equivalent(vec![RenderPlatform::Web, RenderPlatform::Desktop]);
         assert!(result.equivalent);
     }
 
@@ -965,8 +1009,16 @@ mod tests {
         let mut graph = SignalGraph::new();
         graph.add_dependency("b", "a");
         let updates = vec![
-            SignalUpdate { signal: "a".into(), value: "1".into(), order: 0 },
-            SignalUpdate { signal: "b".into(), value: "2".into(), order: 1 },
+            SignalUpdate {
+                signal: "a".into(),
+                value: "1".into(),
+                order: 0,
+            },
+            SignalUpdate {
+                signal: "b".into(),
+                value: "2".into(),
+                order: 1,
+            },
         ];
         assert!(graph.verify_order(&updates));
     }
@@ -975,8 +1027,16 @@ mod tests {
     #[test]
     fn test_generated_test_from_trace() {
         let events = vec![
-            TraceEvent { signal: "count".into(), value: "1".into(), rendered: "<span>1</span>".into() },
-            TraceEvent { signal: "count".into(), value: "2".into(), rendered: "<span>2</span>".into() },
+            TraceEvent {
+                signal: "count".into(),
+                value: "1".into(),
+                rendered: "<span>1</span>".into(),
+            },
+            TraceEvent {
+                signal: "count".into(),
+                value: "2".into(),
+                rendered: "<span>2</span>".into(),
+            },
         ];
         let test = GeneratedTest::from_trace("counter", &events);
         assert_eq!(test.event_count, 2);

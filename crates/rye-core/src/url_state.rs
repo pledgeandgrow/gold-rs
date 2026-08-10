@@ -91,9 +91,7 @@ impl UrlState {
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            IN_MEMORY_URL.with(|url| {
-                url.borrow().get(key).cloned()
-            })
+            IN_MEMORY_URL.with(|url| url.borrow().get(key).cloned())
         }
     }
 
@@ -223,10 +221,7 @@ pub fn parse_query_string(query: &str) -> HashMap<String, String> {
 
 /// Build a URL query string from a HashMap.
 pub fn build_query_string(params: &HashMap<String, String>) -> String {
-    let pairs: Vec<String> = params
-        .iter()
-        .map(|(k, v)| format!("{}={}", k, v))
-        .collect();
+    let pairs: Vec<String> = params.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
 
     if pairs.is_empty() {
         String::new()
@@ -296,7 +291,8 @@ mod tests {
         let state = UrlState::new("q", "initial");
         // Simulate external URL change
         IN_MEMORY_URL.with(|url| {
-            url.borrow_mut().insert("q".to_string(), "external".to_string());
+            url.borrow_mut()
+                .insert("q".to_string(), "external".to_string());
         });
         state.sync_from_url();
         assert_eq!(state.get(), "external");

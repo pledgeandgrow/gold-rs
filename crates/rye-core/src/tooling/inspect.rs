@@ -153,11 +153,23 @@ impl PerformanceInfo {
     pub fn format(&self) -> String {
         let mut out = String::new();
         out.push_str("=== Performance ===\n");
-        out.push_str(&format!("  Avg render:    {:.2} ms\n", self.avg_render_us as f64 / 1000.0));
-        out.push_str(&format!("  Max render:    {:.2} ms\n", self.max_render_us as f64 / 1000.0));
+        out.push_str(&format!(
+            "  Avg render:    {:.2} ms\n",
+            self.avg_render_us as f64 / 1000.0
+        ));
+        out.push_str(&format!(
+            "  Max render:    {:.2} ms\n",
+            self.max_render_us as f64 / 1000.0
+        ));
         out.push_str(&format!("  Render count:  {}\n", self.render_count));
-        out.push_str(&format!("  Avg reconcile: {:.2} ms\n", self.avg_reconcile_us as f64 / 1000.0));
-        out.push_str(&format!("  Bridge/frame:  {}\n", self.bridge_calls_per_frame));
+        out.push_str(&format!(
+            "  Avg reconcile: {:.2} ms\n",
+            self.avg_reconcile_us as f64 / 1000.0
+        ));
+        out.push_str(&format!(
+            "  Bridge/frame:  {}\n",
+            self.bridge_calls_per_frame
+        ));
         out
     }
 }
@@ -252,7 +264,10 @@ mod tests {
 
     #[test]
     fn test_inspect_target_from_str() {
-        assert_eq!(InspectTarget::from_str("components"), InspectTarget::Components);
+        assert_eq!(
+            InspectTarget::from_str("components"),
+            InspectTarget::Components
+        );
         assert_eq!(InspectTarget::from_str("bundle"), InspectTarget::BundleSize);
         assert_eq!(InspectTarget::from_str("deps"), InspectTarget::Dependencies);
         assert_eq!(InspectTarget::from_str("signals"), InspectTarget::Signals);

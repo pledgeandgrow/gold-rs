@@ -17,15 +17,30 @@ struct CheckResult {
 
 impl CheckResult {
     fn ok(name: &str, message: &str) -> Self {
-        Self { name: name.to_string(), passed: true, message: message.to_string(), fix: None }
+        Self {
+            name: name.to_string(),
+            passed: true,
+            message: message.to_string(),
+            fix: None,
+        }
     }
 
     fn fail(name: &str, message: &str, fix: &str) -> Self {
-        Self { name: name.to_string(), passed: false, message: message.to_string(), fix: Some(fix.to_string()) }
+        Self {
+            name: name.to_string(),
+            passed: false,
+            message: message.to_string(),
+            fix: Some(fix.to_string()),
+        }
     }
 
     fn warn(name: &str, message: &str, fix: &str) -> Self {
-        Self { name: name.to_string(), passed: true, message: message.to_string(), fix: Some(fix.to_string()) }
+        Self {
+            name: name.to_string(),
+            passed: true,
+            message: message.to_string(),
+            fix: Some(fix.to_string()),
+        }
     }
 }
 
@@ -41,24 +56,49 @@ pub fn run(args: &[String]) {
     if cargo_toml.exists() {
         results.push(CheckResult::ok("Cargo.toml", "Found Cargo.toml"));
     } else {
-        results.push(CheckResult::fail("Cargo.toml", "No Cargo.toml found", "Run 'rpg new <name>' to create a project"));
+        results.push(CheckResult::fail(
+            "Cargo.toml",
+            "No Cargo.toml found",
+            "Run 'rpg new <name>' to create a project",
+        ));
     }
 
     // Check 2: rye dependency
     if let Ok(content) = fs::read_to_string(&cargo_toml) {
-        if content.contains("rye-core") || content.contains("rye-macros") || content.contains("rye =") {
-            results.push(CheckResult::ok("rye dependency", "rye dependency found in Cargo.toml"));
+        if content.contains("rye-core")
+            || content.contains("rye-macros")
+            || content.contains("rye =")
+        {
+            results.push(CheckResult::ok(
+                "rye dependency",
+                "rye dependency found in Cargo.toml",
+            ));
         } else {
-            results.push(CheckResult::fail("rye dependency", "No rye dependency in Cargo.toml", "Add rye to Cargo.toml: rye-core = { workspace = true }"));
+            results.push(CheckResult::fail(
+                "rye dependency",
+                "No rye dependency in Cargo.toml",
+                "Add rye to Cargo.toml: rye-core = { workspace = true }",
+            ));
         }
 
         // Check 3: Edition
         if content.contains("edition = \"2021\"") || content.contains("edition = \"2024\"") {
-            results.push(CheckResult::ok("Rust edition", "Using edition 2021 or 2024"));
+            results.push(CheckResult::ok(
+                "Rust edition",
+                "Using edition 2021 or 2024",
+            ));
         } else if content.contains("edition = \"2018\"") {
-            results.push(CheckResult::warn("Rust edition", "Using edition 2018 (consider upgrading)", "Update to edition 2021 in Cargo.toml"));
+            results.push(CheckResult::warn(
+                "Rust edition",
+                "Using edition 2018 (consider upgrading)",
+                "Update to edition 2021 in Cargo.toml",
+            ));
         } else {
-            results.push(CheckResult::warn("Rust edition", "Unknown edition", "Set edition = \"2021\" in Cargo.toml"));
+            results.push(CheckResult::warn(
+                "Rust edition",
+                "Unknown edition",
+                "Set edition = \"2021\" in Cargo.toml",
+            ));
         }
     }
 
@@ -67,7 +107,11 @@ pub fn run(args: &[String]) {
     if src_dir.exists() && src_dir.is_dir() {
         results.push(CheckResult::ok("src/ directory", "src/ directory exists"));
     } else {
-        results.push(CheckResult::fail("src/ directory", "No src/ directory", "Create src/ directory with main.rs or lib.rs"));
+        results.push(CheckResult::fail(
+            "src/ directory",
+            "No src/ directory",
+            "Create src/ directory with main.rs or lib.rs",
+        ));
     }
 
     // Check 5: main.rs or lib.rs
@@ -78,39 +122,79 @@ pub fn run(args: &[String]) {
     } else if lib_rs.exists() {
         results.push(CheckResult::ok("Entry point", "src/lib.rs found"));
     } else {
-        results.push(CheckResult::fail("Entry point", "No src/main.rs or src/lib.rs", "Create src/main.rs or src/lib.rs"));
+        results.push(CheckResult::fail(
+            "Entry point",
+            "No src/main.rs or src/lib.rs",
+            "Create src/main.rs or src/lib.rs",
+        ));
     }
 
     // Check 6: components directory
     let components_dir = src_dir.join("components");
     if components_dir.exists() {
         let count = fs::read_dir(&components_dir)
-            .map(|d| d.filter(|e| e.as_ref().ok().map(|e| e.path().extension().and_then(|e| e.to_str()) == Some("rs")).unwrap_or(false))
-                .count())
+            .map(|d| {
+                d.filter(|e| {
+                    e.as_ref()
+                        .ok()
+                        .map(|e| e.path().extension().and_then(|e| e.to_str()) == Some("rs"))
+                        .unwrap_or(false)
+                })
+                .count()
+            })
             .unwrap_or(0);
         if count > 0 {
-            results.push(CheckResult::ok("Components", &format!("Found {} component file(s) in src/components/", count)));
+            results.push(CheckResult::ok(
+                "Components",
+                &format!("Found {} component file(s) in src/components/", count),
+            ));
         } else {
-            results.push(CheckResult::warn("Components", "src/components/ exists but is empty", "Add components with 'rpg scaffold component <Name>'"));
+            results.push(CheckResult::warn(
+                "Components",
+                "src/components/ exists but is empty",
+                "Add components with 'rpg scaffold component <Name>'",
+            ));
         }
     } else {
-        results.push(CheckResult::warn("Components", "No src/components/ directory", "Create with 'rpg scaffold component <Name>'"));
+        results.push(CheckResult::warn(
+            "Components",
+            "No src/components/ directory",
+            "Create with 'rpg scaffold component <Name>'",
+        ));
     }
 
     // Check 7: tests directory
     let tests_dir = project_root.join("tests");
     if tests_dir.exists() {
         let count = fs::read_dir(&tests_dir)
-            .map(|d| d.filter(|e| e.as_ref().ok().map(|e| e.path().extension().and_then(|e| e.to_str()) == Some("rs")).unwrap_or(false))
-                .count())
+            .map(|d| {
+                d.filter(|e| {
+                    e.as_ref()
+                        .ok()
+                        .map(|e| e.path().extension().and_then(|e| e.to_str()) == Some("rs"))
+                        .unwrap_or(false)
+                })
+                .count()
+            })
             .unwrap_or(0);
         if count > 0 {
-            results.push(CheckResult::ok("Tests", &format!("Found {} test file(s) in tests/", count)));
+            results.push(CheckResult::ok(
+                "Tests",
+                &format!("Found {} test file(s) in tests/", count),
+            ));
         } else {
-            results.push(CheckResult::warn("Tests", "tests/ exists but is empty", "Generate tests with 'rpg test --generate'"));
+            results.push(CheckResult::warn(
+                "Tests",
+                "tests/ exists but is empty",
+                "Generate tests with 'rpg test --generate'",
+            ));
         }
     } else {
-        results.push(CheckResult::warn("Tests", "No tests/ directory", "Generate tests with 'rpg test --generate'"));
+        results.push(CheckResult::warn(
+            "Tests",
+            "No tests/ directory",
+            "Generate tests with 'rpg test --generate'",
+        ));
     }
 
     // Check 8: .gitignore
@@ -118,7 +202,11 @@ pub fn run(args: &[String]) {
     if gitignore.exists() {
         results.push(CheckResult::ok(".gitignore", ".gitignore exists"));
     } else {
-        results.push(CheckResult::warn(".gitignore", "No .gitignore found", "Add a .gitignore with target/ and *.rs.bk"));
+        results.push(CheckResult::warn(
+            ".gitignore",
+            "No .gitignore found",
+            "Add a .gitignore with target/ and *.rs.bk",
+        ));
     }
 
     // Check 9: rye config
@@ -126,15 +214,26 @@ pub fn run(args: &[String]) {
     if rye_config.exists() {
         results.push(CheckResult::ok("rye.toml", "rye.toml config found"));
     } else {
-        results.push(CheckResult::warn("rye.toml", "No rye.toml config (optional)", "Create rye.toml for project-specific settings"));
+        results.push(CheckResult::warn(
+            "rye.toml",
+            "No rye.toml config (optional)",
+            "Create rye.toml for project-specific settings",
+        ));
     }
 
     // Check 10: Cargo.lock
     let cargo_lock = project_root.join("Cargo.lock");
     if cargo_lock.exists() {
-        results.push(CheckResult::ok("Cargo.lock", "Cargo.lock exists (dependencies resolved)"));
+        results.push(CheckResult::ok(
+            "Cargo.lock",
+            "Cargo.lock exists (dependencies resolved)",
+        ));
     } else {
-        results.push(CheckResult::warn("Cargo.lock", "No Cargo.lock", "Run 'cargo build' to generate Cargo.lock"));
+        results.push(CheckResult::warn(
+            "Cargo.lock",
+            "No Cargo.lock",
+            "Run 'cargo build' to generate Cargo.lock",
+        ));
     }
 
     // Output results
@@ -168,11 +267,18 @@ fn print_text(results: &[CheckResult]) {
 
     let passed = results.iter().filter(|r| r.passed).count();
     let failed = results.iter().filter(|r| !r.passed).count();
-    let warnings = results.iter().filter(|r| r.passed && r.fix.is_some()).count();
+    let warnings = results
+        .iter()
+        .filter(|r| r.passed && r.fix.is_some())
+        .count();
 
     for r in results {
         let icon = if r.passed {
-            if r.fix.is_some() { "[WARN]" } else { "[OK]  " }
+            if r.fix.is_some() {
+                "[WARN]"
+            } else {
+                "[OK]  "
+            }
         } else {
             "[FAIL]"
         };
@@ -182,7 +288,10 @@ fn print_text(results: &[CheckResult]) {
         }
     }
 
-    println!("\n{} passed, {} warnings, {} failed", passed, warnings, failed);
+    println!(
+        "\n{} passed, {} warnings, {} failed",
+        passed, warnings, failed
+    );
 
     if failed > 0 {
         println!("\nFix the issues above before proceeding.");
@@ -197,10 +306,17 @@ fn print_json(results: &[CheckResult]) {
     let entries: Vec<String> = results
         .iter()
         .map(|r| {
-            let fix = r.fix.as_ref().map(|f| format!(",\"fix\":\"{}\"", f.replace('"', "\\\""))).unwrap_or_default();
+            let fix = r
+                .fix
+                .as_ref()
+                .map(|f| format!(",\"fix\":\"{}\"", f.replace('"', "\\\"")))
+                .unwrap_or_default();
             format!(
                 r#"{{"name":"{}","passed":{},"message":"{}"{} }}"#,
-                r.name, r.passed, r.message.replace('"', "\\\""), fix
+                r.name,
+                r.passed,
+                r.message.replace('"', "\\\""),
+                fix
             )
         })
         .collect();

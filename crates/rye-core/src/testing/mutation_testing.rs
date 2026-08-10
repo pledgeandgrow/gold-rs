@@ -9,9 +9,15 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Mutant {
     /// Replace a binary operator.
-    BinaryOp { original: String, replacement: String },
+    BinaryOp {
+        original: String,
+        replacement: String,
+    },
     /// Replace a comparison operator.
-    ComparisonOp { original: String, replacement: String },
+    ComparisonOp {
+        original: String,
+        replacement: String,
+    },
     /// Replace a boolean literal.
     BooleanLiteral { from: bool, to: bool },
     /// Replace an integer literal.
@@ -28,10 +34,16 @@ impl Mutant {
     /// Get a description of the mutation.
     pub fn description(&self) -> String {
         match self {
-            Mutant::BinaryOp { original, replacement } => {
+            Mutant::BinaryOp {
+                original,
+                replacement,
+            } => {
                 format!("Replace {} with {}", original, replacement)
             }
-            Mutant::ComparisonOp { original, replacement } => {
+            Mutant::ComparisonOp {
+                original,
+                replacement,
+            } => {
                 format!("Replace {} with {}", original, replacement)
             }
             Mutant::BooleanLiteral { from, to } => {
@@ -87,7 +99,11 @@ impl MutationSummary {
             killed,
             survived,
             timeout: 0,
-            score: if total > 0 { killed as f64 / total as f64 } else { 0.0 },
+            score: if total > 0 {
+                killed as f64 / total as f64
+            } else {
+                0.0
+            },
         }
     }
 
@@ -95,7 +111,10 @@ impl MutationSummary {
     pub fn report(&self) -> String {
         format!(
             "Mutation Testing Summary:\n  Total: {}\n  Killed: {}\n  Survived: {}\n  Score: {:.1}%",
-            self.total, self.killed, self.survived, self.score * 100.0
+            self.total,
+            self.killed,
+            self.survived,
+            self.score * 100.0
         )
     }
 }
@@ -111,7 +130,8 @@ pub fn binary_op_mutations(op: &str) -> Vec<Mutant> {
         _ => return Vec::new(),
     };
 
-    replacements.iter()
+    replacements
+        .iter()
         .map(|r| Mutant::BinaryOp {
             original: op.to_string(),
             replacement: r.to_string(),
@@ -131,7 +151,8 @@ pub fn comparison_op_mutations(op: &str) -> Vec<Mutant> {
         _ => return Vec::new(),
     };
 
-    replacements.iter()
+    replacements
+        .iter()
         .map(|r| Mutant::ComparisonOp {
             original: op.to_string(),
             replacement: r.to_string(),
@@ -141,16 +162,25 @@ pub fn comparison_op_mutations(op: &str) -> Vec<Mutant> {
 
 /// Generate boolean literal mutations.
 pub fn boolean_mutations(value: bool) -> Vec<Mutant> {
-    vec![Mutant::BooleanLiteral { from: value, to: !value }]
+    vec![Mutant::BooleanLiteral {
+        from: value,
+        to: !value,
+    }]
 }
 
 /// Generate integer literal mutations.
 pub fn int_literal_mutations(value: i64) -> Vec<Mutant> {
     let mut mutants = Vec::new();
     mutants.push(Mutant::IntLiteral { from: value, to: 0 });
-    mutants.push(Mutant::IntLiteral { from: value, to: value + 1 });
+    mutants.push(Mutant::IntLiteral {
+        from: value,
+        to: value + 1,
+    });
     if value != 0 {
-        mutants.push(Mutant::IntLiteral { from: value, to: value - 1 });
+        mutants.push(Mutant::IntLiteral {
+            from: value,
+            to: value - 1,
+        });
     }
     mutants
 }
@@ -190,7 +220,9 @@ mod tests {
     fn test_binary_op_mutations() {
         let mutants = binary_op_mutations("+");
         assert_eq!(mutants.len(), 2);
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::BinaryOp { replacement, .. } if replacement == "-")));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::BinaryOp { replacement, .. } if replacement == "-")));
     }
 
     #[test]
@@ -203,39 +235,75 @@ mod tests {
     fn test_comparison_op_mutations() {
         let mutants = comparison_op_mutations("==");
         assert_eq!(mutants.len(), 3);
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::ComparisonOp { replacement, .. } if replacement == "!=")));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::ComparisonOp { replacement, .. } if replacement == "!=")));
     }
 
     #[test]
     fn test_boolean_mutations() {
         let mutants = boolean_mutations(true);
         assert_eq!(mutants.len(), 1);
-        assert!(matches!(mutants[0], Mutant::BooleanLiteral { from: true, to: false }));
+        assert!(matches!(
+            mutants[0],
+            Mutant::BooleanLiteral {
+                from: true,
+                to: false
+            }
+        ));
     }
 
     #[test]
     fn test_int_literal_mutations() {
         let mutants = int_literal_mutations(42);
         assert_eq!(mutants.len(), 3);
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::IntLiteral { to: 0, .. })));
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::IntLiteral { to: 43, .. })));
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::IntLiteral { to: 41, .. })));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::IntLiteral { to: 0, .. })));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::IntLiteral { to: 43, .. })));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::IntLiteral { to: 41, .. })));
     }
 
     #[test]
     fn test_int_literal_mutations_zero() {
         let mutants = int_literal_mutations(0);
         assert_eq!(mutants.len(), 2); // 0 and 1, no -1 since value == 0
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::IntLiteral { to: 0, .. })));
-        assert!(mutants.iter().any(|m| matches!(m, Mutant::IntLiteral { to: 1, .. })));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::IntLiteral { to: 0, .. })));
+        assert!(mutants
+            .iter()
+            .any(|m| matches!(m, Mutant::IntLiteral { to: 1, .. })));
     }
 
     #[test]
     fn test_mutation_summary() {
         let results = vec![
-            MutationResult { mutant: Mutant::RemoveStatement, location: "file.rs:10".to_string(), killed: true, killed_by: Some("test_basic".to_string()) },
-            MutationResult { mutant: Mutant::NegateCondition, location: "file.rs:20".to_string(), killed: false, killed_by: None },
-            MutationResult { mutant: Mutant::BooleanLiteral { from: true, to: false }, location: "file.rs:30".to_string(), killed: true, killed_by: Some("test_edge".to_string()) },
+            MutationResult {
+                mutant: Mutant::RemoveStatement,
+                location: "file.rs:10".to_string(),
+                killed: true,
+                killed_by: Some("test_basic".to_string()),
+            },
+            MutationResult {
+                mutant: Mutant::NegateCondition,
+                location: "file.rs:20".to_string(),
+                killed: false,
+                killed_by: None,
+            },
+            MutationResult {
+                mutant: Mutant::BooleanLiteral {
+                    from: true,
+                    to: false,
+                },
+                location: "file.rs:30".to_string(),
+                killed: true,
+                killed_by: Some("test_edge".to_string()),
+            },
         ];
         let summary = MutationSummary::from_results(&results);
         assert_eq!(summary.total, 3);
@@ -254,8 +322,18 @@ mod tests {
     #[test]
     fn test_mutation_summary_report() {
         let results = vec![
-            MutationResult { mutant: Mutant::RemoveStatement, location: "x".to_string(), killed: true, killed_by: None },
-            MutationResult { mutant: Mutant::RemoveStatement, location: "y".to_string(), killed: false, killed_by: None },
+            MutationResult {
+                mutant: Mutant::RemoveStatement,
+                location: "x".to_string(),
+                killed: true,
+                killed_by: None,
+            },
+            MutationResult {
+                mutant: Mutant::RemoveStatement,
+                location: "y".to_string(),
+                killed: false,
+                killed_by: None,
+            },
         ];
         let summary = MutationSummary::from_results(&results);
         let report = summary.report();
@@ -267,7 +345,10 @@ mod tests {
 
     #[test]
     fn test_mutant_description() {
-        let m = Mutant::BinaryOp { original: "+".to_string(), replacement: "-".to_string() };
+        let m = Mutant::BinaryOp {
+            original: "+".to_string(),
+            replacement: "-".to_string(),
+        };
         assert!(m.description().contains("Replace"));
         assert!(m.description().contains("+"));
         assert!(m.description().contains("-"));

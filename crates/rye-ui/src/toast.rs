@@ -1,8 +1,8 @@
 //! Toast — auto-dismiss notification.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToastVariant {
@@ -15,15 +15,19 @@ pub enum ToastVariant {
 impl ToastVariant {
     pub fn color(&self) -> &'static str {
         match self {
-            Self::Success => vars::SUCCESS, Self::Error => vars::DANGER,
-            Self::Warning => vars::WARNING, Self::Info => vars::INFO,
+            Self::Success => vars::SUCCESS,
+            Self::Error => vars::DANGER,
+            Self::Warning => vars::WARNING,
+            Self::Info => vars::INFO,
         }
     }
 
     pub fn icon(&self) -> &'static str {
         match self {
-            Self::Success => "✓", Self::Error => "✕",
-            Self::Warning => "⚠", Self::Info => "ℹ",
+            Self::Success => "✓",
+            Self::Error => "✕",
+            Self::Warning => "⚠",
+            Self::Info => "ℹ",
         }
     }
 }
@@ -39,15 +43,29 @@ pub struct ToastProps {
 
 impl Default for ToastProps {
     fn default() -> Self {
-        Self { message: String::new(), variant: ToastVariant::Info,
-               duration_ms: 3000, class: None, style: None }
+        Self {
+            message: String::new(),
+            variant: ToastVariant::Info,
+            duration_ms: 3000,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ToastProps {
-    pub fn message(mut self, m: impl Into<String>) -> Self { self.message = m.into(); self }
-    pub fn variant(mut self, v: ToastVariant) -> Self { self.variant = v; self }
-    pub fn duration(mut self, d: u64) -> Self { self.duration_ms = d; self }
+    pub fn message(mut self, m: impl Into<String>) -> Self {
+        self.message = m.into();
+        self
+    }
+    pub fn variant(mut self, v: ToastVariant) -> Self {
+        self.variant = v;
+        self
+    }
+    pub fn duration(mut self, d: u64) -> Self {
+        self.duration_ms = d;
+        self
+    }
 }
 
 pub struct Toast;
@@ -63,18 +81,35 @@ impl Toast {
         );
 
         let children = vec![
-            Template::new_element("span",
-                vec![("style".to_string(), "font-size:18px;flex-shrink:0;".to_string())],
-                Vec::new(), vec![Template::text(props.variant.icon())]),
-            Template::new_element("span",
+            Template::new_element(
+                "span",
+                vec![(
+                    "style".to_string(),
+                    "font-size:18px;flex-shrink:0;".to_string(),
+                )],
+                Vec::new(),
+                vec![Template::text(props.variant.icon())],
+            ),
+            Template::new_element(
+                "span",
                 vec![("style".to_string(), "flex:1;".to_string())],
-                Vec::new(), vec![Template::text(&props.message)]),
+                Vec::new(),
+                vec![Template::text(&props.message)],
+            ),
         ];
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-toast {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-toast {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -85,26 +120,56 @@ pub struct ToastManager {
 }
 
 impl ToastManager {
-    pub fn new() -> Self { Self { toasts: Vec::new() } }
+    pub fn new() -> Self {
+        Self { toasts: Vec::new() }
+    }
 
-    pub fn success(&mut self, msg: impl Into<String>) { self.toasts.push((msg.into(), ToastVariant::Success)); }
-    pub fn error(&mut self, msg: impl Into<String>) { self.toasts.push((msg.into(), ToastVariant::Error)); }
-    pub fn warning(&mut self, msg: impl Into<String>) { self.toasts.push((msg.into(), ToastVariant::Warning)); }
-    pub fn info(&mut self, msg: impl Into<String>) { self.toasts.push((msg.into(), ToastVariant::Info)); }
+    pub fn success(&mut self, msg: impl Into<String>) {
+        self.toasts.push((msg.into(), ToastVariant::Success));
+    }
+    pub fn error(&mut self, msg: impl Into<String>) {
+        self.toasts.push((msg.into(), ToastVariant::Error));
+    }
+    pub fn warning(&mut self, msg: impl Into<String>) {
+        self.toasts.push((msg.into(), ToastVariant::Warning));
+    }
+    pub fn info(&mut self, msg: impl Into<String>) {
+        self.toasts.push((msg.into(), ToastVariant::Info));
+    }
 
-    pub fn count(&self) -> usize { self.toasts.len() }
-    pub fn is_empty(&self) -> bool { self.toasts.is_empty() }
+    pub fn count(&self) -> usize {
+        self.toasts.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.toasts.is_empty()
+    }
 
-    pub fn clear(&mut self) { self.toasts.clear(); }
+    pub fn clear(&mut self) {
+        self.toasts.clear();
+    }
 
     pub fn render_all(&self) -> Element {
         if self.toasts.is_empty() {
             return Element::None;
         }
-        let toasts: Vec<Template> = self.toasts.iter().map(|(msg, variant)| {
-            let props = ToastProps { message: msg.clone(), variant: *variant, duration_ms: 3000, class: None, style: None };
-            if let Element::Template(t) = Toast::render(props) { t } else { Template::empty() }
-        }).collect();
+        let toasts: Vec<Template> = self
+            .toasts
+            .iter()
+            .map(|(msg, variant)| {
+                let props = ToastProps {
+                    message: msg.clone(),
+                    variant: *variant,
+                    duration_ms: 3000,
+                    class: None,
+                    style: None,
+                };
+                if let Element::Template(t) = Toast::render(props) {
+                    t
+                } else {
+                    Template::empty()
+                }
+            })
+            .collect();
 
         Element::Template(Template::new_element("div",
             vec![("class".to_string(), "rye-toast-container".to_string()),
@@ -114,7 +179,9 @@ impl ToastManager {
 }
 
 impl Default for ToastManager {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]
@@ -135,7 +202,10 @@ mod tests {
 
     #[test]
     fn test_toast_props_builder() {
-        let p = ToastProps::default().message("Saved!").variant(ToastVariant::Success).duration(5000);
+        let p = ToastProps::default()
+            .message("Saved!")
+            .variant(ToastVariant::Success)
+            .duration(5000);
         assert_eq!(p.message, "Saved!");
         assert_eq!(p.variant, ToastVariant::Success);
         assert_eq!(p.duration_ms, 5000);
@@ -143,7 +213,11 @@ mod tests {
 
     #[test]
     fn test_toast_render() {
-        let el = Toast::render(ToastProps::default().message("Hello").variant(ToastVariant::Info));
+        let el = Toast::render(
+            ToastProps::default()
+                .message("Hello")
+                .variant(ToastVariant::Info),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 

@@ -1,8 +1,8 @@
 //! Card — container with header, body, footer.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct CardProps {
@@ -17,18 +17,39 @@ pub struct CardProps {
 
 impl Default for CardProps {
     fn default() -> Self {
-        Self { shadow: true, border: true, padding: "16px".to_string(),
-               border_radius: "var(--rye-radius-lg)".to_string(), background: vars::BG.to_string(),
-               class: None, style: None }
+        Self {
+            shadow: true,
+            border: true,
+            padding: "16px".to_string(),
+            border_radius: "var(--rye-radius-lg)".to_string(),
+            background: vars::BG.to_string(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl CardProps {
-    pub fn shadow(mut self, s: bool) -> Self { self.shadow = s; self }
-    pub fn border(mut self, b: bool) -> Self { self.border = b; self }
-    pub fn padding(mut self, p: impl Into<String>) -> Self { self.padding = p.into(); self }
-    pub fn border_radius(mut self, r: impl Into<String>) -> Self { self.border_radius = r.into(); self }
-    pub fn background(mut self, b: impl Into<String>) -> Self { self.background = b.into(); self }
+    pub fn shadow(mut self, s: bool) -> Self {
+        self.shadow = s;
+        self
+    }
+    pub fn border(mut self, b: bool) -> Self {
+        self.border = b;
+        self
+    }
+    pub fn padding(mut self, p: impl Into<String>) -> Self {
+        self.padding = p.into();
+        self
+    }
+    pub fn border_radius(mut self, r: impl Into<String>) -> Self {
+        self.border_radius = r.into();
+        self
+    }
+    pub fn background(mut self, b: impl Into<String>) -> Self {
+        self.background = b.into();
+        self
+    }
 }
 
 pub struct Card;
@@ -46,13 +67,23 @@ impl Card {
         if props.shadow {
             parts.push(format!("box-shadow:{}", vars::SHADOW_MD));
         }
-        if let Some(s) = &props.style { parts.push(s.clone()); }
+        if let Some(s) = &props.style {
+            parts.push(s.clone());
+        }
         let style = parts.join(";");
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-card {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), Vec::new()))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-card {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ))
     }
 }
 
@@ -64,14 +95,28 @@ impl CardHeader {
             vec![("style".to_string(), format!("font-size:var(--rye-font-size-xl);font-weight:var(--rye-font-weight-semibold);color:{};", vars::TEXT))],
             Vec::new(), vec![Template::text(title)])];
         if let Some(sub) = subtitle {
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), format!("font-size:var(--rye-font-size-md);color:{};margin-top:4px;", vars::TEXT_MUTED))],
-                Vec::new(), vec![Template::text(sub)]));
+            children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "font-size:var(--rye-font-size-md);color:{};margin-top:4px;",
+                        vars::TEXT_MUTED
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(sub)],
+            ));
         }
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), "rye-card-header".to_string()),
-                 ("style".to_string(), "margin-bottom:12px;".to_string())],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "rye-card-header".to_string()),
+                ("style".to_string(), "margin-bottom:12px;".to_string()),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -79,10 +124,18 @@ pub struct CardBody;
 
 impl CardBody {
     pub fn render() -> Element {
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), "rye-card-body".to_string()),
-                 ("style".to_string(), format!("font-size:var(--rye-font-size-md);color:{};", vars::TEXT))],
-            Vec::new(), Vec::new()))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "rye-card-body".to_string()),
+                (
+                    "style".to_string(),
+                    format!("font-size:var(--rye-font-size-md);color:{};", vars::TEXT),
+                ),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ))
     }
 }
 
@@ -110,7 +163,10 @@ mod tests {
 
     #[test]
     fn test_card_builder() {
-        let p = CardProps::default().shadow(false).padding("24px").background("#f8fafc");
+        let p = CardProps::default()
+            .shadow(false)
+            .padding("24px")
+            .background("#f8fafc");
         assert!(!p.shadow);
         assert_eq!(p.padding, "24px");
     }

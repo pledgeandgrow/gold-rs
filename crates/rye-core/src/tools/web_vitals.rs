@@ -3,7 +3,7 @@
 //! This module is re-exported from `analytics` since Web Vitals and analytics
 //! are closely related. See `analytics::WebVitals` and `analytics::web_vitals_script`.
 
-pub use super::analytics::{WebVitals, VitalRating, web_vitals_script};
+pub use super::analytics::{web_vitals_script, VitalRating, WebVitals};
 
 #[cfg(test)]
 mod tests {

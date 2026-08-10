@@ -98,7 +98,12 @@ fn call_rye_with_two_ints(sel_str: &str, arg1: i64, arg2: i64) -> Result<(), Ffi
 }
 
 /// Call a class method on `RyeNative` with three integers.
-fn call_rye_with_three_ints(sel_str: &str, arg1: i64, arg2: i64, arg3: i64) -> Result<(), FfiResult> {
+fn call_rye_with_three_ints(
+    sel_str: &str,
+    arg1: i64,
+    arg2: i64,
+    arg3: i64,
+) -> Result<(), FfiResult> {
     let cls = rye_class().ok_or(FfiResult::PlatformError)?;
     let sel_name = CString::new(sel_str).unwrap();
     let sel = Sel::register(sel_name.as_ptr());
@@ -160,9 +165,7 @@ pub extern "C" fn rye_create_element(
         return -1;
     }
     let bridge = unsafe { &mut *bridge };
-    let tag_str = unsafe {
-        std::ffi::CStr::from_ptr(tag).to_str().unwrap_or("")
-    };
+    let tag_str = unsafe { std::ffi::CStr::from_ptr(tag).to_str().unwrap_or("") };
     let _el = bridge.create_element(tag_str);
     (bridge.element_count() - 1) as i64
 }
@@ -177,9 +180,7 @@ pub extern "C" fn rye_create_text(
         return -1;
     }
     let bridge = unsafe { &mut *bridge };
-    let content_str = unsafe {
-        std::ffi::CStr::from_ptr(content).to_str().unwrap_or("")
-    };
+    let content_str = unsafe { std::ffi::CStr::from_ptr(content).to_str().unwrap_or("") };
     let _text = bridge.create_text(content_str);
     (bridge.text_count() - 1) as i64
 }
@@ -195,9 +196,7 @@ pub extern "C" fn rye_set_text(
         return;
     }
     let bridge = unsafe { &mut *bridge };
-    let content_str = unsafe {
-        std::ffi::CStr::from_ptr(content).to_str().unwrap_or("")
-    };
+    let content_str = unsafe { std::ffi::CStr::from_ptr(content).to_str().unwrap_or("") };
     let texts = bridge.texts_lock();
     if let Some(text) = texts.get(text_handle as usize) {
         bridge.set_text(text, content_str);
@@ -419,7 +418,12 @@ pub fn objc_replace_child(parent: i64, child: i64, index: i32) -> Result<(), Ffi
 
 /// Call the `RyeNative` Objective-C class to move a child.
 pub fn objc_move_child(parent: i64, from: i32, to: i32) -> Result<(), FfiResult> {
-    call_rye_with_three_ints("moveChildFromIndex:toIndex:element:", parent, from as i64, to as i64)
+    call_rye_with_three_ints(
+        "moveChildFromIndex:toIndex:element:",
+        parent,
+        from as i64,
+        to as i64,
+    )
 }
 
 /// Call the `RyeNative` Objective-C class to request a redraw.
@@ -433,7 +437,9 @@ pub fn objc_request_redraw() -> Result<(), FfiResult> {
 
 impl super::bridge::FfiRendererBridge {
     /// Get a snapshot of elements for Obj-C lookup.
-    pub(crate) fn elements_lock(&self) -> std::sync::MutexGuard<'_, Vec<super::bridge::FfiElement>> {
+    pub(crate) fn elements_lock(
+        &self,
+    ) -> std::sync::MutexGuard<'_, Vec<super::bridge::FfiElement>> {
         self.elements.lock().unwrap()
     }
 

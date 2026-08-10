@@ -1,8 +1,8 @@
 //! ErrorBoundary — catch render errors, show fallback.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct ErrorFallback {
@@ -24,9 +24,19 @@ impl Default for ErrorFallback {
 }
 
 impl ErrorFallback {
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = t.into(); self }
-    pub fn description(mut self, d: impl Into<String>) -> Self { self.description = d.into(); self }
-    pub fn details(mut self, d: impl Into<String>) -> Self { self.details = Some(d.into()); self.show_details = true; self }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = t.into();
+        self
+    }
+    pub fn description(mut self, d: impl Into<String>) -> Self {
+        self.description = d.into();
+        self
+    }
+    pub fn details(mut self, d: impl Into<String>) -> Self {
+        self.details = Some(d.into());
+        self.show_details = true;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -39,13 +49,24 @@ pub struct ErrorBoundaryProps {
 
 impl Default for ErrorBoundaryProps {
     fn default() -> Self {
-        Self { has_error: false, fallback: ErrorFallback::default(), class: None, style: None }
+        Self {
+            has_error: false,
+            fallback: ErrorFallback::default(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ErrorBoundaryProps {
-    pub fn has_error(mut self, e: bool) -> Self { self.has_error = e; self }
-    pub fn fallback(mut self, f: ErrorFallback) -> Self { self.fallback = f; self }
+    pub fn has_error(mut self, e: bool) -> Self {
+        self.has_error = e;
+        self
+    }
+    pub fn fallback(mut self, f: ErrorFallback) -> Self {
+        self.fallback = f;
+        self
+    }
 }
 
 pub struct ErrorBoundary;
@@ -59,7 +80,9 @@ impl ErrorBoundary {
         let style = format!(
             "padding:24px;border:1px solid {};border-radius:var(--rye-radius-lg);\
              background:{};text-align:center;{}",
-            vars::DANGER, vars::BG, props.style.as_deref().unwrap_or(""),
+            vars::DANGER,
+            vars::BG,
+            props.style.as_deref().unwrap_or(""),
         );
 
         let mut children = vec![
@@ -87,10 +110,21 @@ impl ErrorBoundary {
                  ("class".to_string(), "rye-error-boundary-retry".to_string())],
             Vec::new(), vec![Template::text("Try again")]));
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-error-boundary {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!(
+                        "rye-error-boundary {}",
+                        props.class.as_deref().unwrap_or("")
+                    ),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -130,9 +164,11 @@ mod tests {
 
     #[test]
     fn test_error_boundary_with_details() {
-        let el = ErrorBoundary::render(ErrorBoundaryProps::default()
-            .has_error(true)
-            .fallback(ErrorFallback::default().details("TypeError: cannot read property 'x'")));
+        let el = ErrorBoundary::render(
+            ErrorBoundaryProps::default()
+                .has_error(true)
+                .fallback(ErrorFallback::default().details("TypeError: cannot read property 'x'")),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

@@ -76,7 +76,12 @@ fn generate_for_file(component_path: &str) {
 
     match fs::write(&test_path, &test_code) {
         Ok(_) => {
-            println!("Generated test: {} -> {} ({} components)", component_path, test_path, components.len());
+            println!(
+                "Generated test: {} -> {} ({} components)",
+                component_path,
+                test_path,
+                components.len()
+            );
             for comp in &components {
                 println!("  - {} ({} test functions)", comp.name, comp.test_count());
             }
@@ -169,7 +174,8 @@ impl ParsedComponent {
 /// Parse component definitions from Rust source code.
 fn parse_components(source: &str) -> Vec<ParsedComponent> {
     let mut components = Vec::new();
-    let mut props_map: std::collections::HashMap<String, Vec<(String, String)>> = std::collections::HashMap::new();
+    let mut props_map: std::collections::HashMap<String, Vec<(String, String)>> =
+        std::collections::HashMap::new();
 
     // First pass: find Props structs
     for line in source.lines() {
@@ -207,7 +213,8 @@ fn parse_components(source: &str) -> Vec<ParsedComponent> {
                 consumed[j] = true;
                 let next_line = lines[j].trim();
                 if next_line.starts_with("#[") {
-                    if next_line.starts_with("#[rye::island]") || next_line.starts_with("#[island]") {
+                    if next_line.starts_with("#[rye::island]") || next_line.starts_with("#[island]")
+                    {
                         found_island = true;
                     }
                     j += 1;
@@ -239,7 +246,9 @@ fn parse_components(source: &str) -> Vec<ParsedComponent> {
 
 fn extract_struct_name(line: &str) -> Option<String> {
     let after_struct = line.strip_prefix("struct ")?;
-    let name = after_struct.split(|c: char| c.is_whitespace() || c == '{').next()?;
+    let name = after_struct
+        .split(|c: char| c.is_whitespace() || c == '{')
+        .next()?;
     let name = name.trim();
     if name.is_empty() {
         None
@@ -251,7 +260,9 @@ fn extract_struct_name(line: &str) -> Option<String> {
 fn extract_fn_name(line: &str) -> Option<String> {
     let after_fn = line.find("fn ")?;
     let rest = &line[after_fn + 3..];
-    let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+    let name = rest
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .next()?;
     let name = name.trim();
     if name.is_empty() {
         None
@@ -283,7 +294,9 @@ fn extract_props_fields(source: &str, struct_name: &str) -> Vec<(String, String)
     let struct_pattern = format!("struct {} {{", struct_name);
     let alt_pattern = format!("struct {}{{", struct_name);
 
-    let start = source.find(&struct_pattern).or_else(|| source.find(&alt_pattern));
+    let start = source
+        .find(&struct_pattern)
+        .or_else(|| source.find(&alt_pattern));
 
     if let Some(start_idx) = start {
         if let Some(open_brace) = source[start_idx..].find('{') {
@@ -292,18 +305,15 @@ fn extract_props_fields(source: &str, struct_name: &str) -> Vec<(String, String)
                 let body = &source[abs_open + 1..abs_open + close_brace];
                 for line in body.lines() {
                     let trimmed = line.trim();
-                    if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with("/*") {
+                    if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with("/*")
+                    {
                         continue;
                     }
                     // Parse field: name: Type,
                     let parts: Vec<&str> = trimmed.splitn(2, ':').collect();
                     if parts.len() == 2 {
                         let field_name = parts[0].trim().to_string();
-                        let field_type = parts[1]
-                            .trim()
-                            .trim_end_matches(',')
-                            .trim()
-                            .to_string();
+                        let field_type = parts[1].trim().trim_end_matches(',').trim().to_string();
                         if !field_name.is_empty() && !field_type.is_empty() {
                             props.push((field_name, field_type));
                         }
@@ -349,9 +359,7 @@ fn generate_test_file(components: &[ParsedComponent], file_stem: &str) -> String
             let fields: Vec<String> = comp
                 .props
                 .iter()
-                .map(|(name, ty)| {
-                    format!("    {}: {},", name, default_value_for_type(ty))
-                })
+                .map(|(name, ty)| format!("    {}: {},", name, default_value_for_type(ty)))
                 .collect();
             format!(
                 "    let props = {} {{\n{}\n    }};\n",
@@ -384,9 +392,7 @@ fn generate_test_file(components: &[ParsedComponent], file_stem: &str) -> String
             let fields: Vec<String> = comp
                 .props
                 .iter()
-                .map(|(name, ty)| {
-                    format!("    {}: {},", name, default_value_for_type(ty))
-                })
+                .map(|(name, ty)| format!("    {}: {},", name, default_value_for_type(ty)))
                 .collect();
             out.push_str(&format!(
                 "#[test]\nfn test_{}_with_props() {{\n    let props = {} {{\n{}\n    }};\n    let _element = {}(props);\n    // TODO: verify props are rendered correctly\n}}\n\n",
@@ -432,7 +438,9 @@ fn print_test_generate_help() {
     println!();
     println!("USAGE:");
     println!("  rpg test --generate <file>       Generate tests for a component file");
-    println!("  rpg test --generate --all        Generate tests for all components in src/components");
+    println!(
+        "  rpg test --generate --all        Generate tests for all components in src/components"
+    );
     println!("  rpg test --generate --dir <dir>  Generate tests for all components in a directory");
     println!();
     println!("GENERATED TESTS:");
@@ -485,8 +493,14 @@ fn Button(props: ButtonProps) {
         assert_eq!(components[0].name, "Button");
         assert_eq!(components[0].props_type.as_deref(), Some("ButtonProps"));
         assert_eq!(components[0].props.len(), 2);
-        assert_eq!(components[0].props[0], ("label".to_string(), "String".to_string()));
-        assert_eq!(components[0].props[1], ("disabled".to_string(), "bool".to_string()));
+        assert_eq!(
+            components[0].props[0],
+            ("label".to_string(), "String".to_string())
+        );
+        assert_eq!(
+            components[0].props[1],
+            ("disabled".to_string(), "bool".to_string())
+        );
     }
 
     #[test]
@@ -583,13 +597,25 @@ fn Footer() {
     #[test]
     fn test_extract_fn_name() {
         assert_eq!(extract_fn_name("fn Button() {").as_deref(), Some("Button"));
-        assert_eq!(extract_fn_name("fn MyComponent(props: Props) {").as_deref(), Some("MyComponent"));
-        assert_eq!(extract_fn_name("fn counter() {").as_deref(), Some("counter"));
+        assert_eq!(
+            extract_fn_name("fn MyComponent(props: Props) {").as_deref(),
+            Some("MyComponent")
+        );
+        assert_eq!(
+            extract_fn_name("fn counter() {").as_deref(),
+            Some("counter")
+        );
     }
 
     #[test]
     fn test_extract_struct_name() {
-        assert_eq!(extract_struct_name("struct ButtonProps {").as_deref(), Some("ButtonProps"));
-        assert_eq!(extract_struct_name("struct CardProps{").as_deref(), Some("CardProps"));
+        assert_eq!(
+            extract_struct_name("struct ButtonProps {").as_deref(),
+            Some("ButtonProps")
+        );
+        assert_eq!(
+            extract_struct_name("struct CardProps{").as_deref(),
+            Some("CardProps")
+        );
     }
 }

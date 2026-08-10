@@ -327,7 +327,10 @@ impl GeolocationManager {
 
     /// Add a geofence.
     pub fn add_geofence(&self, region: GeofenceRegion) {
-        self.geofences.lock().unwrap().insert(region.id.clone(), region);
+        self.geofences
+            .lock()
+            .unwrap()
+            .insert(region.id.clone(), region);
     }
 
     /// Remove a geofence.
@@ -536,8 +539,16 @@ mod tests {
     #[test]
     fn test_manager_geofences() {
         let mgr = GeolocationManager::new();
-        mgr.add_geofence(GeofenceRegion::new("home", GeoCoordinates::new(37.0, -122.0), 100.0));
-        mgr.add_geofence(GeofenceRegion::new("work", GeoCoordinates::new(37.5, -122.5), 50.0));
+        mgr.add_geofence(GeofenceRegion::new(
+            "home",
+            GeoCoordinates::new(37.0, -122.0),
+            100.0,
+        ));
+        mgr.add_geofence(GeofenceRegion::new(
+            "work",
+            GeoCoordinates::new(37.5, -122.5),
+            50.0,
+        ));
 
         assert_eq!(mgr.geofence_count(), 2);
         assert!(mgr.geofence_ids().contains(&"home".to_string()));
@@ -548,7 +559,11 @@ mod tests {
     #[test]
     fn test_manager_check_geofences() {
         let mgr = GeolocationManager::new();
-        mgr.add_geofence(GeofenceRegion::new("home", GeoCoordinates::new(37.0, -122.0), 1000.0));
+        mgr.add_geofence(GeofenceRegion::new(
+            "home",
+            GeoCoordinates::new(37.0, -122.0),
+            1000.0,
+        ));
 
         let nearby = GeoCoordinates::new(37.001, -122.001);
         let events = mgr.check_geofences(&nearby);

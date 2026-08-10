@@ -42,7 +42,11 @@ impl<T: 'static> RenderProp<T> {
 
     /// Render for multiple values, joining the results.
     pub fn render_all(&self, values: &[T]) -> String {
-        values.iter().map(|v| self.render(v)).collect::<Vec<_>>().join("")
+        values
+            .iter()
+            .map(|v| self.render(v))
+            .collect::<Vec<_>>()
+            .join("")
     }
 }
 
@@ -229,9 +233,8 @@ mod tests {
 
     #[test]
     fn test_indexed_render_prop() {
-        let prop: IndexedRenderProp<String> = IndexedRenderProp::new(|i, v| {
-            format!("<div data-index=\"{}\">{}</div>", i, v)
-        });
+        let prop: IndexedRenderProp<String> =
+            IndexedRenderProp::new(|i, v| format!("<div data-index=\"{}\">{}</div>", i, v));
         let result = prop.render_all(&["a".to_string(), "b".to_string()]);
         assert!(result.contains("data-index=\"0\""));
         assert!(result.contains("data-index=\"1\""));
@@ -271,8 +274,8 @@ mod tests {
 
     #[test]
     fn test_switch_render_prop_no_default() {
-        let switch: SwitchRenderProp<i32> = SwitchRenderProp::new()
-            .case(|v| *v > 0, |v| format!("Positive: {}", v));
+        let switch: SwitchRenderProp<i32> =
+            SwitchRenderProp::new().case(|v| *v > 0, |v| format!("Positive: {}", v));
 
         assert_eq!(switch.render(&5), "Positive: 5");
         assert_eq!(switch.render(&-1), "");
@@ -280,8 +283,8 @@ mod tests {
 
     #[test]
     fn test_switch_render_prop_clone() {
-        let switch: SwitchRenderProp<i32> = SwitchRenderProp::new()
-            .case(|v| *v > 0, |v| format!("Pos: {}", v));
+        let switch: SwitchRenderProp<i32> =
+            SwitchRenderProp::new().case(|v| *v > 0, |v| format!("Pos: {}", v));
         let switch2 = switch.clone();
         assert_eq!(switch.render(&5), switch2.render(&5));
     }
@@ -292,10 +295,12 @@ mod tests {
             name: String,
             age: i32,
         }
-        let prop: RenderProp<User> = RenderProp::new(|u: &User| {
-            format!("<div>{} ({})</div>", u.name, u.age)
-        });
-        let user = User { name: "Alice".to_string(), age: 30 };
+        let prop: RenderProp<User> =
+            RenderProp::new(|u: &User| format!("<div>{} ({})</div>", u.name, u.age));
+        let user = User {
+            name: "Alice".to_string(),
+            age: 30,
+        };
         assert_eq!(prop.render(&user), "<div>Alice (30)</div>");
     }
 }

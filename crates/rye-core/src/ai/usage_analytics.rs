@@ -60,7 +60,11 @@ impl UsageStats {
 
     /// Format as JSON.
     pub fn format_json(&self) -> String {
-        let files: Vec<String> = self.files.iter().map(|f| format!("\"{}\"", f.replace('\\', "\\\\"))).collect();
+        let files: Vec<String> = self
+            .files
+            .iter()
+            .map(|f| format!("\"{}\"", f.replace('\\', "\\\\")))
+            .collect();
         let props: Vec<String> = self
             .common_props
             .iter()
@@ -68,7 +72,11 @@ impl UsageStats {
             .collect();
         format!(
             r#"{{"component":"{}","usage_count":{},"files":[{}],"common_props":[{}],"is_defined":{}}}"#,
-            self.component, self.usage_count, files.join(","), props.join(","), self.is_defined
+            self.component,
+            self.usage_count,
+            files.join(","),
+            props.join(","),
+            self.is_defined
         )
     }
 }
@@ -114,12 +122,18 @@ pub fn all_records() -> Vec<UsageRecord> {
 
 /// Compute stats from a slice of records (no locking).
 fn stats_from_records(records: &[UsageRecord], component: &str) -> Option<UsageStats> {
-    let component_records: Vec<&UsageRecord> = records.iter().filter(|r| r.component == component).collect();
+    let component_records: Vec<&UsageRecord> = records
+        .iter()
+        .filter(|r| r.component == component)
+        .collect();
     if component_records.is_empty() {
         return None;
     }
 
-    let usage_count = component_records.iter().filter(|r| !r.is_definition).count();
+    let usage_count = component_records
+        .iter()
+        .filter(|r| !r.is_definition)
+        .count();
     let is_defined = component_records.iter().any(|r| r.is_definition);
 
     let mut files: Vec<String> = component_records
@@ -163,7 +177,10 @@ pub fn all_stats() -> Vec<UsageStats> {
     let mut components: Vec<String> = records.iter().map(|r| r.component.clone()).collect();
     components.sort();
     components.dedup();
-    components.into_iter().filter_map(|c| stats_from_records(&records, &c)).collect()
+    components
+        .into_iter()
+        .filter_map(|c| stats_from_records(&records, &c))
+        .collect()
 }
 
 /// Get the most used components.
@@ -213,7 +230,9 @@ pub fn scan_source(file_path: &str, source: &str) {
                 let cleaned = word.trim_matches(|c: char| !c.is_alphanumeric() && c != '_');
                 if is_component_name(cleaned) && !is_rust_keyword(cleaned) {
                     // Check if it's a usage (has { or ( after it on the same line)
-                    if trimmed.contains(&format!("{} {{", cleaned)) || trimmed.contains(&format!("{}(", cleaned)) {
+                    if trimmed.contains(&format!("{} {{", cleaned))
+                        || trimmed.contains(&format!("{}(", cleaned))
+                    {
                         record_usage(cleaned, file_path, i + 1, &[]);
                     }
                 }
@@ -225,7 +244,9 @@ pub fn scan_source(file_path: &str, source: &str) {
 fn extract_pascal_name(line: &str) -> Option<String> {
     let after_fn = line.find("fn ")?;
     let rest = &line[after_fn + 3..];
-    let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+    let name = rest
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .next()?;
     if is_component_name(name) {
         Some(name.to_string())
     } else {
@@ -234,14 +255,26 @@ fn extract_pascal_name(line: &str) -> Option<String> {
 }
 
 fn is_component_name(s: &str) -> bool {
-    s.starts_with(|c: char| c.is_uppercase()) && s.len() > 1 && s.chars().all(|c| c.is_alphanumeric() || c == '_')
+    s.starts_with(|c: char| c.is_uppercase())
+        && s.len() > 1
+        && s.chars().all(|c| c.is_alphanumeric() || c == '_')
 }
 
 fn is_rust_keyword(s: &str) -> bool {
     matches!(
         s,
-        "Self" | "String" | "Vec" | "Option" | "Result" | "Box" | "Some" | "None" | "Ok" | "Err"
-            | "True" | "False"
+        "Self"
+            | "String"
+            | "Vec"
+            | "Option"
+            | "Result"
+            | "Box"
+            | "Some"
+            | "None"
+            | "Ok"
+            | "Err"
+            | "True"
+            | "False"
     )
 }
 
@@ -264,7 +297,10 @@ mod tests {
         assert_eq!(stats.usage_count, 2);
         assert!(stats.is_defined);
         assert_eq!(stats.files.len(), 2);
-        assert!(stats.common_props.iter().any(|(p, c)| p == "label" && *c == 2));
+        assert!(stats
+            .common_props
+            .iter()
+            .any(|(p, c)| p == "label" && *c == 2));
     }
 
     #[test]

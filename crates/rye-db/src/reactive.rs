@@ -166,7 +166,10 @@ impl Default for ReactiveQueryCache {
 /// reactive.execute();
 /// assert!(reactive.state().is_loaded());
 /// ```
-pub fn use_query_db<F: Fn(&Query) -> QueryResult + 'static>(query: Query, fetch_fn: F) -> ReactiveQuery {
+pub fn use_query_db<F: Fn(&Query) -> QueryResult + 'static>(
+    query: Query,
+    fetch_fn: F,
+) -> ReactiveQuery {
     ReactiveQuery::new(query, fetch_fn)
 }
 

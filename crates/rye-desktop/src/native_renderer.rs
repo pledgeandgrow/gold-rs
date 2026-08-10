@@ -50,10 +50,7 @@ impl NativeRenderer {
     }
 
     /// Attach a GPU context from a window handle.
-    pub fn attach_gpu(
-        &mut self,
-        window: &dyn crate::gpu::WindowHandle,
-    ) {
+    pub fn attach_gpu(&mut self, window: &dyn crate::gpu::WindowHandle) {
         self.gpu = Some(GpuContext::new(window));
         self.layout_dirty = true;
     }
@@ -92,9 +89,10 @@ impl NativeRenderer {
         let style = data.style.clone();
 
         if data.children.is_empty() {
-            let id = self.taffy.new_leaf(style).unwrap_or_else(|_| {
-                self.taffy.new_leaf(taffy::Style::default()).unwrap()
-            });
+            let id = self
+                .taffy
+                .new_leaf(style)
+                .unwrap_or_else(|_| self.taffy.new_leaf(taffy::Style::default()).unwrap());
             id
         } else {
             let child_ids: Vec<NodeId> = data
@@ -402,12 +400,7 @@ impl Renderer for NativeRenderer {
         }
     }
 
-    fn set_event_listener(
-        &mut self,
-        el: &Self::Element,
-        event: &str,
-        handler: EventHandler,
-    ) {
+    fn set_event_listener(&mut self, el: &Self::Element, event: &str, handler: EventHandler) {
         el.inner
             .borrow_mut()
             .event_handlers

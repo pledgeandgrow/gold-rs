@@ -1,8 +1,8 @@
 //! Tag (Chip) — removable tag with variants.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::Variant;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct TagProps {
@@ -15,14 +15,29 @@ pub struct TagProps {
 
 impl Default for TagProps {
     fn default() -> Self {
-        Self { text: String::new(), variant: Variant::Secondary, removable: false, class: None, style: None }
+        Self {
+            text: String::new(),
+            variant: Variant::Secondary,
+            removable: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl TagProps {
-    pub fn text(mut self, t: impl Into<String>) -> Self { self.text = t.into(); self }
-    pub fn variant(mut self, v: Variant) -> Self { self.variant = v; self }
-    pub fn removable(mut self, r: bool) -> Self { self.removable = r; self }
+    pub fn text(mut self, t: impl Into<String>) -> Self {
+        self.text = t.into();
+        self
+    }
+    pub fn variant(mut self, v: Variant) -> Self {
+        self.variant = v;
+        self
+    }
+    pub fn removable(mut self, r: bool) -> Self {
+        self.removable = r;
+        self
+    }
 }
 
 pub struct Tag;
@@ -32,7 +47,8 @@ impl Tag {
         let style = format!(
             "display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:12px;\
              border-radius:9999px;background:{};color:{};{}",
-            props.variant.background(), props.variant.color(),
+            props.variant.background(),
+            props.variant.color(),
             props.style.as_deref().unwrap_or(""),
         );
 
@@ -46,10 +62,18 @@ impl Tag {
                 Vec::new(), vec![Template::text("×")]));
         }
 
-        Element::Template(Template::new_element("span",
-            vec![("class".to_string(), format!("rye-tag {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "span",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-tag {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -66,7 +90,10 @@ mod tests {
 
     #[test]
     fn test_tag_builder() {
-        let p = TagProps::default().text("Rust").variant(Variant::Primary).removable(true);
+        let p = TagProps::default()
+            .text("Rust")
+            .variant(Variant::Primary)
+            .removable(true);
         assert_eq!(p.text, "Rust");
         assert!(p.removable);
     }

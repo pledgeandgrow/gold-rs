@@ -184,7 +184,9 @@ pub struct LoaderRegistry {
 impl LoaderRegistry {
     /// Create a new empty registry.
     pub fn new() -> Self {
-        Self { loaders: Vec::new() }
+        Self {
+            loaders: Vec::new(),
+        }
     }
 
     /// Register a loader.

@@ -230,7 +230,10 @@ impl WidgetManager {
 
     /// Register a widget definition.
     pub fn register(&self, widget: WidgetDefinition) {
-        self.widgets.lock().unwrap().insert(widget.id.clone(), widget);
+        self.widgets
+            .lock()
+            .unwrap()
+            .insert(widget.id.clone(), widget);
     }
 
     /// Get a widget definition by ID.
@@ -257,7 +260,12 @@ impl WidgetManager {
         }
         drop(widgets);
 
-        let instance_id = format!("{}_{}_{}", widget_id, format!("{:?}", size), self.states.lock().unwrap().len());
+        let instance_id = format!(
+            "{}_{}_{}",
+            widget_id,
+            format!("{:?}", size),
+            self.states.lock().unwrap().len()
+        );
         let mut state = WidgetState::new(widget_id, size);
 
         // Initialize with default values from bindings
@@ -269,7 +277,10 @@ impl WidgetManager {
         }
         drop(widgets);
 
-        self.states.lock().unwrap().insert(instance_id.clone(), state);
+        self.states
+            .lock()
+            .unwrap()
+            .insert(instance_id.clone(), state);
         Some(instance_id)
     }
 
@@ -419,7 +430,11 @@ mod tests {
     #[test]
     fn test_manager_register_get() {
         let mgr = WidgetManager::new();
-        mgr.register(WidgetDefinition::new("weather", "Weather", WidgetPlatform::Ios));
+        mgr.register(WidgetDefinition::new(
+            "weather",
+            "Weather",
+            WidgetPlatform::Ios,
+        ));
         assert!(mgr.get_widget("weather").is_some());
         assert!(mgr.get_widget("nonexistent").is_none());
         assert_eq!(mgr.widget_count(), 1);
@@ -474,7 +489,10 @@ mod tests {
         mgr.register(WidgetDefinition::new("w", "W", WidgetPlatform::Ios));
         let instance_id = mgr.create_instance("w", WidgetSize::Small).unwrap();
         assert!(mgr.update_value(&instance_id, "temp", "80"));
-        assert_eq!(mgr.get_state(&instance_id).unwrap().get_value("temp"), Some("80"));
+        assert_eq!(
+            mgr.get_state(&instance_id).unwrap().get_value("temp"),
+            Some("80")
+        );
         assert_eq!(mgr.update_count(), 1);
     }
 

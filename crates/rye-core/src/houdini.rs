@@ -74,7 +74,11 @@ impl PaintOutput {
             pixels[i + 2] = b;
             pixels[i + 3] = a;
         }
-        Self { pixels, width, height }
+        Self {
+            pixels,
+            width,
+            height,
+        }
     }
 
     /// Create a gradient paint output (top-to-bottom).
@@ -91,7 +95,11 @@ impl PaintOutput {
                 pixels[idx + 3] = (from[3] as f64 + (to[3] as f64 - from[3] as f64) * t) as u8;
             }
         }
-        Self { pixels, width, height }
+        Self {
+            pixels,
+            width,
+            height,
+        }
     }
 }
 
@@ -363,8 +371,12 @@ mod tests {
     #[test]
     fn test_paint_worklet_registry_names() {
         let registry = PaintWorkletRegistry::new();
-        registry.register(PaintWorklet::new("a", vec![], |_| PaintOutput::solid_color(1, 1, 0, 0, 0, 0)));
-        registry.register(PaintWorklet::new("b", vec![], |_| PaintOutput::solid_color(1, 1, 0, 0, 0, 0)));
+        registry.register(PaintWorklet::new("a", vec![], |_| {
+            PaintOutput::solid_color(1, 1, 0, 0, 0, 0)
+        }));
+        registry.register(PaintWorklet::new("b", vec![], |_| {
+            PaintOutput::solid_color(1, 1, 0, 0, 0, 0)
+        }));
         let names = registry.names();
         assert!(names.contains(&"a".to_string()));
         assert!(names.contains(&"b".to_string()));
@@ -373,16 +385,19 @@ mod tests {
     #[test]
     fn test_paint_worklet_registry_clear() {
         let registry = PaintWorkletRegistry::new();
-        registry.register(PaintWorklet::new("a", vec![], |_| PaintOutput::solid_color(1, 1, 0, 0, 0, 0)));
+        registry.register(PaintWorklet::new("a", vec![], |_| {
+            PaintOutput::solid_color(1, 1, 0, 0, 0, 0)
+        }));
         registry.clear();
         assert!(registry.is_empty());
     }
 
     #[test]
     fn test_wgpu_shader_fallback() {
-        let shader = WgpuShaderFallback::new("@fragment fn fs() -> vec4f { return vec4f(1.0); }", "fs")
-            .with_binding(0, BindingKind::Uniform, true)
-            .with_binding(1, BindingKind::Texture, true);
+        let shader =
+            WgpuShaderFallback::new("@fragment fn fs() -> vec4f { return vec4f(1.0); }", "fs")
+                .with_binding(0, BindingKind::Uniform, true)
+                .with_binding(1, BindingKind::Texture, true);
         assert_eq!(shader.bindings.len(), 2);
         assert_eq!(shader.bindings[0].binding, 0);
         assert_eq!(shader.bindings[0].kind, BindingKind::Uniform);

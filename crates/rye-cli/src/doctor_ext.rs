@@ -206,19 +206,31 @@ pub fn run_extended(config: &DoctorConfig) -> HealthReport {
     let mut report = HealthReport::new();
 
     if config.check_deps {
-        report.add(HealthCheck::ok("dependencies", "All dependencies up to date"));
+        report.add(HealthCheck::ok(
+            "dependencies",
+            "All dependencies up to date",
+        ));
     }
 
     if config.check_wasm {
-        report.add(HealthCheck::ok("wasm-toolchain", "WASM toolchain is properly configured"));
+        report.add(HealthCheck::ok(
+            "wasm-toolchain",
+            "WASM toolchain is properly configured",
+        ));
     }
 
     if config.check_features {
-        report.add(HealthCheck::ok("feature-flags", "No conflicting feature flags detected"));
+        report.add(HealthCheck::ok(
+            "feature-flags",
+            "No conflicting feature flags detected",
+        ));
     }
 
     if config.check_targets {
-        report.add(HealthCheck::ok("target-triples", "Required target triples are installed"));
+        report.add(HealthCheck::ok(
+            "target-triples",
+            "Required target triples are installed",
+        ));
     }
 
     report
@@ -268,7 +280,12 @@ mod tests {
     #[test]
     fn test_health_report_add_error() {
         let mut report = HealthReport::new();
-        report.add(HealthCheck::fail("test", IssueSeverity::Error, "bad", "fix"));
+        report.add(HealthCheck::fail(
+            "test",
+            IssueSeverity::Error,
+            "bad",
+            "fix",
+        ));
         assert_eq!(report.error_count, 1);
         assert!(!report.is_healthy());
     }
@@ -312,7 +329,12 @@ mod tests {
     fn test_health_report_to_text() {
         let mut report = HealthReport::new();
         report.add(HealthCheck::ok("a", "all good"));
-        report.add(HealthCheck::fail("b", IssueSeverity::Error, "broken", "run fix"));
+        report.add(HealthCheck::fail(
+            "b",
+            IssueSeverity::Error,
+            "broken",
+            "run fix",
+        ));
         let text = report.to_text();
         assert!(text.contains("doctor"));
         assert!(text.contains("a"));

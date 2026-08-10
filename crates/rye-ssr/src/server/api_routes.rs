@@ -318,7 +318,11 @@ impl ApiRouteRegistry {
 
                 // Tags
                 if !route.tags.is_empty() {
-                    let tags: Vec<String> = route.tags.iter().map(|t| format!("\"{}\"", escape_json(t))).collect();
+                    let tags: Vec<String> = route
+                        .tags
+                        .iter()
+                        .map(|t| format!("\"{}\"", escape_json(t)))
+                        .collect();
                     paths_json.push_str(&format!(",\"tags\":[{}]", tags.join(",")));
                 }
 
@@ -331,7 +335,13 @@ impl ApiRouteRegistry {
         let servers_json: Vec<String> = self
             .servers
             .iter()
-            .map(|s| format!("{{\"url\":\"{}\",\"description\":\"{}\"}}", escape_json(&s.url), escape_json(&s.description)))
+            .map(|s| {
+                format!(
+                    "{{\"url\":\"{}\",\"description\":\"{}\"}}",
+                    escape_json(&s.url),
+                    escape_json(&s.description)
+                )
+            })
             .collect();
 
         format!(
@@ -426,7 +436,13 @@ impl ApiRouteBuilder {
     }
 
     /// Add a parameter.
-    pub fn param(mut self, name: &str, location: ParamLocation, required: bool, param_type: &str) -> Self {
+    pub fn param(
+        mut self,
+        name: &str,
+        location: ParamLocation,
+        required: bool,
+        param_type: &str,
+    ) -> Self {
         self.route.params.push(ApiParam {
             name: name.to_string(),
             location,
@@ -449,7 +465,13 @@ impl ApiRouteBuilder {
     }
 
     /// Add a response.
-    pub fn response(mut self, status: u16, description: &str, content_type: &str, schema_type: Option<&str>) -> Self {
+    pub fn response(
+        mut self,
+        status: u16,
+        description: &str,
+        content_type: &str,
+        schema_type: Option<&str>,
+    ) -> Self {
         self.route.responses.push(ApiResponse {
             status,
             description: description.to_string(),

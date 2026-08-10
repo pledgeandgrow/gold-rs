@@ -249,7 +249,11 @@ impl TextShapingCache {
     }
 
     /// Get or compute a shaped text.
-    pub fn get_or_compute<F: FnOnce(&ShapingKey) -> ShapedText>(&self, key: &ShapingKey, compute: F) -> ShapedText {
+    pub fn get_or_compute<F: FnOnce(&ShapingKey) -> ShapedText>(
+        &self,
+        key: &ShapingKey,
+        compute: F,
+    ) -> ShapedText {
         if let Some(cached) = self.get(key) {
             return cached;
         }
@@ -307,8 +311,20 @@ mod tests {
     #[test]
     fn test_shaped_text_from_glyphs() {
         let glyphs = vec![
-            ShapedGlyph { glyph_id: 1, x_offset: 0.0, y_offset: 0.0, advance: 8.0, cluster: 0 },
-            ShapedGlyph { glyph_id: 2, x_offset: 0.0, y_offset: 0.0, advance: 10.0, cluster: 1 },
+            ShapedGlyph {
+                glyph_id: 1,
+                x_offset: 0.0,
+                y_offset: 0.0,
+                advance: 8.0,
+                cluster: 0,
+            },
+            ShapedGlyph {
+                glyph_id: 2,
+                x_offset: 0.0,
+                y_offset: 0.0,
+                advance: 10.0,
+                cluster: 1,
+            },
         ];
         let text = ShapedText::from_glyphs(glyphs, 12.0, 4.0);
         assert_eq!(text.glyph_count(), 2);
@@ -333,7 +349,13 @@ mod tests {
         let cache = TextShapingCache::new(100);
         let key = ShapingKey::new("Hello", "Arial", 16);
         let shaped = ShapedText::from_glyphs(
-            vec![ShapedGlyph { glyph_id: 1, x_offset: 0.0, y_offset: 0.0, advance: 8.0, cluster: 0 }],
+            vec![ShapedGlyph {
+                glyph_id: 1,
+                x_offset: 0.0,
+                y_offset: 0.0,
+                advance: 8.0,
+                cluster: 0,
+            }],
             12.0,
             4.0,
         );
@@ -397,7 +419,13 @@ mod tests {
         // First call: miss, compute
         let result1 = cache.get_or_compute(&key, |k| {
             ShapedText::from_glyphs(
-                vec![ShapedGlyph { glyph_id: 1, x_offset: 0.0, y_offset: 0.0, advance: 8.0, cluster: 0 }],
+                vec![ShapedGlyph {
+                    glyph_id: 1,
+                    x_offset: 0.0,
+                    y_offset: 0.0,
+                    advance: 8.0,
+                    cluster: 0,
+                }],
                 12.0,
                 4.0,
             )

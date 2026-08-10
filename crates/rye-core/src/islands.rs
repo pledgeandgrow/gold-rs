@@ -116,7 +116,8 @@ impl IslandRegistry {
     {
         self.ssr_renderers
             .insert(id.to_string(), Box::new(render_fn));
-        self.chunk_urls.insert(id.to_string(), chunk_url.to_string());
+        self.chunk_urls
+            .insert(id.to_string(), chunk_url.to_string());
     }
 
     /// SSR-render an island by ID with serialized props.
@@ -317,8 +318,8 @@ mod tests {
 
     #[test]
     fn test_island_manual_strategy() {
-        let island = Island::new("widget", "<div>Widget</div>")
-            .with_strategy(HydrationStrategy::Manual);
+        let island =
+            Island::new("widget", "<div>Widget</div>").with_strategy(HydrationStrategy::Manual);
 
         let html = island.to_html();
         assert!(html.contains("data-rye-hydrate=\"manual\""));
@@ -326,8 +327,7 @@ mod tests {
 
     #[test]
     fn test_island_html_escaping() {
-        let island = Island::new("test", "<p>content</p>")
-            .with_props("\"quoted\" & <tagged>");
+        let island = Island::new("test", "<p>content</p>").with_props("\"quoted\" & <tagged>");
 
         let html = island.to_html();
         assert!(html.contains("&quot;quoted&quot;"));

@@ -20,8 +20,8 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens};
-use syn::{ItemFn, FnArg, PatType, parse_macro_input, ReturnType, PathArguments, GenericArgument};
 use syn::Type;
+use syn::{parse_macro_input, FnArg, GenericArgument, ItemFn, PatType, PathArguments, ReturnType};
 
 /// Implementation of the `#[server]` attribute macro.
 pub fn server_impl(item: TokenStream) -> TokenStream {

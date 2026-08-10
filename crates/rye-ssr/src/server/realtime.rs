@@ -294,8 +294,7 @@ mod tests {
 
     #[test]
     fn test_sse_config() {
-        let config = SseConfig::new("/api/events")
-            .with_last_event_id("42");
+        let config = SseConfig::new("/api/events").with_last_event_id("42");
         assert_eq!(config.url, "/api/events");
         assert_eq!(config.last_event_id, Some("42".to_string()));
     }

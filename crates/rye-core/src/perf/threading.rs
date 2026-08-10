@@ -244,8 +244,12 @@ mod tests {
     #[test]
     fn test_cross_origin_headers() {
         let headers = cross_origin_headers();
-        assert!(headers.iter().any(|(k, _)| *k == "Cross-Origin-Opener-Policy"));
-        assert!(headers.iter().any(|(k, _)| *k == "Cross-Origin-Embedder-Policy"));
+        assert!(headers
+            .iter()
+            .any(|(k, _)| *k == "Cross-Origin-Opener-Policy"));
+        assert!(headers
+            .iter()
+            .any(|(k, _)| *k == "Cross-Origin-Embedder-Policy"));
     }
 
     #[test]

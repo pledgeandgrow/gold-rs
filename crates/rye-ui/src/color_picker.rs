@@ -1,8 +1,8 @@
 //! ColorPicker — color swatch picker.
 
-use rye_core::Element;
-use rye_core::template::{Template, TemplateNode, ReactiveValue};
 use crate::theme::vars;
+use rye_core::template::{ReactiveValue, Template, TemplateNode};
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct ColorPickerProps {
@@ -19,23 +19,50 @@ impl Default for ColorPickerProps {
         Self {
             value: ReactiveValue::Static("#2563eb".to_string()),
             swatches: vec![
-                "#2563eb".into(), "#16a34a".into(), "#dc2626".into(), "#d97706".into(),
-                "#0891b2".into(), "#7c3aed".into(), "#db2777".into(), "#000000".into(),
-                "#ffffff".into(), "#64748b".into(), "#94a3b8".into(), "#e2e8f0".into(),
+                "#2563eb".into(),
+                "#16a34a".into(),
+                "#dc2626".into(),
+                "#d97706".into(),
+                "#0891b2".into(),
+                "#7c3aed".into(),
+                "#db2777".into(),
+                "#000000".into(),
+                "#ffffff".into(),
+                "#64748b".into(),
+                "#94a3b8".into(),
+                "#e2e8f0".into(),
             ],
-            label: None, show_input: true, class: None, style: None,
+            label: None,
+            show_input: true,
+            class: None,
+            style: None,
         }
     }
 }
 
 impl ColorPickerProps {
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = ReactiveValue::Static(v.into()); self }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = ReactiveValue::Static(v.into());
+        self
+    }
 
     /// Set the value as a reactive signal.
-    pub fn value_reactive(mut self, signal: rye_signals::Signal<String>) -> Self { self.value = ReactiveValue::Reactive(signal); self }
-    pub fn swatches(mut self, s: Vec<String>) -> Self { self.swatches = s; self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn show_input(mut self, s: bool) -> Self { self.show_input = s; self }
+    pub fn value_reactive(mut self, signal: rye_signals::Signal<String>) -> Self {
+        self.value = ReactiveValue::Reactive(signal);
+        self
+    }
+    pub fn swatches(mut self, s: Vec<String>) -> Self {
+        self.swatches = s;
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn show_input(mut self, s: bool) -> Self {
+        self.show_input = s;
+        self
+    }
 }
 
 pub struct ColorPicker;
@@ -67,10 +94,19 @@ impl ColorPicker {
                 Vec::new(), Vec::new())
         }).collect();
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "display:grid;grid-template-columns:repeat(6,28px);gap:8px;margin-bottom:12px;".to_string()),
-                 ("class".to_string(), "rye-color-picker-swatches".to_string())],
-            Vec::new(), swatch_cells));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "display:grid;grid-template-columns:repeat(6,28px);gap:8px;margin-bottom:12px;"
+                        .to_string(),
+                ),
+                ("class".to_string(), "rye-color-picker-swatches".to_string()),
+            ],
+            Vec::new(),
+            swatch_cells,
+        ));
 
         // Native color input
         if props.show_input {
@@ -83,32 +119,54 @@ impl ColorPicker {
                 // Reactive: use reactive_attrs for value, Reactive node for display
                 let input = Template::new_element_reactive(
                     "input",
-                    vec![("type".to_string(), "color".to_string()),
-                         ("style".to_string(), input_style),
-                         ("class".to_string(), "rye-color-picker-input".to_string())],
+                    vec![
+                        ("type".to_string(), "color".to_string()),
+                        ("style".to_string(), input_style),
+                        ("class".to_string(), "rye-color-picker-input".to_string()),
+                    ],
                     vec![("value".to_string(), props.value.to_reactive_fn())],
-                    Vec::new(), Vec::new());
-                let span = Template::new(vec![TemplateNode::Reactive(props.value.to_reactive_fn())]);
+                    Vec::new(),
+                    Vec::new(),
+                );
+                let span =
+                    Template::new(vec![TemplateNode::Reactive(props.value.to_reactive_fn())]);
                 (input, vec![span])
             } else {
-                let input = Template::new_element("input",
-                    vec![("type".to_string(), "color".to_string()),
-                         ("value".to_string(), current_value.clone()),
-                         ("style".to_string(), input_style),
-                         ("class".to_string(), "rye-color-picker-input".to_string())],
-                    Vec::new(), Vec::new());
+                let input = Template::new_element(
+                    "input",
+                    vec![
+                        ("type".to_string(), "color".to_string()),
+                        ("value".to_string(), current_value.clone()),
+                        ("style".to_string(), input_style),
+                        ("class".to_string(), "rye-color-picker-input".to_string()),
+                    ],
+                    Vec::new(),
+                    Vec::new(),
+                );
                 let span = Template::text(&current_value);
                 (input, vec![span])
             };
 
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), "display:flex;align-items:center;gap:8px;".to_string())],
-                Vec::new(), vec![input_el, span_children.into_iter().next().unwrap()]));
+            children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    "display:flex;align-items:center;gap:8px;".to_string(),
+                )],
+                Vec::new(),
+                vec![input_el, span_children.into_iter().next().unwrap()],
+            ));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-color-picker {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![(
+                "class".to_string(),
+                format!("rye-color-picker {}", props.class.as_deref().unwrap_or("")),
+            )],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -146,8 +204,7 @@ mod tests {
     fn test_color_picker_reactive_value() {
         use rye_signals::Signal;
         let value = Signal::new("#2563eb".to_string());
-        let props = ColorPickerProps::default()
-            .value_reactive(value.clone());
+        let props = ColorPickerProps::default().value_reactive(value.clone());
         assert!(props.value.is_reactive());
         assert_eq!(props.value.get(), "#2563eb");
 

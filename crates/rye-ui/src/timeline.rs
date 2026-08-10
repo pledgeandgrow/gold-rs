@@ -1,8 +1,8 @@
 //! Timeline — vertical event timeline.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TimelineVariant {
@@ -16,8 +16,11 @@ pub enum TimelineVariant {
 impl TimelineVariant {
     pub fn color(&self) -> &'static str {
         match self {
-            Self::Default => vars::TEXT_MUTED, Self::Success => vars::SUCCESS,
-            Self::Warning => vars::WARNING, Self::Error => vars::DANGER, Self::Info => vars::INFO,
+            Self::Default => vars::TEXT_MUTED,
+            Self::Success => vars::SUCCESS,
+            Self::Warning => vars::WARNING,
+            Self::Error => vars::DANGER,
+            Self::Info => vars::INFO,
         }
     }
 }
@@ -32,11 +35,25 @@ pub struct TimelineItem {
 
 impl TimelineItem {
     pub fn new(title: impl Into<String>) -> Self {
-        Self { title: title.into(), description: None, timestamp: None, variant: TimelineVariant::Default }
+        Self {
+            title: title.into(),
+            description: None,
+            timestamp: None,
+            variant: TimelineVariant::Default,
+        }
     }
-    pub fn description(mut self, d: impl Into<String>) -> Self { self.description = Some(d.into()); self }
-    pub fn timestamp(mut self, t: impl Into<String>) -> Self { self.timestamp = Some(t.into()); self }
-    pub fn variant(mut self, v: TimelineVariant) -> Self { self.variant = v; self }
+    pub fn description(mut self, d: impl Into<String>) -> Self {
+        self.description = Some(d.into());
+        self
+    }
+    pub fn timestamp(mut self, t: impl Into<String>) -> Self {
+        self.timestamp = Some(t.into());
+        self
+    }
+    pub fn variant(mut self, v: TimelineVariant) -> Self {
+        self.variant = v;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -47,11 +64,20 @@ pub struct TimelineProps {
 }
 
 impl Default for TimelineProps {
-    fn default() -> Self { Self { items: Vec::new(), class: None, style: None } }
+    fn default() -> Self {
+        Self {
+            items: Vec::new(),
+            class: None,
+            style: None,
+        }
+    }
 }
 
 impl TimelineProps {
-    pub fn items(mut self, i: Vec<TimelineItem>) -> Self { self.items = i; self }
+    pub fn items(mut self, i: Vec<TimelineItem>) -> Self {
+        self.items = i;
+        self
+    }
 }
 
 pub struct Timeline;
@@ -104,10 +130,18 @@ impl Timeline {
 
         let style = format!("padding:8px 0;{}", props.style.as_deref().unwrap_or(""));
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-timeline {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), items))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!("rye-timeline {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            items,
+        ))
     }
 }
 
@@ -134,14 +168,16 @@ mod tests {
             .description("Compilation error in main.rs")
             .timestamp("2 min ago")
             .variant(TimelineVariant::Error);
-        assert_eq!(i.description.as_deref(), Some("Compilation error in main.rs"));
+        assert_eq!(
+            i.description.as_deref(),
+            Some("Compilation error in main.rs")
+        );
         assert_eq!(i.variant, TimelineVariant::Error);
     }
 
     #[test]
     fn test_timeline_render() {
-        let el = Timeline::render(TimelineProps::default()
-            .items(vec![
+        let el = Timeline::render(TimelineProps::default().items(vec![
                 TimelineItem::new("Created").timestamp("1h ago").variant(TimelineVariant::Info),
                 TimelineItem::new("Updated").timestamp("30m ago").variant(TimelineVariant::Success),
             ]));

@@ -1,6 +1,6 @@
 //! Memo — derived/computed state with automatic dependency tracking.
 
-use crate::runtime::{self, ScopeId, Callback, SignalId};
+use crate::runtime::{self, Callback, ScopeId, SignalId};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -67,18 +67,30 @@ impl<T: Clone + 'static> Memo<T> {
         runtime::pop_scope();
         inner.borrow_mut().value = Some(value);
 
-        Self { inner, scope_id, memo_id }
+        Self {
+            inner,
+            scope_id,
+            memo_id,
+        }
     }
 
     /// Read the current value. Registers a dependency if inside a tracking scope.
     pub fn get(&self) -> T {
         runtime::track(self.memo_id);
-        self.inner.borrow().value.clone().expect("Memo was not computed")
+        self.inner
+            .borrow()
+            .value
+            .clone()
+            .expect("Memo was not computed")
     }
 
     /// Read the current value without tracking.
     pub fn get_untracked(&self) -> T {
-        self.inner.borrow().value.clone().expect("Memo was not computed")
+        self.inner
+            .borrow()
+            .value
+            .clone()
+            .expect("Memo was not computed")
     }
 
     /// Convenience method — shorthand for `.get()`.

@@ -207,14 +207,15 @@ impl ReloadMessage {
     /// Serialize to JSON for WebSocket transmission.
     pub fn to_json(&self) -> String {
         match self {
-            ReloadMessage::FullReload => {
-                r#"{"type":"reload"}"#.to_string()
-            }
+            ReloadMessage::FullReload => r#"{"type":"reload"}"#.to_string(),
             ReloadMessage::CssUpdate { href } => {
                 format!(r#"{{"type":"css-update","href":"{}"}}"#, href)
             }
             ReloadMessage::ComponentUpdate { component } => {
-                format!(r#"{{"type":"component-update","component":"{}"}}"#, component)
+                format!(
+                    r#"{{"type":"component-update","component":"{}"}}"#,
+                    component
+                )
             }
         }
     }
@@ -244,7 +245,10 @@ mod tests {
         let mut mgr = HotReloadManager::new(HotReloadConfig::default());
         mgr.register("Button", PathBuf::from("src/components/button.rs"));
 
-        mgr.on_change(PathBuf::from("src/components/button.rs"), FileChange::Modified);
+        mgr.on_change(
+            PathBuf::from("src/components/button.rs"),
+            FileChange::Modified,
+        );
         assert_eq!(mgr.pending_count(), 1);
 
         let affected = mgr.drain();
@@ -272,11 +276,15 @@ mod tests {
         let full = ReloadMessage::FullReload;
         assert_eq!(full.to_json(), r#"{"type":"reload"}"#);
 
-        let css = ReloadMessage::CssUpdate { href: "/style.css".to_string() };
+        let css = ReloadMessage::CssUpdate {
+            href: "/style.css".to_string(),
+        };
         assert!(css.to_json().contains("css-update"));
         assert!(css.to_json().contains("/style.css"));
 
-        let comp = ReloadMessage::ComponentUpdate { component: "Button".to_string() };
+        let comp = ReloadMessage::ComponentUpdate {
+            component: "Button".to_string(),
+        };
         assert!(comp.to_json().contains("component-update"));
         assert!(comp.to_json().contains("Button"));
     }

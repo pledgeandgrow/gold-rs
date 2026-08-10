@@ -103,16 +103,18 @@ impl StorybookConfig {
 pub fn storybook_html(config: &StorybookConfig) -> String {
     let mut stories_json = Vec::new();
     for comp in &config.components {
-        let stories: Vec<String> = comp.stories.iter().map(|s| {
-            let props: Vec<String> = s.props.iter()
-                .map(|(k, v)| format!(r#""{}":"{}""#, k, v))
-                .collect();
-            format!(
-                r#"{{"name":"{}","props":{{{}}}}}"#,
-                s.name,
-                props.join(",")
-            )
-        }).collect();
+        let stories: Vec<String> = comp
+            .stories
+            .iter()
+            .map(|s| {
+                let props: Vec<String> = s
+                    .props
+                    .iter()
+                    .map(|(k, v)| format!(r#""{}":"{}""#, k, v))
+                    .collect();
+                format!(r#"{{"name":"{}","props":{{{}}}}}"#, s.name, props.join(","))
+            })
+            .collect();
 
         stories_json.push(format!(
             r#"{{"component":"{}","stories":[{}]}}"#,
@@ -217,9 +219,7 @@ mod tests {
 
     #[test]
     fn test_storybook_config() {
-        let config = StorybookConfig::new()
-            .title("My Storybook")
-            .port(8080);
+        let config = StorybookConfig::new().title("My Storybook").port(8080);
         assert_eq!(config.title, "My Storybook");
         assert_eq!(config.port, 8080);
     }

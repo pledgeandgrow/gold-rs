@@ -24,7 +24,10 @@ pub enum PushPermissionState {
 impl PushPermissionState {
     /// Check if push notifications can be used.
     pub fn can_send(&self) -> bool {
-        matches!(self, PushPermissionState::Granted | PushPermissionState::Provisional)
+        matches!(
+            self,
+            PushPermissionState::Granted | PushPermissionState::Provisional
+        )
     }
 }
 
@@ -260,7 +263,10 @@ impl PushNotificationManager {
 
     /// Register a notification channel (Android).
     pub fn register_channel(&self, channel: NotificationChannel) {
-        self.channels.lock().unwrap().insert(channel.id.clone(), channel);
+        self.channels
+            .lock()
+            .unwrap()
+            .insert(channel.id.clone(), channel);
     }
 
     /// Get a channel by ID.
@@ -349,8 +355,7 @@ mod tests {
 
     #[test]
     fn test_push_notification_to_json_with_data() {
-        let n = PushNotification::new("Hello", "World")
-            .with_data("url", "https://example.com");
+        let n = PushNotification::new("Hello", "World").with_data("url", "https://example.com");
         let json = n.to_json();
         assert!(json.contains("\"data\""));
         assert!(json.contains("\"url\":\"https://example.com\""));

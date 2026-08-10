@@ -1,8 +1,8 @@
 //! Tabs — tab list with panels.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct TabItem {
@@ -12,7 +12,10 @@ pub struct TabItem {
 
 impl TabItem {
     pub fn new(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self { id: id.into(), label: label.into() }
+        Self {
+            id: id.into(),
+            label: label.into(),
+        }
     }
 }
 
@@ -26,13 +29,24 @@ pub struct TabsProps {
 
 impl Default for TabsProps {
     fn default() -> Self {
-        Self { tabs: Vec::new(), active_tab: String::new(), class: None, style: None }
+        Self {
+            tabs: Vec::new(),
+            active_tab: String::new(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl TabsProps {
-    pub fn tabs(mut self, t: Vec<TabItem>) -> Self { self.tabs = t; self }
-    pub fn active(mut self, id: impl Into<String>) -> Self { self.active_tab = id.into(); self }
+    pub fn tabs(mut self, t: Vec<TabItem>) -> Self {
+        self.tabs = t;
+        self
+    }
+    pub fn active(mut self, id: impl Into<String>) -> Self {
+        self.active_tab = id.into();
+        self
+    }
 }
 
 pub struct Tabs;
@@ -55,20 +69,47 @@ impl Tabs {
                 Vec::new(), vec![Template::text(&tab.label)])
         }).collect();
 
-        let list = Template::new_element("div",
-            vec![("class".to_string(), "rye-tab-list".to_string()),
-                 ("style".to_string(), format!("display:flex;gap:4px;border-bottom:1px solid {};", vars::BORDER))],
-            Vec::new(), std::mem::take(&mut tab_buttons));
+        let list = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "rye-tab-list".to_string()),
+                (
+                    "style".to_string(),
+                    format!(
+                        "display:flex;gap:4px;border-bottom:1px solid {};",
+                        vars::BORDER
+                    ),
+                ),
+            ],
+            Vec::new(),
+            std::mem::take(&mut tab_buttons),
+        );
 
-        let panel = Template::new_element("div",
-            vec![("class".to_string(), "rye-tab-panel".to_string()),
-                 ("style".to_string(), "padding:16px 0;".to_string())],
-            Vec::new(), Vec::new());
+        let panel = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "rye-tab-panel".to_string()),
+                ("style".to_string(), "padding:16px 0;".to_string()),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-tabs {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), props.style.as_deref().unwrap_or("").to_string())],
-            Vec::new(), vec![list, panel]))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-tabs {}", props.class.as_deref().unwrap_or("")),
+                ),
+                (
+                    "style".to_string(),
+                    props.style.as_deref().unwrap_or("").to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![list, panel],
+        ))
     }
 }
 
@@ -100,9 +141,11 @@ mod tests {
 
     #[test]
     fn test_tabs_render() {
-        let el = Tabs::render(TabsProps::default()
-            .tabs(vec![TabItem::new("1", "One")])
-            .active("1"));
+        let el = Tabs::render(
+            TabsProps::default()
+                .tabs(vec![TabItem::new("1", "One")])
+                .active("1"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

@@ -260,7 +260,12 @@ impl QueryBuilder {
     }
 
     /// Add a WHERE condition (custom operator).
-    pub fn where_cond(mut self, column: &str, operator: ConditionOperator, value: ValueType) -> Self {
+    pub fn where_cond(
+        mut self,
+        column: &str,
+        operator: ConditionOperator,
+        value: ValueType,
+    ) -> Self {
         self.query.conditions.push(Condition {
             column: column.to_string(),
             operator,
@@ -334,7 +339,10 @@ impl Query {
                 .conditions
                 .iter()
                 .map(|c| {
-                    if matches!(c.operator, ConditionOperator::IsNull | ConditionOperator::IsNotNull) {
+                    if matches!(
+                        c.operator,
+                        ConditionOperator::IsNull | ConditionOperator::IsNotNull
+                    ) {
                         format!("{} {}", c.column, c.operator.as_sql())
                     } else {
                         format!("{} {} {}", c.column, c.operator.as_sql(), c.value)
@@ -403,7 +411,10 @@ impl Query {
                 .conditions
                 .iter()
                 .map(|c| {
-                    if matches!(c.operator, ConditionOperator::IsNull | ConditionOperator::IsNotNull) {
+                    if matches!(
+                        c.operator,
+                        ConditionOperator::IsNull | ConditionOperator::IsNotNull
+                    ) {
                         format!("{} {}", c.column, c.operator.as_sql())
                     } else {
                         format!("{} {} {}", c.column, c.operator.as_sql(), c.value)
@@ -469,10 +480,7 @@ mod tests {
 
     #[test]
     fn test_select_limit_offset() {
-        let sql = QueryBuilder::select("users")
-            .limit(10)
-            .offset(20)
-            .to_sql();
+        let sql = QueryBuilder::select("users").limit(10).offset(20).to_sql();
         assert_eq!(sql, "SELECT * FROM users LIMIT 10 OFFSET 20");
     }
 
@@ -511,7 +519,7 @@ mod tests {
     #[test]
     fn test_value_type_display() {
         assert_eq!(ValueType::Int(42).to_string(), "42");
-        assert_eq!(ValueType::Float(3.14).to_string(), "3.14");
+        assert_eq!(ValueType::Float(1.5).to_string(), "1.5");
         assert_eq!(ValueType::Text("hello".to_string()).to_string(), "'hello'");
         assert_eq!(ValueType::Bool(true).to_string(), "true");
         assert_eq!(ValueType::Null.to_string(), "NULL");
@@ -555,7 +563,10 @@ mod tests {
         };
 
         assert_eq!(result.row_count(), 2);
-        assert_eq!(result.get(0, "name"), Some(&ValueType::Text("Alice".to_string())));
+        assert_eq!(
+            result.get(0, "name"),
+            Some(&ValueType::Text("Alice".to_string()))
+        );
         assert_eq!(result.get(1, "id"), Some(&ValueType::Int(2)));
         assert_eq!(result.get(5, "name"), None);
     }
@@ -573,7 +584,11 @@ mod tests {
     #[test]
     fn test_select_like() {
         let sql = QueryBuilder::select("users")
-            .where_cond("name", ConditionOperator::Like, ValueType::Text("%alice%".to_string()))
+            .where_cond(
+                "name",
+                ConditionOperator::Like,
+                ValueType::Text("%alice%".to_string()),
+            )
             .to_sql();
         assert_eq!(sql, "SELECT * FROM users WHERE name LIKE '%alice%'");
     }

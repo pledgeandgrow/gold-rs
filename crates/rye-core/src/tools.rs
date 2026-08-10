@@ -9,11 +9,11 @@
 //! - **Goal 139**: Analytics events
 //! - **Goal 140**: Web Vitals tracking
 
-pub mod figma;
-pub mod storybook;
-pub mod visual_regression;
-pub mod telemetry;
+pub mod analytics;
 pub mod crash_reporting;
 pub mod feature_flags;
-pub mod analytics;
+pub mod figma;
+pub mod storybook;
+pub mod telemetry;
+pub mod visual_regression;
 pub mod web_vitals;

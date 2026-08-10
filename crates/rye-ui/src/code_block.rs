@@ -1,8 +1,8 @@
 //! CodeBlock — syntax-highlighted code display.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CodeLanguage {
@@ -21,9 +21,16 @@ pub enum CodeLanguage {
 impl CodeLanguage {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::Rust => "rust", Self::TypeScript => "typescript", Self::JavaScript => "javascript",
-            Self::Python => "python", Self::Go => "go", Self::Json => "json",
-            Self::Html => "html", Self::Css => "css", Self::Bash => "bash", Self::Plain => "text",
+            Self::Rust => "rust",
+            Self::TypeScript => "typescript",
+            Self::JavaScript => "javascript",
+            Self::Python => "python",
+            Self::Go => "go",
+            Self::Json => "json",
+            Self::Html => "html",
+            Self::Css => "css",
+            Self::Bash => "bash",
+            Self::Plain => "text",
         }
     }
 }
@@ -41,18 +48,39 @@ pub struct CodeBlockProps {
 
 impl Default for CodeBlockProps {
     fn default() -> Self {
-        Self { code: String::new(), language: CodeLanguage::Plain,
-               show_line_numbers: true, show_copy_button: true,
-               title: None, class: None, style: None }
+        Self {
+            code: String::new(),
+            language: CodeLanguage::Plain,
+            show_line_numbers: true,
+            show_copy_button: true,
+            title: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl CodeBlockProps {
-    pub fn code(mut self, c: impl Into<String>) -> Self { self.code = c.into(); self }
-    pub fn language(mut self, l: CodeLanguage) -> Self { self.language = l; self }
-    pub fn line_numbers(mut self, s: bool) -> Self { self.show_line_numbers = s; self }
-    pub fn copy_button(mut self, s: bool) -> Self { self.show_copy_button = s; self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
+    pub fn code(mut self, c: impl Into<String>) -> Self {
+        self.code = c.into();
+        self
+    }
+    pub fn language(mut self, l: CodeLanguage) -> Self {
+        self.language = l;
+        self
+    }
+    pub fn line_numbers(mut self, s: bool) -> Self {
+        self.show_line_numbers = s;
+        self
+    }
+    pub fn copy_button(mut self, s: bool) -> Self {
+        self.show_copy_button = s;
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
 }
 
 pub struct CodeBlock;
@@ -73,9 +101,18 @@ impl CodeBlock {
             Vec::new(), vec![Template::text(props.language.as_str())]));
 
         if let Some(title) = &props.title {
-            header_children.push(Template::new_element("span",
-                vec![("style".to_string(), format!("font-size:13px;color:{};margin-left:12px;", vars::BORDER_STRONG))],
-                Vec::new(), vec![Template::text(title)]));
+            header_children.push(Template::new_element(
+                "span",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "font-size:13px;color:{};margin-left:12px;",
+                        vars::BORDER_STRONG
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(title)],
+            ));
         }
 
         if props.show_copy_button {
@@ -103,30 +140,61 @@ impl CodeBlock {
                     Vec::new(), vec![Template::text(&(i + 1).to_string())]));
             }
 
-            line_children.push(Template::new_element("span",
+            line_children.push(Template::new_element(
+                "span",
                 vec![("style".to_string(), format!("color:{};", vars::CODE_TEXT))],
-                Vec::new(), vec![Template::text(if line.is_empty() { " " } else { line })]));
+                Vec::new(),
+                vec![Template::text(if line.is_empty() { " " } else { line })],
+            ));
 
-            code_children.push(Template::new_element("div",
-                vec![("style".to_string(), "display:flex;min-height:20px;".to_string())],
-                Vec::new(), line_children));
+            code_children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    "display:flex;min-height:20px;".to_string(),
+                )],
+                Vec::new(),
+                line_children,
+            ));
         }
 
         if code_children.is_empty() {
-            code_children.push(Template::new_element("div",
-                vec![("style".to_string(), format!("color:{};", vars::CODE_LINE_NUMBER))],
-                Vec::new(), vec![Template::text(" ")]));
+            code_children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    format!("color:{};", vars::CODE_LINE_NUMBER),
+                )],
+                Vec::new(),
+                vec![Template::text(" ")],
+            ));
         }
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "padding:16px;overflow-x:auto;font-size:13px;line-height:1.6;".to_string()),
-                 ("class".to_string(), "rye-code-block-content".to_string())],
-            Vec::new(), code_children));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "padding:16px;overflow-x:auto;font-size:13px;line-height:1.6;".to_string(),
+                ),
+                ("class".to_string(), "rye-code-block-content".to_string()),
+            ],
+            Vec::new(),
+            code_children,
+        ));
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), container_style),
-                 ("class".to_string(), format!("rye-code-block {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), container_style),
+                (
+                    "class".to_string(),
+                    format!("rye-code-block {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -163,10 +231,12 @@ mod tests {
 
     #[test]
     fn test_code_block_render() {
-        let el = CodeBlock::render(CodeBlockProps::default()
-            .code("let x = 42;\nprintln!(\"{}\", x);")
-            .language(CodeLanguage::Rust)
-            .title("example.rs"));
+        let el = CodeBlock::render(
+            CodeBlockProps::default()
+                .code("let x = 42;\nprintln!(\"{}\", x);")
+                .language(CodeLanguage::Rust)
+                .title("example.rs"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 

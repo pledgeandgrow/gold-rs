@@ -1,8 +1,8 @@
 //! Textarea component — multi-line text input.
 
-use rye_core::Element;
+use crate::theme::{vars, Size};
 use rye_core::template::Template;
-use crate::theme::{Size, vars};
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct TextareaProps {
@@ -21,28 +21,60 @@ pub struct TextareaProps {
 impl Default for TextareaProps {
     fn default() -> Self {
         Self {
-            placeholder: String::new(), value: String::new(), label: None,
-            error: None, disabled: false, size: Size::Medium, rows: 4,
-            resize: true, class: None, style: None,
+            placeholder: String::new(),
+            value: String::new(),
+            label: None,
+            error: None,
+            disabled: false,
+            size: Size::Medium,
+            rows: 4,
+            resize: true,
+            class: None,
+            style: None,
         }
     }
 }
 
 impl TextareaProps {
-    pub fn placeholder(mut self, p: impl Into<String>) -> Self { self.placeholder = p.into(); self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn error(mut self, e: impl Into<String>) -> Self { self.error = Some(e.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn rows(mut self, r: usize) -> Self { self.rows = r; self }
-    pub fn no_resize(mut self) -> Self { self.resize = false; self }
+    pub fn placeholder(mut self, p: impl Into<String>) -> Self {
+        self.placeholder = p.into();
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn error(mut self, e: impl Into<String>) -> Self {
+        self.error = Some(e.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn rows(mut self, r: usize) -> Self {
+        self.rows = r;
+        self
+    }
+    pub fn no_resize(mut self) -> Self {
+        self.resize = false;
+        self
+    }
 }
 
 pub struct Textarea;
 
 impl Textarea {
     pub fn render(props: TextareaProps) -> Element {
-        let border_color = if props.error.is_some() { vars::DANGER } else { vars::INPUT_BORDER };
+        let border_color = if props.error.is_some() {
+            vars::DANGER
+        } else {
+            vars::INPUT_BORDER
+        };
         let style = format!(
             "width:100%;padding:{};font-size:{};border:1px solid {};border-radius:var(--rye-radius-md);\
              background:{};opacity:{};cursor:{};font-family:var(--rye-font-family);box-sizing:border-box;resize:{};",
@@ -62,8 +94,18 @@ impl Textarea {
         }
 
         let mut attrs = vec![
-            ("style".to_string(), if let Some(extra) = &props.style { format!("{}{}", style, extra) } else { style }),
-            ("class".to_string(), format!("rye-textarea {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "style".to_string(),
+                if let Some(extra) = &props.style {
+                    format!("{}{}", style, extra)
+                } else {
+                    style
+                },
+            ),
+            (
+                "class".to_string(),
+                format!("rye-textarea {}", props.class.as_deref().unwrap_or("")),
+            ),
             ("rows".to_string(), props.rows.to_string()),
         ];
         if !props.placeholder.is_empty() {
@@ -77,7 +119,12 @@ impl Textarea {
         if !props.value.is_empty() {
             ta_children.push(Template::text(&props.value));
         }
-        children.push(Template::new_element("textarea", attrs, Vec::new(), ta_children));
+        children.push(Template::new_element(
+            "textarea",
+            attrs,
+            Vec::new(),
+            ta_children,
+        ));
 
         if let Some(error) = &props.error {
             children.push(Template::new_element("span",
@@ -85,8 +132,12 @@ impl Textarea {
                 Vec::new(), vec![Template::text(error)]));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), "rye-textarea-wrapper".to_string())], Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![("class".to_string(), "rye-textarea-wrapper".to_string())],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -103,7 +154,11 @@ mod tests {
 
     #[test]
     fn test_textarea_builder() {
-        let p = TextareaProps::default().rows(8).no_resize().label("Bio").placeholder("Tell us about yourself");
+        let p = TextareaProps::default()
+            .rows(8)
+            .no_resize()
+            .label("Bio")
+            .placeholder("Tell us about yourself");
         assert_eq!(p.rows, 8);
         assert!(!p.resize);
         assert_eq!(p.label.as_deref(), Some("Bio"));

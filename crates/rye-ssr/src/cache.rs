@@ -45,9 +45,13 @@ impl CacheKey {
     /// Create a cache key from path + query string.
     pub fn with_query(path: &str, query: &str) -> Self {
         if query.is_empty() {
-            Self { key: path.to_string() }
+            Self {
+                key: path.to_string(),
+            }
         } else {
-            Self { key: format!("{}?{}", path, query) }
+            Self {
+                key: format!("{}?{}", path, query),
+            }
         }
     }
 
@@ -334,7 +338,10 @@ mod tests {
         assert_eq!(evicted, 2);
         assert_eq!(cache.get(&CacheKey::new("/posts/1")), None);
         assert_eq!(cache.get(&CacheKey::new("/posts/2")), None);
-        assert_eq!(cache.get(&CacheKey::new("/about")), Some("about".to_string()));
+        assert_eq!(
+            cache.get(&CacheKey::new("/about")),
+            Some("about".to_string())
+        );
     }
 
     #[test]

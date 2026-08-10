@@ -1,8 +1,8 @@
 //! TagInput — multi-value tag input (type + enter to add).
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct TagInputProps {
@@ -17,17 +17,39 @@ pub struct TagInputProps {
 
 impl Default for TagInputProps {
     fn default() -> Self {
-        Self { tags: Vec::new(), placeholder: "Add tag...".to_string(), label: None,
-               disabled: false, max_tags: None, class: None, style: None }
+        Self {
+            tags: Vec::new(),
+            placeholder: "Add tag...".to_string(),
+            label: None,
+            disabled: false,
+            max_tags: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl TagInputProps {
-    pub fn tags(mut self, t: Vec<String>) -> Self { self.tags = t; self }
-    pub fn placeholder(mut self, p: impl Into<String>) -> Self { self.placeholder = p.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn max_tags(mut self, m: usize) -> Self { self.max_tags = Some(m); self }
+    pub fn tags(mut self, t: Vec<String>) -> Self {
+        self.tags = t;
+        self
+    }
+    pub fn placeholder(mut self, p: impl Into<String>) -> Self {
+        self.placeholder = p.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn max_tags(mut self, m: usize) -> Self {
+        self.max_tags = Some(m);
+        self
+    }
 }
 
 pub struct TagInput;
@@ -42,16 +64,31 @@ impl TagInput {
                 Vec::new(), vec![Template::text(label)]));
         }
 
-        let at_max = props.max_tags.map(|m| props.tags.len() >= m).unwrap_or(false);
+        let at_max = props
+            .max_tags
+            .map(|m| props.tags.len() >= m)
+            .unwrap_or(false);
         let input_disabled = props.disabled || at_max;
 
         let container_style = format!(
             "display:flex;flex-wrap:wrap;gap:6px;padding:8px;min-height:40px;\
              border:1px solid {};border-radius:var(--rye-radius-md);background:{};cursor:{};\
              align-items:center;{}",
-            if input_disabled { vars::BORDER } else { vars::INPUT_BORDER },
-            if input_disabled { vars::BG_MUTED } else { vars::INPUT_BG },
-            if input_disabled { "not-allowed" } else { "text" },
+            if input_disabled {
+                vars::BORDER
+            } else {
+                vars::INPUT_BORDER
+            },
+            if input_disabled {
+                vars::BG_MUTED
+            } else {
+                vars::INPUT_BG
+            },
+            if input_disabled {
+                "not-allowed"
+            } else {
+                "text"
+            },
             props.style.as_deref().unwrap_or(""),
         );
 
@@ -89,22 +126,47 @@ impl TagInput {
             input_attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        container_children.push(Template::new_element("input", input_attrs, Vec::new(), Vec::new()));
+        container_children.push(Template::new_element(
+            "input",
+            input_attrs,
+            Vec::new(),
+            Vec::new(),
+        ));
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), container_style),
-                 ("class".to_string(), format!("rye-tag-input {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), container_children));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), container_style),
+                (
+                    "class".to_string(),
+                    format!("rye-tag-input {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            container_children,
+        ));
 
         if let Some(max) = props.max_tags {
-            children.push(Template::new_element("span",
-                vec![("style".to_string(), format!("font-size:var(--rye-font-size-sm);color:{};margin-top:4px;", vars::TEXT_MUTED))],
-                Vec::new(), vec![Template::text(&format!("{}/{}", props.tags.len(), max))]));
+            children.push(Template::new_element(
+                "span",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "font-size:var(--rye-font-size-sm);color:{};margin-top:4px;",
+                        vars::TEXT_MUTED
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(&format!("{}/{}", props.tags.len(), max))],
+            ));
         }
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-tag-input-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -138,13 +200,21 @@ mod tests {
 
     #[test]
     fn test_tag_input_render_with_tags() {
-        let el = TagInput::render(TagInputProps::default().tags(vec!["a".into(), "b".into(), "c".into()]));
+        let el = TagInput::render(TagInputProps::default().tags(vec![
+            "a".into(),
+            "b".into(),
+            "c".into(),
+        ]));
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_tag_input_render_max() {
-        let el = TagInput::render(TagInputProps::default().tags(vec!["a".into(), "b".into()]).max_tags(2));
+        let el = TagInput::render(
+            TagInputProps::default()
+                .tags(vec!["a".into(), "b".into()])
+                .max_tags(2),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

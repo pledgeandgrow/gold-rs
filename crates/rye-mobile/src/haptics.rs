@@ -245,10 +245,7 @@ mod tests {
 
     #[test]
     fn test_haptic_pattern_builder() {
-        let pattern = HapticPattern::new()
-            .on(20, 200)
-            .off(50)
-            .on(30, 255);
+        let pattern = HapticPattern::new().on(20, 200).off(50).on(30, 255);
 
         assert_eq!(pattern.timings, vec![20, 50, 30]);
         assert_eq!(pattern.amplitudes, vec![200, 0, 255]);

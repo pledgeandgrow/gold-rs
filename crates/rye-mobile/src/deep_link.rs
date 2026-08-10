@@ -115,7 +115,10 @@ pub struct DeepLinkRoute {
 
 impl DeepLinkRoute {
     /// Create a new deep link route.
-    pub fn new<F: Fn(&DeepLink) -> bool + Send + Sync + 'static>(pattern: &str, handler: F) -> Self {
+    pub fn new<F: Fn(&DeepLink) -> bool + Send + Sync + 'static>(
+        pattern: &str,
+        handler: F,
+    ) -> Self {
         Self {
             pattern: pattern.to_string(),
             handler: Box::new(handler),

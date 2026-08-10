@@ -88,9 +88,7 @@ impl ComponentSummary {
             let parts: Vec<String> = self
                 .props
                 .iter()
-                .map(|(n, t, req)| {
-                    format!("{}: {}{}", n, t, if *req { "" } else { "?" })
-                })
+                .map(|(n, t, req)| format!("{}: {}{}", n, t, if *req { "" } else { "?" }))
                 .collect();
             format!("({})", parts.join(", "))
         };
@@ -264,14 +262,20 @@ mod tests {
     use super::*;
     use crate::component_registry;
 
-    fn setup_test_components() {
+    fn setup_test_components() -> std::sync::MutexGuard<'static, ()> {
+        let guard = crate::ai::REGISTRY_TEST_MUTEX.lock().unwrap();
         component_registry::clear();
         component_registry::register(ComponentMeta {
             name: "Button".to_string(),
             props_type: "ButtonProps".to_string(),
             props: vec![
                 crate::component_registry::PropInfo::required("label", "String", "Button text"),
-                crate::component_registry::PropInfo::optional("disabled", "bool", "false", "Disabled state"),
+                crate::component_registry::PropInfo::optional(
+                    "disabled",
+                    "bool",
+                    "false",
+                    "Disabled state",
+                ),
             ],
             is_island: false,
             uses_suspense: false,
@@ -291,6 +295,7 @@ mod tests {
             tags: vec![],
             example: "Card { }".to_string(),
         });
+        guard
     }
 
     #[test]
@@ -317,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_component_summary_compact() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let comp = component_registry::find("Button").unwrap();
         let summary = ComponentSummary::from_meta(&comp);
         let compact = summary.format_compact();
@@ -328,7 +333,7 @@ mod tests {
 
     #[test]
     fn test_optimize_components() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let mut budget = ContextBudget::new(10000);
         let summaries = optimize_components(&mut budget);
         assert!(summaries.len() >= 2);
@@ -337,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_optimize_components_budget_limit() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let mut budget = ContextBudget::new(1); // Very small budget
         let summaries = optimize_components(&mut budget);
         assert!(summaries.is_empty());
@@ -345,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_generate_context_package() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let pkg = generate_context_package(8000);
         assert!(pkg.contains("Error Codes"));
         assert!(pkg.contains("Available Components"));
@@ -355,7 +360,7 @@ mod tests {
 
     #[test]
     fn test_generate_focused_context() {
-        setup_test_components();
+        let _guard = setup_test_components();
         let ctx = generate_focused_context("button", 4000);
         assert!(ctx.contains("Relevant Components"));
         assert!(ctx.contains("Button"));

@@ -114,7 +114,11 @@ impl SessionAffinityRouter {
         if let Some(sid) = session_id {
             let map = self.session_map.lock().unwrap();
             if let Some(server_id) = map.get(sid) {
-                if let Some(server) = self.servers.iter().find(|s| s.id == *server_id && s.healthy) {
+                if let Some(server) = self
+                    .servers
+                    .iter()
+                    .find(|s| s.id == *server_id && s.healthy)
+                {
                     return Some(server);
                 }
             }
@@ -167,7 +171,10 @@ impl SessionAffinityRouter {
                 .filter(|s| s.healthy && s.region == region)
                 .collect();
             if !in_region.is_empty() {
-                return in_region.iter().min_by_key(|s| s.active_connections).copied();
+                return in_region
+                    .iter()
+                    .min_by_key(|s| s.active_connections)
+                    .copied();
             }
         }
         // Fall back to least connections

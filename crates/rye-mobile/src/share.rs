@@ -106,7 +106,10 @@ impl ShareContent {
 
     /// Check if this is file content.
     pub fn is_file(&self) -> bool {
-        matches!(self, ShareContent::File { .. } | ShareContent::Files { .. } | ShareContent::Image { .. })
+        matches!(
+            self,
+            ShareContent::File { .. } | ShareContent::Files { .. } | ShareContent::Image { .. }
+        )
     }
 }
 
@@ -309,7 +312,9 @@ mod tests {
             .clipboard_only();
 
         assert_eq!(config.subject, Some("Check this out".to_string()));
-        assert!(config.excluded_activity_types.contains(&"com.apple.mail".to_string()));
+        assert!(config
+            .excluded_activity_types
+            .contains(&"com.apple.mail".to_string()));
         assert!(config.clipboard_only);
     }
 
@@ -357,7 +362,10 @@ mod tests {
     #[test]
     fn test_share_manager_clipboard_only() {
         let mgr = ShareManager::new();
-        let result = mgr.share(&ShareContent::text("Clipboard"), &ShareConfig::new().clipboard_only());
+        let result = mgr.share(
+            &ShareContent::text("Clipboard"),
+            &ShareConfig::new().clipboard_only(),
+        );
         assert!(result.is_success());
         assert_eq!(mgr.last_shared(), Some("Clipboard".to_string()));
     }

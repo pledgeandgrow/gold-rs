@@ -120,7 +120,12 @@ impl BundleSizeAnalyzer {
         result
     }
 
-    fn collect_above_threshold<'a>(&self, node: &'a SizeNode, threshold: u64, result: &mut Vec<&'a SizeNode>) {
+    fn collect_above_threshold<'a>(
+        &self,
+        node: &'a SizeNode,
+        threshold: u64,
+        result: &mut Vec<&'a SizeNode>,
+    ) {
         if node.total_size() >= threshold {
             result.push(node);
         }
@@ -138,19 +143,31 @@ impl BundleSizeAnalyzer {
         suggestions
     }
 
-    fn collect_suggestions(&self, node: &SizeNode, total: u64, suggestions: &mut Vec<SizeSuggestion>) {
+    fn collect_suggestions(
+        &self,
+        node: &SizeNode,
+        total: u64,
+        suggestions: &mut Vec<SizeSuggestion>,
+    ) {
         let pct = node.percentage(total);
         if pct > 20.0 && node.kind == SizeNodeKind::Crate {
             suggestions.push(SizeSuggestion::new(
                 &node.name,
-                &format!("Crate '{}' is {:.1}% of bundle — consider splitting or tree-shaking", node.name, pct),
+                &format!(
+                    "Crate '{}' is {:.1}% of bundle — consider splitting or tree-shaking",
+                    node.name, pct
+                ),
                 (node.total_size() as f64 * 0.3) as u64,
             ));
         }
         if node.kind == SizeNodeKind::Function && node.size > 10_000 {
             suggestions.push(SizeSuggestion::new(
                 &node.name,
-                &format!("Function '{}' is {}KB — consider inlining or splitting", node.name, node.size / 1024),
+                &format!(
+                    "Function '{}' is {}KB — consider inlining or splitting",
+                    node.name,
+                    node.size / 1024
+                ),
                 node.size / 4,
             ));
         }
@@ -166,9 +183,15 @@ impl BundleSizeAnalyzer {
         html.push_str("<!DOCTYPE html>\n<html>\n<head>\n<style>\n");
         html.push_str(".treemap { display:flex; flex-wrap:wrap; width:100%; height:100vh; }\n");
         html.push_str(".tile { display:flex; align-items:center; justify-content:center; ");
-        html.push_str("font-size:12px; color:#fff; overflow:hidden; padding:4px; cursor:pointer; }\n");
+        html.push_str(
+            "font-size:12px; color:#fff; overflow:hidden; padding:4px; cursor:pointer; }\n",
+        );
         html.push_str("</style>\n</head>\n<body>\n");
-        html.push_str(&format!("<h2>Bundle Size: {} ({:.1}KB)</h2>\n", self.root.name, total as f64 / 1024.0));
+        html.push_str(&format!(
+            "<h2>Bundle Size: {} ({:.1}KB)</h2>\n",
+            self.root.name,
+            total as f64 / 1024.0
+        ));
         html.push_str("<div class=\"treemap\">\n");
 
         for child in &self.root.children {
@@ -176,10 +199,7 @@ impl BundleSizeAnalyzer {
             let color = color_for_percentage(pct);
             html.push_str(&format!(
                 "<div class=\"tile\" style=\"flex:{};background:{};\">{} ({:.1}%)</div>\n",
-                pct as u32,
-                color,
-                child.name,
-                pct,
+                pct as u32, color, child.name, pct,
             ));
         }
 
@@ -192,7 +212,11 @@ impl BundleSizeAnalyzer {
         let total = self.total_size();
         let mut text = String::new();
         text.push_str("=== Bundle Size Report ===\n\n");
-        text.push_str(&format!("Total: {:.1}KB ({} bytes)\n\n", total as f64 / 1024.0, total));
+        text.push_str(&format!(
+            "Total: {:.1}KB ({} bytes)\n\n",
+            total as f64 / 1024.0,
+            total
+        ));
         text.push_str("Breakdown:\n");
         self.render_node(&self.root, total, 0, &mut text);
 
@@ -200,7 +224,10 @@ impl BundleSizeAnalyzer {
         if !suggestions.is_empty() {
             text.push_str("\nSuggestions:\n");
             for s in &suggestions {
-                text.push_str(&format!("  • {} (save ~{}B)\n", s.message, s.estimated_savings));
+                text.push_str(&format!(
+                    "  • {} (save ~{}B)\n",
+                    s.message, s.estimated_savings
+                ));
             }
         }
 
@@ -225,15 +252,24 @@ impl BundleSizeAnalyzer {
 
 /// Get a color for a percentage.
 fn color_for_percentage(pct: f64) -> &'static str {
-    if pct > 30.0 { "#e74c3c" }
-    else if pct > 15.0 { "#e67e22" }
-    else if pct > 5.0 { "#f1c40f" }
-    else { "#2ecc71" }
+    if pct > 30.0 {
+        "#e74c3c"
+    } else if pct > 15.0 {
+        "#e67e22"
+    } else if pct > 5.0 {
+        "#f1c40f"
+    } else {
+        "#2ecc71"
+    }
 }
 
 /// Run the bundle command.
 pub fn run(args: &[String]) {
-    let wasm_path = args.iter().find(|a| !a.starts_with("--")).map(|s| s.as_str()).unwrap_or("pkg/rye_app.wasm");
+    let wasm_path = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map(|s| s.as_str())
+        .unwrap_or("pkg/rye_app.wasm");
     println!("Analyzing bundle: {}", wasm_path);
 
     let mut root = SizeNode::new("rye_app.wasm", 0, SizeNodeKind::Crate);

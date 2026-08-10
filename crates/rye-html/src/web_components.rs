@@ -281,8 +281,7 @@ mod tests {
 
     #[test]
     fn test_custom_element_with_children() {
-        let el = CustomElement::new("my-card")
-            .child("<p>Hello</p>");
+        let el = CustomElement::new("my-card").child("<p>Hello</p>");
         let html = el.to_html();
         assert!(html.contains("<p>Hello</p>"));
         assert!(html.contains("<my-card>"));
@@ -304,8 +303,7 @@ mod tests {
 
     #[test]
     fn test_custom_element_attrs_slice() {
-        let el = CustomElement::new("my-chart")
-            .attrs(&[("data", "[1,2,3]"), ("type", "bar")]);
+        let el = CustomElement::new("my-chart").attrs(&[("data", "[1,2,3]"), ("type", "bar")]);
         let html = el.to_html();
         assert!(html.contains(r#"data="[1,2,3]""#));
         assert!(html.contains(r#"type="bar""#));
@@ -334,8 +332,7 @@ mod tests {
 
     #[test]
     fn test_define_component_script() {
-        let def = WebComponentDef::new("my-counter")
-            .observe("count");
+        let def = WebComponentDef::new("my-counter").observe("count");
 
         let script = define_component_script(&def);
         assert!(script.contains("customElements.define('my-counter'"));

@@ -2,8 +2,8 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, format_ident, ToTokens};
-use syn::{ItemFn, FnArg, PatType, parse_macro_input};
+use quote::{format_ident, quote, ToTokens};
+use syn::{parse_macro_input, FnArg, ItemFn, PatType};
 
 /// Implementation of the `#[component]` attribute macro.
 ///

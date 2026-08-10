@@ -3,7 +3,7 @@
 //! Suspense shows a fallback while async resources are loading.
 //! ErrorBoundary catches errors in child components and shows a fallback.
 
-use rye_signals::{Resource, ResourceState, Signal, Effect};
+use rye_signals::{Effect, Resource, ResourceState, Signal};
 
 /// Suspense boundary — shows fallback content while resources are pending.
 ///
@@ -21,7 +21,8 @@ use rye_signals::{Resource, ResourceState, Signal, Effect};
 ///     format!("Data: {}", value)
 /// });
 /// ```
-pub struct Suspense<T: Clone + 'static, F: Fn() -> String + 'static, R: Fn(&T) -> String + 'static> {
+pub struct Suspense<T: Clone + 'static, F: Fn() -> String + 'static, R: Fn(&T) -> String + 'static>
+{
     resource: Resource<T>,
     fallback: F,
     render: R,
@@ -48,17 +49,15 @@ impl<T: Clone + 'static, F: Fn() -> String + 'static, R: Fn(&T) -> String + 'sta
 
         let state_clone = state.clone();
         let resource_clone = resource.clone();
-        let _effect = Effect::new(move || {
-            match resource_clone.get() {
-                ResourceState::Pending => {
-                    state_clone.set(SuspenseState::Pending);
-                }
-                ResourceState::Ready(_) => {
-                    state_clone.set(SuspenseState::Ready);
-                }
-                ResourceState::Error(e) => {
-                    state_clone.set(SuspenseState::Error(e));
-                }
+        let _effect = Effect::new(move || match resource_clone.get() {
+            ResourceState::Pending => {
+                state_clone.set(SuspenseState::Pending);
+            }
+            ResourceState::Ready(_) => {
+                state_clone.set(SuspenseState::Ready);
+            }
+            ResourceState::Error(e) => {
+                state_clone.set(SuspenseState::Error(e));
             }
         });
 
@@ -134,9 +133,7 @@ impl<F: Fn() -> String + 'static, C: Fn() -> String + 'static> ErrorBoundary<F, 
         }
 
         // Try to render the child — catch panics
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            (self.child)()
-        }));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| (self.child)()));
 
         match result {
             Ok(content) => content,
@@ -199,16 +196,15 @@ mod tests {
         );
 
         let state = suspense.state_untracked();
-        assert!(state == SuspenseState::Error("fetch failed".to_string())
-            || state == SuspenseState::Pending);
+        assert!(
+            state == SuspenseState::Error("fetch failed".to_string())
+                || state == SuspenseState::Pending
+        );
     }
 
     #[test]
     fn test_error_boundary_ok() {
-        let boundary = ErrorBoundary::new(
-            || "Error!".to_string(),
-            || "Hello world".to_string(),
-        );
+        let boundary = ErrorBoundary::new(|| "Error!".to_string(), || "Hello world".to_string());
 
         assert_eq!(boundary.render_content(), "Hello world");
         assert!(boundary.error_untracked().is_none());
@@ -216,10 +212,7 @@ mod tests {
 
     #[test]
     fn test_error_boundary_catches_panic() {
-        let boundary = ErrorBoundary::new(
-            || "Error!".to_string(),
-            || panic!("boom"),
-        );
+        let boundary = ErrorBoundary::new(|| "Error!".to_string(), || panic!("boom"));
 
         let result = boundary.render_content();
         assert_eq!(result, "Error!");
@@ -228,10 +221,7 @@ mod tests {
 
     #[test]
     fn test_error_boundary_reset() {
-        let boundary = ErrorBoundary::new(
-            || "Error!".to_string(),
-            || panic!("boom"),
-        );
+        let boundary = ErrorBoundary::new(|| "Error!".to_string(), || panic!("boom"));
 
         boundary.render_content();
         assert!(boundary.error_untracked().is_some());

@@ -70,7 +70,10 @@ impl ReviewResult {
                 out.push_str(&format!("    Suggestion: {}\n", sug));
             }
             if let Some(code) = &f.error_code {
-                out.push_str(&format!("    Error code: {} (run 'rpg explain {}')\n", code, code));
+                out.push_str(&format!(
+                    "    Error code: {} (run 'rpg explain {}')\n",
+                    code, code
+                ));
             }
         }
         out
@@ -155,14 +158,23 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
                 // Heuristic: lowercase identifier followed by { or } without .get()
                 if is_signal_like_name(cleaned) {
                     let context = &trimmed[trimmed.find(cleaned).unwrap_or(0)..];
-                    if !context.contains(".get()") && !context.contains(".set(") && !context.contains("let ") {
+                    if !context.contains(".get()")
+                        && !context.contains(".set(")
+                        && !context.contains("let ")
+                    {
                         // Only flag if it looks like it's in a template expression
                         if trimmed.contains("{") && trimmed.contains("}") {
                             findings.push(ReviewFinding {
                                 severity: Severity::Warning,
                                 line: line_num,
-                                message: format!("Signal '{}' may need .get() to read its value", cleaned),
-                                suggestion: Some(format!("Use {}.get() instead of {}", cleaned, cleaned)),
+                                message: format!(
+                                    "Signal '{}' may need .get() to read its value",
+                                    cleaned
+                                ),
+                                suggestion: Some(format!(
+                                    "Use {}.get() instead of {}",
+                                    cleaned, cleaned
+                                )),
                                 error_code: Some("R802".to_string()),
                             });
                         }
@@ -172,7 +184,9 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
         }
 
         // Check: Closure without 'move' in event handlers
-        if (trimmed.contains("onclick:") || trimmed.contains("oninput:") || trimmed.contains("onchange:"))
+        if (trimmed.contains("onclick:")
+            || trimmed.contains("oninput:")
+            || trimmed.contains("onchange:"))
             && trimmed.contains("|_|")
             && !trimmed.contains("move |")
         {
@@ -193,8 +207,14 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
                     findings.push(ReviewFinding {
                         severity: Severity::Error,
                         line: line_num,
-                        message: format!("Direct assignment to Signal '{}' — use .set() instead", lhs),
-                        suggestion: Some(format!("Use {}.set(value) instead of {} = value", lhs, lhs)),
+                        message: format!(
+                            "Direct assignment to Signal '{}' — use .set() instead",
+                            lhs
+                        ),
+                        suggestion: Some(format!(
+                            "Use {}.set(value) instead of {} = value",
+                            lhs, lhs
+                        )),
                         error_code: Some("R803".to_string()),
                     });
                 }
@@ -206,14 +226,19 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
             findings.push(ReviewFinding {
                 severity: Severity::Warning,
                 line: line_num,
-                message: "use_effect used to compute derived state — consider Memo instead".to_string(),
-                suggestion: Some("Replace use_effect + .set() with Memo::new(move || ...)".to_string()),
+                message: "use_effect used to compute derived state — consider Memo instead"
+                    .to_string(),
+                suggestion: Some(
+                    "Replace use_effect + .set() with Memo::new(move || ...)".to_string(),
+                ),
                 error_code: Some("R806".to_string()),
             });
         }
 
         // Check: Unnecessary .clone()
-        if trimmed.contains(".clone()") && (trimmed.contains("props.") || trimmed.contains(".get().clone()")) {
+        if trimmed.contains(".clone()")
+            && (trimmed.contains("props.") || trimmed.contains(".get().clone()"))
+        {
             findings.push(ReviewFinding {
                 severity: Severity::Info,
                 line: line_num,
@@ -230,7 +255,8 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
             findings.push(ReviewFinding {
                 severity: Severity::Warning,
                 line: line_num,
-                message: "Raw async spawn detected — use use_resource for reactive async data".to_string(),
+                message: "Raw async spawn detected — use use_resource for reactive async data"
+                    .to_string(),
                 suggestion: Some("Replace with use_resource(move || async { ... })".to_string()),
                 error_code: Some("R809".to_string()),
             });
@@ -287,12 +313,26 @@ pub fn review_source(file_path: &str, source: &str) -> ReviewResult {
     }
 
     // Calculate score
-    let errors = findings.iter().filter(|f| f.severity == Severity::Error).count();
-    let warnings = findings.iter().filter(|f| f.severity == Severity::Warning).count();
-    let praises = findings.iter().filter(|f| f.severity == Severity::Praise).count();
+    let errors = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Error)
+        .count();
+    let warnings = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Warning)
+        .count();
+    let praises = findings
+        .iter()
+        .filter(|f| f.severity == Severity::Praise)
+        .count();
     let score = calculate_score(errors, warnings, praises);
 
-    let summary = generate_summary(errors, warnings, findings.len() - errors - warnings - praises, praises);
+    let summary = generate_summary(
+        errors,
+        warnings,
+        findings.len() - errors - warnings - praises,
+        praises,
+    );
 
     ReviewResult {
         file: file_path.to_string(),
@@ -333,7 +373,10 @@ fn generate_summary(errors: usize, warnings: usize, info: usize, praises: usize)
 
 fn is_pascal_case_fn(line: &str) -> bool {
     if let Some(name) = extract_fn_name(line) {
-        name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+        name.chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false)
     } else {
         false
     }
@@ -375,7 +418,9 @@ fn is_component_candidate_in_range(lines: &[&str], idx: usize) -> bool {
 fn extract_fn_name(line: &str) -> Option<String> {
     let after_fn = line.find("fn ")?;
     let rest = &line[after_fn + 3..];
-    let name = rest.split(|c: char| !c.is_alphanumeric() && c != '_').next()?;
+    let name = rest
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .next()?;
     if name.is_empty() {
         None
     } else {
@@ -393,11 +438,50 @@ fn is_signal_like_name(s: &str) -> bool {
 fn is_rust_keyword(s: &str) -> bool {
     matches!(
         s,
-        "let" | "mut" | "if" | "else" | "for" | "while" | "loop" | "match" | "return"
-            | "fn" | "struct" | "enum" | "impl" | "trait" | "use" | "mod" | "pub" | "self"
-            | "super" | "crate" | "move" | "async" | "await" | "dyn" | "ref" | "static"
-            | "const" | "true" | "false" | "div" | "span" | "p" | "h1" | "h2" | "button"
-            | "input" | "form" | "img" | "a" | "ul" | "li" | "table" | "tr" | "td"
+        "let"
+            | "mut"
+            | "if"
+            | "else"
+            | "for"
+            | "while"
+            | "loop"
+            | "match"
+            | "return"
+            | "fn"
+            | "struct"
+            | "enum"
+            | "impl"
+            | "trait"
+            | "use"
+            | "mod"
+            | "pub"
+            | "self"
+            | "super"
+            | "crate"
+            | "move"
+            | "async"
+            | "await"
+            | "dyn"
+            | "ref"
+            | "static"
+            | "const"
+            | "true"
+            | "false"
+            | "div"
+            | "span"
+            | "p"
+            | "h1"
+            | "h2"
+            | "button"
+            | "input"
+            | "form"
+            | "img"
+            | "a"
+            | "ul"
+            | "li"
+            | "table"
+            | "tr"
+            | "td"
     )
 }
 
@@ -446,7 +530,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(result.findings.iter().any(|f| f.severity == Severity::Error && f.error_code == Some("R805".to_string())));
+        assert!(result
+            .findings
+            .iter()
+            .any(|f| f.severity == Severity::Error && f.error_code == Some("R805".to_string())));
     }
 
     #[test]
@@ -458,7 +545,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(!result.findings.iter().any(|f| f.error_code == Some("R805".to_string())));
+        assert!(!result
+            .findings
+            .iter()
+            .any(|f| f.error_code == Some("R805".to_string())));
     }
 
     #[test]
@@ -470,7 +560,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(result.findings.iter().any(|f| f.error_code == Some("R801".to_string())));
+        assert!(result
+            .findings
+            .iter()
+            .any(|f| f.error_code == Some("R801".to_string())));
     }
 
     #[test]
@@ -482,7 +575,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(!result.findings.iter().any(|f| f.error_code == Some("R801".to_string())));
+        assert!(!result
+            .findings
+            .iter()
+            .any(|f| f.error_code == Some("R801".to_string())));
     }
 
     #[test]
@@ -494,7 +590,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(result.findings.iter().any(|f| f.error_code == Some("R806".to_string())));
+        assert!(result
+            .findings
+            .iter()
+            .any(|f| f.error_code == Some("R806".to_string())));
     }
 
     #[test]
@@ -506,7 +605,10 @@ fn MyComponent() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(result.findings.iter().any(|f| f.severity == Severity::Praise));
+        assert!(result
+            .findings
+            .iter()
+            .any(|f| f.severity == Severity::Praise));
     }
 
     #[test]
@@ -564,8 +666,18 @@ fn MyComponent() {
     #[test]
     fn test_overall_score() {
         let results = vec![
-            ReviewResult { file: "a".into(), findings: vec![], score: 80, summary: "ok".into() },
-            ReviewResult { file: "b".into(), findings: vec![], score: 60, summary: "ok".into() },
+            ReviewResult {
+                file: "a".into(),
+                findings: vec![],
+                score: 80,
+                summary: "ok".into(),
+            },
+            ReviewResult {
+                file: "b".into(),
+                findings: vec![],
+                score: 60,
+                summary: "ok".into(),
+            },
         ];
         assert_eq!(overall_score(&results), 70);
     }
@@ -584,6 +696,9 @@ fn my_button() {
 }
 "#;
         let result = review_source("test.rs", source);
-        assert!(result.findings.iter().any(|f| f.error_code == Some("R804".to_string())));
+        assert!(result
+            .findings
+            .iter()
+            .any(|f| f.error_code == Some("R804".to_string())));
     }
 }

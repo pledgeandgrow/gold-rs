@@ -1,9 +1,9 @@
 //! FormField — wrapper combining Label + Input + error message.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
 use crate::theme::Size;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct FormFieldProps {
@@ -32,22 +32,55 @@ pub enum FormFieldType {
 
 impl Default for FormFieldProps {
     fn default() -> Self {
-        Self { label: String::new(), required: false, error: None, hint: None,
-               field_type: FormFieldType::Text, placeholder: String::new(),
-               value: String::new(), disabled: false, size: Size::Medium,
-               class: None, style: None }
+        Self {
+            label: String::new(),
+            required: false,
+            error: None,
+            hint: None,
+            field_type: FormFieldType::Text,
+            placeholder: String::new(),
+            value: String::new(),
+            disabled: false,
+            size: Size::Medium,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl FormFieldProps {
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = l.into(); self }
-    pub fn required(mut self, r: bool) -> Self { self.required = r; self }
-    pub fn error(mut self, e: impl Into<String>) -> Self { self.error = Some(e.into()); self }
-    pub fn hint(mut self, h: impl Into<String>) -> Self { self.hint = Some(h.into()); self }
-    pub fn field_type(mut self, t: FormFieldType) -> Self { self.field_type = t; self }
-    pub fn placeholder(mut self, p: impl Into<String>) -> Self { self.placeholder = p.into(); self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = l.into();
+        self
+    }
+    pub fn required(mut self, r: bool) -> Self {
+        self.required = r;
+        self
+    }
+    pub fn error(mut self, e: impl Into<String>) -> Self {
+        self.error = Some(e.into());
+        self
+    }
+    pub fn hint(mut self, h: impl Into<String>) -> Self {
+        self.hint = Some(h.into());
+        self
+    }
+    pub fn field_type(mut self, t: FormFieldType) -> Self {
+        self.field_type = t;
+        self
+    }
+    pub fn placeholder(mut self, p: impl Into<String>) -> Self {
+        self.placeholder = p.into();
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
 }
 
 pub struct FormField;
@@ -61,9 +94,15 @@ impl FormField {
             let label_children = {
                 let mut v = vec![Template::text(&props.label)];
                 if props.required {
-                    v.push(Template::new_element("span",
-                        vec![("style".to_string(), format!("color:{};margin-left:2px;", vars::DANGER))],
-                        Vec::new(), vec![Template::text("*")]));
+                    v.push(Template::new_element(
+                        "span",
+                        vec![(
+                            "style".to_string(),
+                            format!("color:{};margin-left:2px;", vars::DANGER),
+                        )],
+                        Vec::new(),
+                        vec![Template::text("*")],
+                    ));
                 }
                 v
             };
@@ -74,7 +113,11 @@ impl FormField {
         }
 
         // Field
-        let border_color = if props.error.is_some() { vars::DANGER } else { vars::INPUT_BORDER };
+        let border_color = if props.error.is_some() {
+            vars::DANGER
+        } else {
+            vars::INPUT_BORDER
+        };
         let field_style = format!(
             "width:100%;padding:{};font-size:{};border:1px solid {};border-radius:var(--rye-radius-md);\
              background:{};opacity:{};cursor:{};font-family:var(--rye-font-family);box-sizing:border-box;",
@@ -94,8 +137,21 @@ impl FormField {
         };
 
         let mut field_attrs = vec![
-            ("style".to_string(), if let Some(s) = &props.style { format!("{}{}", field_style, s) } else { field_style }),
-            ("class".to_string(), format!("rye-form-field-input {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "style".to_string(),
+                if let Some(s) = &props.style {
+                    format!("{}{}", field_style, s)
+                } else {
+                    field_style
+                },
+            ),
+            (
+                "class".to_string(),
+                format!(
+                    "rye-form-field-input {}",
+                    props.class.as_deref().unwrap_or("")
+                ),
+            ),
         ];
         if let Some(t) = type_attr {
             field_attrs.push(("type".to_string(), t.to_string()));
@@ -108,7 +164,11 @@ impl FormField {
         }
 
         let field_children = if tag == "textarea" || tag == "select" {
-            if !props.value.is_empty() { vec![Template::text(&props.value)] } else { Vec::new() }
+            if !props.value.is_empty() {
+                vec![Template::text(&props.value)]
+            } else {
+                Vec::new()
+            }
         } else {
             Vec::new()
         };
@@ -117,7 +177,12 @@ impl FormField {
             field_attrs.push(("value".to_string(), props.value.clone()));
         }
 
-        children.push(Template::new_element(tag, field_attrs, Vec::new(), field_children));
+        children.push(Template::new_element(
+            tag,
+            field_attrs,
+            Vec::new(),
+            field_children,
+        ));
 
         // Error or hint
         if let Some(error) = &props.error {
@@ -132,9 +197,12 @@ impl FormField {
                 Vec::new(), vec![Template::text(hint)]));
         }
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-form-field".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -165,19 +233,31 @@ mod tests {
 
     #[test]
     fn test_form_field_render_text() {
-        let el = FormField::render(FormFieldProps::default().label("Name").placeholder("Enter name"));
+        let el = FormField::render(
+            FormFieldProps::default()
+                .label("Name")
+                .placeholder("Enter name"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_form_field_render_textarea() {
-        let el = FormField::render(FormFieldProps::default().label("Bio").field_type(FormFieldType::Textarea));
+        let el = FormField::render(
+            FormFieldProps::default()
+                .label("Bio")
+                .field_type(FormFieldType::Textarea),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_form_field_render_select() {
-        let el = FormField::render(FormFieldProps::default().label("Country").field_type(FormFieldType::Select));
+        let el = FormField::render(
+            FormFieldProps::default()
+                .label("Country")
+                .field_type(FormFieldType::Select),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

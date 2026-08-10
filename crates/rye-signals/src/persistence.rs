@@ -40,7 +40,9 @@ impl Default for MemoryPersistence {
 
 impl PersistenceStrategy for MemoryPersistence {
     fn save(&self, key: &str, value: &str) {
-        self.storage.borrow_mut().insert(key.to_string(), value.to_string());
+        self.storage
+            .borrow_mut()
+            .insert(key.to_string(), value.to_string());
     }
 
     fn load(&self, key: &str) -> Option<String> {
@@ -57,7 +59,9 @@ pub struct NoopPersistence;
 
 impl PersistenceStrategy for NoopPersistence {
     fn save(&self, _key: &str, _value: &str) {}
-    fn load(&self, _key: &str) -> Option<String> { None }
+    fn load(&self, _key: &str) -> Option<String> {
+        None
+    }
     fn remove(&self, _key: &str) {}
 }
 
@@ -109,11 +113,7 @@ impl<T: Clone + std::fmt::Display + std::str::FromStr + 'static> PersistedSignal
     ///
     /// Loads the initial value from the persistence strategy. If not found,
     /// uses the provided default.
-    pub fn new<S: PersistenceStrategy>(
-        key: &str,
-        default: T,
-        strategy: S,
-    ) -> Self {
+    pub fn new<S: PersistenceStrategy>(key: &str, default: T, strategy: S) -> Self {
         let strategy = Rc::new(strategy);
         let initial = strategy
             .load(key)
@@ -264,7 +264,11 @@ mod tests {
         let storage_clone = Rc::clone(&storage);
 
         let custom = CustomPersistence::new(
-            move |k, v| { storage_clone.borrow_mut().insert(k.to_string(), v.to_string()); },
+            move |k, v| {
+                storage_clone
+                    .borrow_mut()
+                    .insert(k.to_string(), v.to_string());
+            },
             |_| None,
             |_| {},
         );

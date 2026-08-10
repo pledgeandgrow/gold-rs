@@ -1,8 +1,8 @@
 //! DataTable — sortable, filterable, paginated table.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortDirection {
@@ -13,10 +13,18 @@ pub enum SortDirection {
 
 impl SortDirection {
     pub fn icon(&self) -> &'static str {
-        match self { Self::Asc => "↑", Self::Desc => "↓", Self::None => "↕" }
+        match self {
+            Self::Asc => "↑",
+            Self::Desc => "↓",
+            Self::None => "↕",
+        }
     }
     pub fn toggle(&self) -> Self {
-        match self { Self::None => Self::Asc, Self::Asc => Self::Desc, Self::Desc => Self::Asc }
+        match self {
+            Self::None => Self::Asc,
+            Self::Asc => Self::Desc,
+            Self::Desc => Self::Asc,
+        }
     }
 }
 
@@ -30,10 +38,21 @@ pub struct DataColumn {
 
 impl DataColumn {
     pub fn new(key: impl Into<String>, label: impl Into<String>) -> Self {
-        Self { key: key.into(), label: label.into(), sortable: false, width: None }
+        Self {
+            key: key.into(),
+            label: label.into(),
+            sortable: false,
+            width: None,
+        }
     }
-    pub fn sortable(mut self) -> Self { self.sortable = true; self }
-    pub fn width(mut self, w: impl Into<String>) -> Self { self.width = Some(w.into()); self }
+    pub fn sortable(mut self) -> Self {
+        self.sortable = true;
+        self
+    }
+    pub fn width(mut self, w: impl Into<String>) -> Self {
+        self.width = Some(w.into());
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +61,9 @@ pub struct DataRow {
 }
 
 impl DataRow {
-    pub fn new(cells: Vec<String>) -> Self { Self { cells } }
+    pub fn new(cells: Vec<String>) -> Self {
+        Self { cells }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -52,7 +73,12 @@ pub struct FilterConfig {
 }
 
 impl Default for FilterConfig {
-    fn default() -> Self { Self { enabled: false, placeholder: "Filter...".to_string() } }
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            placeholder: "Filter...".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +90,14 @@ pub struct PaginationConfig {
 }
 
 impl Default for PaginationConfig {
-    fn default() -> Self { Self { enabled: false, page: 1, per_page: 10, total: 0 } }
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            page: 1,
+            per_page: 10,
+            total: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -82,21 +115,46 @@ pub struct DataTableProps {
 
 impl Default for DataTableProps {
     fn default() -> Self {
-        Self { columns: Vec::new(), rows: Vec::new(), sort_column: None,
-               sort_direction: SortDirection::None, filter: FilterConfig::default(),
-               pagination: PaginationConfig::default(), striped: true, class: None, style: None }
+        Self {
+            columns: Vec::new(),
+            rows: Vec::new(),
+            sort_column: None,
+            sort_direction: SortDirection::None,
+            filter: FilterConfig::default(),
+            pagination: PaginationConfig::default(),
+            striped: true,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl DataTableProps {
-    pub fn columns(mut self, c: Vec<DataColumn>) -> Self { self.columns = c; self }
-    pub fn rows(mut self, r: Vec<DataRow>) -> Self { self.rows = r; self }
-    pub fn sort(mut self, col: impl Into<String>, dir: SortDirection) -> Self {
-        self.sort_column = Some(col.into()); self.sort_direction = dir; self
+    pub fn columns(mut self, c: Vec<DataColumn>) -> Self {
+        self.columns = c;
+        self
     }
-    pub fn filter(mut self, f: FilterConfig) -> Self { self.filter = f; self }
-    pub fn pagination(mut self, p: PaginationConfig) -> Self { self.pagination = p; self }
-    pub fn striped(mut self, s: bool) -> Self { self.striped = s; self }
+    pub fn rows(mut self, r: Vec<DataRow>) -> Self {
+        self.rows = r;
+        self
+    }
+    pub fn sort(mut self, col: impl Into<String>, dir: SortDirection) -> Self {
+        self.sort_column = Some(col.into());
+        self.sort_direction = dir;
+        self
+    }
+    pub fn filter(mut self, f: FilterConfig) -> Self {
+        self.filter = f;
+        self
+    }
+    pub fn pagination(mut self, p: PaginationConfig) -> Self {
+        self.pagination = p;
+        self
+    }
+    pub fn striped(mut self, s: bool) -> Self {
+        self.striped = s;
+        self
+    }
 }
 
 pub struct DataTable;
@@ -120,7 +178,10 @@ impl DataTable {
         }
 
         // Table
-        let table_style = format!("width:100%;border-collapse:collapse;font-size:var(--rye-font-size-md);{}", props.style.as_deref().unwrap_or(""));
+        let table_style = format!(
+            "width:100%;border-collapse:collapse;font-size:var(--rye-font-size-md);{}",
+            props.style.as_deref().unwrap_or("")
+        );
 
         let headers: Vec<Template> = props.columns.iter().map(|col| {
             let mut style = format!("padding:10px 12px;text-align:left;font-weight:var(--rye-font-weight-semibold);background:{};border-bottom:2px solid {};", vars::BG_SUBTLE, vars::BORDER);
@@ -143,29 +204,65 @@ impl DataTable {
                 Vec::new(), h_children)
         }).collect();
 
-        let thead = Template::new_element("thead", Vec::new(), Vec::new(),
-            vec![Template::new_element("tr", Vec::new(), Vec::new(), headers)]);
+        let thead = Template::new_element(
+            "thead",
+            Vec::new(),
+            Vec::new(),
+            vec![Template::new_element("tr", Vec::new(), Vec::new(), headers)],
+        );
 
-        let body_rows: Vec<Template> = props.rows.iter().enumerate().map(|(i, row)| {
-            let bg = if props.striped && i % 2 == 1 { vars::BG_SUBTLE } else { vars::BG };
-            let cells: Vec<Template> = row.cells.iter().map(|cell| {
-                Template::new_element("td",
-                    vec![("style".to_string(), format!("padding:10px 12px;border-bottom:1px solid {};background:{};", vars::BORDER, bg))],
-                    Vec::new(), vec![Template::text(cell)])
-            }).collect();
-            Template::new_element("tr", Vec::new(), Vec::new(), cells)
-        }).collect();
+        let body_rows: Vec<Template> = props
+            .rows
+            .iter()
+            .enumerate()
+            .map(|(i, row)| {
+                let bg = if props.striped && i % 2 == 1 {
+                    vars::BG_SUBTLE
+                } else {
+                    vars::BG
+                };
+                let cells: Vec<Template> = row
+                    .cells
+                    .iter()
+                    .map(|cell| {
+                        Template::new_element(
+                            "td",
+                            vec![(
+                                "style".to_string(),
+                                format!(
+                                    "padding:10px 12px;border-bottom:1px solid {};background:{};",
+                                    vars::BORDER,
+                                    bg
+                                ),
+                            )],
+                            Vec::new(),
+                            vec![Template::text(cell)],
+                        )
+                    })
+                    .collect();
+                Template::new_element("tr", Vec::new(), Vec::new(), cells)
+            })
+            .collect();
 
         let tbody = Template::new_element("tbody", Vec::new(), Vec::new(), body_rows);
 
-        children.push(Template::new_element("table",
-            vec![("style".to_string(), table_style),
-                 ("class".to_string(), format!("rye-data-table {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), vec![thead, tbody]));
+        children.push(Template::new_element(
+            "table",
+            vec![
+                ("style".to_string(), table_style),
+                (
+                    "class".to_string(),
+                    format!("rye-data-table {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            vec![thead, tbody],
+        ));
 
         // Pagination
         if props.pagination.enabled && props.pagination.total > 0 {
-            let total_pages = (props.pagination.total + props.pagination.per_page - 1) / props.pagination.per_page;
+            let total_pages = (props.pagination.total + props.pagination.per_page - 1)
+                / props.pagination.per_page;
             let pag_style = format!("display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:var(--rye-font-size-sm);color:{};", vars::TEXT_MUTED);
             let pag_children = vec![
                 Template::new_element("span", Vec::new(), Vec::new(),
@@ -181,15 +278,23 @@ impl DataTable {
                             Vec::new(), vec![Template::text("Next ›")]),
                     ]),
             ];
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), pag_style.to_string()),
-                     ("class".to_string(), "rye-data-table-pagination".to_string())],
-                Vec::new(), pag_children));
+            children.push(Template::new_element(
+                "div",
+                vec![
+                    ("style".to_string(), pag_style.to_string()),
+                    ("class".to_string(), "rye-data-table-pagination".to_string()),
+                ],
+                Vec::new(),
+                pag_children,
+            ));
         }
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-data-table-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -220,11 +325,22 @@ mod tests {
     #[test]
     fn test_data_table_props_builder() {
         let p = DataTableProps::default()
-            .columns(vec![DataColumn::new("id", "ID").sortable(), DataColumn::new("name", "Name")])
+            .columns(vec![
+                DataColumn::new("id", "ID").sortable(),
+                DataColumn::new("name", "Name"),
+            ])
             .rows(vec![DataRow::new(vec!["1".into(), "Alice".into()])])
             .sort("name", SortDirection::Asc)
-            .filter(FilterConfig { enabled: true, placeholder: "Search...".to_string() })
-            .pagination(PaginationConfig { enabled: true, page: 1, per_page: 5, total: 23 });
+            .filter(FilterConfig {
+                enabled: true,
+                placeholder: "Search...".to_string(),
+            })
+            .pagination(PaginationConfig {
+                enabled: true,
+                page: 1,
+                per_page: 5,
+                total: 23,
+            });
         assert_eq!(p.columns.len(), 2);
         assert_eq!(p.sort_direction, SortDirection::Asc);
         assert!(p.filter.enabled);
@@ -233,18 +349,27 @@ mod tests {
 
     #[test]
     fn test_data_table_render() {
-        let el = DataTable::render(DataTableProps::default()
-            .columns(vec![DataColumn::new("a", "A")])
-            .rows(vec![DataRow::new(vec!["1".into()])]));
+        let el = DataTable::render(
+            DataTableProps::default()
+                .columns(vec![DataColumn::new("a", "A")])
+                .rows(vec![DataRow::new(vec!["1".into()])]),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_data_table_render_with_pagination() {
-        let el = DataTable::render(DataTableProps::default()
-            .columns(vec![DataColumn::new("a", "A")])
-            .rows(vec![DataRow::new(vec!["1".into()])])
-            .pagination(PaginationConfig { enabled: true, page: 2, per_page: 10, total: 50 }));
+        let el = DataTable::render(
+            DataTableProps::default()
+                .columns(vec![DataColumn::new("a", "A")])
+                .rows(vec![DataRow::new(vec!["1".into()])])
+                .pagination(PaginationConfig {
+                    enabled: true,
+                    page: 2,
+                    per_page: 10,
+                    total: 50,
+                }),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

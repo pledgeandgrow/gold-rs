@@ -51,7 +51,12 @@ pub struct VisibleRange {
 /// Compute the visible range for a virtual list at the given scroll position.
 pub fn compute_visible_range(config: &VirtualListConfig, scroll_top: f64) -> VisibleRange {
     if config.item_height <= 0.0 || config.item_count == 0 {
-        return VisibleRange { start: 0, end: 0, count: 0, offset_y: 0.0 };
+        return VisibleRange {
+            start: 0,
+            end: 0,
+            count: 0,
+            offset_y: 0.0,
+        };
     }
 
     let first_visible = (scroll_top / config.item_height).floor() as usize;
@@ -62,7 +67,12 @@ pub fn compute_visible_range(config: &VirtualListConfig, scroll_top: f64) -> Vis
     let count = end.saturating_sub(start);
     let offset_y = start as f64 * config.item_height;
 
-    VisibleRange { start, end, count, offset_y }
+    VisibleRange {
+        start,
+        end,
+        count,
+        offset_y,
+    }
 }
 
 /// Virtual grid configuration.
@@ -124,13 +134,21 @@ pub struct GridVisibleRange {
 }
 
 /// Compute visible range for a virtual grid.
-pub fn compute_grid_visible_range(config: &VirtualGridConfig, scroll_top: f64, scroll_left: f64) -> GridVisibleRange {
+pub fn compute_grid_visible_range(
+    config: &VirtualGridConfig,
+    scroll_top: f64,
+    scroll_left: f64,
+) -> GridVisibleRange {
     let total_rows = (config.item_count + config.columns - 1) / config.columns.max(1);
 
     if config.item_height <= 0.0 || total_rows == 0 {
         return GridVisibleRange {
-            start_row: 0, end_row: 0, start_col: 0, end_col: 0,
-            offset_y: 0.0, offset_x: 0.0,
+            start_row: 0,
+            end_row: 0,
+            start_col: 0,
+            end_col: 0,
+            offset_y: 0.0,
+            offset_x: 0.0,
         };
     }
 

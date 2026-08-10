@@ -121,7 +121,10 @@ pub enum NotificationPermissionState {
 impl NotificationPermissionState {
     /// Check if notifications can be scheduled.
     pub fn can_schedule(&self) -> bool {
-        matches!(self, NotificationPermissionState::Granted | NotificationPermissionState::Provisional)
+        matches!(
+            self,
+            NotificationPermissionState::Granted | NotificationPermissionState::Provisional
+        )
     }
 }
 
@@ -168,7 +171,11 @@ impl LocalNotificationsManager {
     }
 
     /// Schedule a notification.
-    pub fn schedule(&self, notification: LocalNotification, trigger: NotificationTrigger) -> Result<(), String> {
+    pub fn schedule(
+        &self,
+        notification: LocalNotification,
+        trigger: NotificationTrigger,
+    ) -> Result<(), String> {
         let perm = self.permission.lock().unwrap();
         if !perm.can_schedule() {
             return Err("Notification permission not granted".to_string());
@@ -204,7 +211,12 @@ impl LocalNotificationsManager {
 
     /// Get the number of pending notifications.
     pub fn pending_count(&self) -> usize {
-        self.scheduled.lock().unwrap().iter().filter(|(_, s)| !s.delivered).count()
+        self.scheduled
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|(_, s)| !s.delivered)
+            .count()
     }
 
     /// Simulate delivering due notifications.
@@ -316,7 +328,10 @@ mod tests {
     #[test]
     fn test_manager_request_permission() {
         let mgr = LocalNotificationsManager::new();
-        assert_eq!(mgr.permission_state(), NotificationPermissionState::NotDetermined);
+        assert_eq!(
+            mgr.permission_state(),
+            NotificationPermissionState::NotDetermined
+        );
         mgr.request_permission();
         assert_eq!(mgr.permission_state(), NotificationPermissionState::Granted);
     }
@@ -415,8 +430,14 @@ mod tests {
     fn test_manager_cancel_all() {
         let mgr = LocalNotificationsManager::new();
         mgr.request_permission();
-        mgr.schedule(LocalNotification::new("1", "A", "B"), NotificationTrigger::after(60));
-        mgr.schedule(LocalNotification::new("2", "C", "D"), NotificationTrigger::after(30));
+        mgr.schedule(
+            LocalNotification::new("1", "A", "B"),
+            NotificationTrigger::after(60),
+        );
+        mgr.schedule(
+            LocalNotification::new("2", "C", "D"),
+            NotificationTrigger::after(30),
+        );
         mgr.cancel_all();
         assert_eq!(mgr.pending_count(), 0);
     }
@@ -425,8 +446,14 @@ mod tests {
     fn test_manager_pending_ids() {
         let mgr = LocalNotificationsManager::new();
         mgr.request_permission();
-        mgr.schedule(LocalNotification::new("a", "A", "B"), NotificationTrigger::after(60));
-        mgr.schedule(LocalNotification::new("b", "C", "D"), NotificationTrigger::after(30));
+        mgr.schedule(
+            LocalNotification::new("a", "A", "B"),
+            NotificationTrigger::after(60),
+        );
+        mgr.schedule(
+            LocalNotification::new("b", "C", "D"),
+            NotificationTrigger::after(30),
+        );
         let ids = mgr.pending_ids();
         assert!(ids.contains(&"a".to_string()));
         assert!(ids.contains(&"b".to_string()));

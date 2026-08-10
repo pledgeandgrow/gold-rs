@@ -108,11 +108,7 @@ impl StreamingRenderer {
     /// the suspense resolves.
     pub fn push_suspense(&mut self, id: &str, fallback: impl Into<String>) {
         let fallback_html = fallback.into();
-        let placeholder = format!(
-            r#"<template id="{}">{}</template>"#,
-            id,
-            fallback_html
-        );
+        let placeholder = format!(r#"<template id="{}">{}</template>"#, id, fallback_html);
 
         self.chunks.push(HtmlChunk {
             html: placeholder,
@@ -120,7 +116,8 @@ impl StreamingRenderer {
             suspense_id: Some(id.to_string()),
         });
 
-        self.suspense_state.insert(id.to_string(), SuspenseState::Pending);
+        self.suspense_state
+            .insert(id.to_string(), SuspenseState::Pending);
     }
 
     /// Resolve a suspense boundary with the final content.
@@ -136,8 +133,7 @@ impl StreamingRenderer {
 
         let script = format!(
             r#"<script>(function(){{var t=document.getElementById('{}');if(t){{var d=document.createElement('div');d.innerHTML='{}';t.replaceWith(d.firstChild||d);}}}})();</script>"#,
-            id,
-            escaped
+            id, escaped
         );
 
         self.chunks.push(HtmlChunk {
@@ -146,7 +142,8 @@ impl StreamingRenderer {
             suspense_id: Some(id.to_string()),
         });
 
-        self.suspense_state.insert(id.to_string(), SuspenseState::Resolved);
+        self.suspense_state
+            .insert(id.to_string(), SuspenseState::Resolved);
     }
 
     /// Check if a suspense boundary has been resolved.
@@ -177,7 +174,11 @@ impl StreamingRenderer {
     ///
     /// This is useful for non-streaming contexts or testing.
     pub fn to_html(&self) -> String {
-        self.chunks.iter().map(|c| c.html.as_str()).collect::<Vec<_>>().join("\n")
+        self.chunks
+            .iter()
+            .map(|c| c.html.as_str())
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// Number of chunks buffered.
@@ -389,4 +390,3 @@ mod tests {
         assert!(html.contains("<script>"));
     }
 }
-

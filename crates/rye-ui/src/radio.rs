@@ -1,8 +1,8 @@
 //! Radio and RadioGroup components.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct RadioProps {
@@ -16,23 +16,46 @@ pub struct RadioProps {
 
 impl Default for RadioProps {
     fn default() -> Self {
-        Self { label: None, value: String::new(), checked: false, disabled: false, name: String::new(), class: None }
+        Self {
+            label: None,
+            value: String::new(),
+            checked: false,
+            disabled: false,
+            name: String::new(),
+            class: None,
+        }
     }
 }
 
 impl RadioProps {
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn value(mut self, v: impl Into<String>) -> Self { self.value = v.into(); self }
-    pub fn checked(mut self, c: bool) -> Self { self.checked = c; self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn name(mut self, n: impl Into<String>) -> Self { self.name = n.into(); self }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn value(mut self, v: impl Into<String>) -> Self {
+        self.value = v.into();
+        self
+    }
+    pub fn checked(mut self, c: bool) -> Self {
+        self.checked = c;
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn name(mut self, n: impl Into<String>) -> Self {
+        self.name = n.into();
+        self
+    }
 }
 
 pub struct Radio;
 
 impl Radio {
     pub fn render(props: RadioProps) -> Element {
-        let label_style = format!(
+        let label_style =
+            format!(
             "display:inline-flex;align-items:center;gap:6px;cursor:{};opacity:{};font-size:14px;",
             if props.disabled { "not-allowed" } else { "pointer" },
             if props.disabled { "0.6" } else { "1.0" },
@@ -41,8 +64,14 @@ impl Radio {
         let mut attrs = vec![
             ("type".to_string(), "radio".to_string()),
             ("value".to_string(), props.value.clone()),
-            ("style".to_string(), format!("width:16px;height:16px;accent-color:{};", vars::PRIMARY)),
-            ("class".to_string(), format!("rye-radio {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "style".to_string(),
+                format!("width:16px;height:16px;accent-color:{};", vars::PRIMARY),
+            ),
+            (
+                "class".to_string(),
+                format!("rye-radio {}", props.class.as_deref().unwrap_or("")),
+            ),
         ];
         if !props.name.is_empty() {
             attrs.push(("name".to_string(), props.name.clone()));
@@ -54,13 +83,22 @@ impl Radio {
             attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        let mut children = vec![Template::new_element("input", attrs, Vec::new(), Vec::new())];
+        let mut children = vec![Template::new_element(
+            "input",
+            attrs,
+            Vec::new(),
+            Vec::new(),
+        )];
         if let Some(label) = &props.label {
             children.push(Template::text(label));
         }
 
-        Element::Template(Template::new_element("label",
-            vec![("style".to_string(), label_style)], Vec::new(), children))
+        Element::Template(Template::new_element(
+            "label",
+            vec![("style".to_string(), label_style)],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -76,16 +114,38 @@ pub struct RadioGroupProps {
 
 impl Default for RadioGroupProps {
     fn default() -> Self {
-        Self { name: String::new(), options: Vec::new(), selected: None, disabled: false, label: None, class: None }
+        Self {
+            name: String::new(),
+            options: Vec::new(),
+            selected: None,
+            disabled: false,
+            label: None,
+            class: None,
+        }
     }
 }
 
 impl RadioGroupProps {
-    pub fn name(mut self, n: impl Into<String>) -> Self { self.name = n.into(); self }
-    pub fn options(mut self, opts: Vec<(String, String)>) -> Self { self.options = opts; self }
-    pub fn selected(mut self, s: impl Into<String>) -> Self { self.selected = Some(s.into()); self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
+    pub fn name(mut self, n: impl Into<String>) -> Self {
+        self.name = n.into();
+        self
+    }
+    pub fn options(mut self, opts: Vec<(String, String)>) -> Self {
+        self.options = opts;
+        self
+    }
+    pub fn selected(mut self, s: impl Into<String>) -> Self {
+        self.selected = Some(s.into());
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
 }
 
 pub struct RadioGroup;
@@ -95,9 +155,15 @@ impl RadioGroup {
         let mut children = Vec::new();
 
         if let Some(label) = &props.label {
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), "font-size:14px;font-weight:500;margin-bottom:8px;".to_string())],
-                Vec::new(), vec![Template::text(label)]));
+            children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    "font-size:14px;font-weight:500;margin-bottom:8px;".to_string(),
+                )],
+                Vec::new(),
+                vec![Template::text(label)],
+            ));
         }
 
         let group_style = "display:flex;flex-direction:column;gap:8px;";
@@ -116,12 +182,25 @@ impl RadioGroup {
                 radios.push(t);
             }
         }
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), group_style.to_string()),
-                 ("class".to_string(), format!("rye-radio-group {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), radios));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), group_style.to_string()),
+                (
+                    "class".to_string(),
+                    format!("rye-radio-group {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            radios,
+        ));
 
-        Element::Template(Template::new_element("div", Vec::new(), Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            Vec::new(),
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -137,7 +216,11 @@ mod tests {
 
     #[test]
     fn test_radio_builder() {
-        let p = RadioProps::default().label("Option A").value("a").checked(true).name("group1");
+        let p = RadioProps::default()
+            .label("Option A")
+            .value("a")
+            .checked(true)
+            .name("group1");
         assert_eq!(p.label.as_deref(), Some("Option A"));
         assert_eq!(p.value, "a");
         assert!(p.checked);
@@ -145,17 +228,27 @@ mod tests {
 
     #[test]
     fn test_radio_render() {
-        let el = Radio::render(RadioProps::default().label("Yes").value("yes").checked(true));
+        let el = Radio::render(
+            RadioProps::default()
+                .label("Yes")
+                .value("yes")
+                .checked(true),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 
     #[test]
     fn test_radio_group_render() {
-        let el = RadioGroup::render(RadioGroupProps::default()
-            .name("color")
-            .options(vec![("red".into(), "Red".into()), ("blue".into(), "Blue".into())])
-            .selected("blue")
-            .label("Pick a color"));
+        let el = RadioGroup::render(
+            RadioGroupProps::default()
+                .name("color")
+                .options(vec![
+                    ("red".into(), "Red".into()),
+                    ("blue".into(), "Blue".into()),
+                ])
+                .selected("blue")
+                .label("Pick a color"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

@@ -81,7 +81,10 @@ pub enum TaskState {
 impl TaskState {
     /// Check if the task is finished.
     pub fn is_finished(&self) -> bool {
-        matches!(self, TaskState::Completed | TaskState::Failed | TaskState::Cancelled)
+        matches!(
+            self,
+            TaskState::Completed | TaskState::Failed | TaskState::Cancelled
+        )
     }
 
     /// Check if the task is active.
@@ -289,7 +292,12 @@ impl BackgroundTaskScheduler {
 
     /// Get the number of scheduled instances.
     pub fn scheduled_count(&self) -> usize {
-        self.instances.lock().unwrap().iter().filter(|i| i.state.is_active()).count()
+        self.instances
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|i| i.state.is_active())
+            .count()
     }
 
     /// Get the number of completed instances.
@@ -326,9 +334,18 @@ mod tests {
 
     #[test]
     fn test_task_type_default_timeout() {
-        assert_eq!(BackgroundTaskType::BackgroundFetch.default_timeout(), Duration::from_secs(30));
-        assert_eq!(BackgroundTaskType::BackgroundProcessing.default_timeout(), Duration::from_secs(180));
-        assert_eq!(BackgroundTaskType::BackgroundSync.default_timeout(), Duration::from_secs(60));
+        assert_eq!(
+            BackgroundTaskType::BackgroundFetch.default_timeout(),
+            Duration::from_secs(30)
+        );
+        assert_eq!(
+            BackgroundTaskType::BackgroundProcessing.default_timeout(),
+            Duration::from_secs(180)
+        );
+        assert_eq!(
+            BackgroundTaskType::BackgroundSync.default_timeout(),
+            Duration::from_secs(60)
+        );
     }
 
     #[test]
@@ -363,17 +380,21 @@ mod tests {
 
     #[test]
     fn test_background_task_new() {
-        let task = BackgroundTask::new("fetch", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NewData);
+        let task = BackgroundTask::new("fetch", BackgroundTaskType::BackgroundFetch, || {
+            TaskOutcome::NewData
+        });
         assert_eq!(task.id, "fetch");
         assert_eq!(task.task_type, BackgroundTaskType::BackgroundFetch);
     }
 
     #[test]
     fn test_background_task_builder() {
-        let task = BackgroundTask::new("sync", BackgroundTaskType::BackgroundSync, || TaskOutcome::NewData)
-            .with_constraints(TaskConstraints::network())
-            .with_min_interval(Duration::from_secs(120))
-            .requires_power();
+        let task = BackgroundTask::new("sync", BackgroundTaskType::BackgroundSync, || {
+            TaskOutcome::NewData
+        })
+        .with_constraints(TaskConstraints::network())
+        .with_min_interval(Duration::from_secs(120))
+        .requires_power();
 
         assert!(task.constraints.require_network);
         assert_eq!(task.min_interval, Duration::from_secs(120));
@@ -382,7 +403,9 @@ mod tests {
 
     #[test]
     fn test_background_task_run() {
-        let task = BackgroundTask::new("test", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NewData);
+        let task = BackgroundTask::new("test", BackgroundTaskType::BackgroundFetch, || {
+            TaskOutcome::NewData
+        });
         assert_eq!(task.run(), TaskOutcome::NewData);
     }
 
@@ -397,14 +420,22 @@ mod tests {
     #[test]
     fn test_scheduler_register() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("t1", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NewData));
+        scheduler.register(BackgroundTask::new(
+            "t1",
+            BackgroundTaskType::BackgroundFetch,
+            || TaskOutcome::NewData,
+        ));
         assert_eq!(scheduler.task_count(), 1);
     }
 
     #[test]
     fn test_scheduler_schedule() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("t1", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NewData));
+        scheduler.register(BackgroundTask::new(
+            "t1",
+            BackgroundTaskType::BackgroundFetch,
+            || TaskOutcome::NewData,
+        ));
         assert!(scheduler.schedule("t1"));
         assert!(!scheduler.schedule("nonexistent"));
         assert_eq!(scheduler.scheduled_count(), 1);
@@ -415,10 +446,14 @@ mod tests {
         let counter = std::sync::Arc::new(AtomicU32::new(0));
         let c = counter.clone();
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("t1", BackgroundTaskType::BackgroundFetch, move || {
-            c.fetch_add(1, Ordering::SeqCst);
-            TaskOutcome::NewData
-        }));
+        scheduler.register(BackgroundTask::new(
+            "t1",
+            BackgroundTaskType::BackgroundFetch,
+            move || {
+                c.fetch_add(1, Ordering::SeqCst);
+                TaskOutcome::NewData
+            },
+        ));
         scheduler.schedule("t1");
 
         let ran = scheduler.run_ready();
@@ -431,7 +466,11 @@ mod tests {
     #[test]
     fn test_scheduler_cancel() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("t1", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NewData));
+        scheduler.register(BackgroundTask::new(
+            "t1",
+            BackgroundTaskType::BackgroundFetch,
+            || TaskOutcome::NewData,
+        ));
         scheduler.schedule("t1");
         assert!(scheduler.cancel("t1"));
         assert_eq!(scheduler.scheduled_count(), 0);
@@ -440,8 +479,16 @@ mod tests {
     #[test]
     fn test_scheduler_task_ids() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("a", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NoData));
-        scheduler.register(BackgroundTask::new("b", BackgroundTaskType::BackgroundSync, || TaskOutcome::NoData));
+        scheduler.register(BackgroundTask::new(
+            "a",
+            BackgroundTaskType::BackgroundFetch,
+            || TaskOutcome::NoData,
+        ));
+        scheduler.register(BackgroundTask::new(
+            "b",
+            BackgroundTaskType::BackgroundSync,
+            || TaskOutcome::NoData,
+        ));
         let ids = scheduler.task_ids();
         assert!(ids.contains(&"a".to_string()));
         assert!(ids.contains(&"b".to_string()));
@@ -450,7 +497,11 @@ mod tests {
     #[test]
     fn test_scheduler_unregister() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("temp", BackgroundTaskType::BackgroundFetch, || TaskOutcome::NoData));
+        scheduler.register(BackgroundTask::new(
+            "temp",
+            BackgroundTaskType::BackgroundFetch,
+            || TaskOutcome::NoData,
+        ));
         assert!(scheduler.unregister("temp"));
         assert_eq!(scheduler.task_count(), 0);
     }
@@ -458,9 +509,11 @@ mod tests {
     #[test]
     fn test_scheduler_run_ready_failed() {
         let scheduler = BackgroundTaskScheduler::new();
-        scheduler.register(BackgroundTask::new("fail", BackgroundTaskType::BackgroundProcessing, || {
-            TaskOutcome::Failed("error".to_string())
-        }));
+        scheduler.register(BackgroundTask::new(
+            "fail",
+            BackgroundTaskType::BackgroundProcessing,
+            || TaskOutcome::Failed("error".to_string()),
+        ));
         scheduler.schedule("fail");
         scheduler.run_ready();
         assert_eq!(scheduler.completed_count(), 0);

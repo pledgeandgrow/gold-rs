@@ -62,12 +62,22 @@ impl Vec4 {
 
     /// Create a 2D point (z=0, w=1).
     pub fn point2d(x: f32, y: f32) -> Self {
-        Self { x, y, z: 0.0, w: 1.0 }
+        Self {
+            x,
+            y,
+            z: 0.0,
+            w: 1.0,
+        }
     }
 
     /// Create a 2D size (z=0, w=0).
     pub fn size2d(w: f32, h: f32) -> Self {
-        Self { x: w, y: h, z: 0.0, w: 0.0 }
+        Self {
+            x: w,
+            y: h,
+            z: 0.0,
+            w: 0.0,
+        }
     }
 
     /// Add two vectors (SIMD-accelerated when available).
@@ -138,10 +148,7 @@ impl Mat4 {
     pub fn identity() -> Self {
         Self {
             m: [
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0,
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ],
         }
     }
@@ -150,10 +157,7 @@ impl Mat4 {
     pub fn translate(x: f32, y: f32, z: f32) -> Self {
         Self {
             m: [
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                x,   y,   z,   1.0,
+                1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0,
             ],
         }
     }
@@ -162,10 +166,7 @@ impl Mat4 {
     pub fn scale(sx: f32, sy: f32, sz: f32) -> Self {
         Self {
             m: [
-                sx,  0.0, 0.0, 0.0,
-                0.0, sy,  0.0, 0.0,
-                0.0, 0.0, sz,  0.0,
-                0.0, 0.0, 0.0, 1.0,
+                sx, 0.0, 0.0, 0.0, 0.0, sy, 0.0, 0.0, 0.0, 0.0, sz, 0.0, 0.0, 0.0, 0.0, 1.0,
             ],
         }
     }
@@ -176,10 +177,7 @@ impl Mat4 {
         let s = radians.sin();
         Self {
             m: [
-                c,   s,   0.0, 0.0,
-                -s,  c,   0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0,
+                c, s, 0.0, 0.0, -s, c, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
             ],
         }
     }
@@ -227,7 +225,12 @@ pub struct LayoutRect {
 impl LayoutRect {
     /// Create a new layout rect.
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
-        Self { x, y, width, height }
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 
     /// Check if a point is inside this rect.

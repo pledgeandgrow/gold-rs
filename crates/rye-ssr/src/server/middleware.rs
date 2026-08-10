@@ -125,7 +125,8 @@ impl ServerResponse {
 }
 
 /// Middleware function type.
-pub type MiddlewareFn = Box<dyn Fn(&mut ServerRequest, &mut ServerResponse) -> MiddlewareResult + Send + Sync>;
+pub type MiddlewareFn =
+    Box<dyn Fn(&mut ServerRequest, &mut ServerResponse) -> MiddlewareResult + Send + Sync>;
 
 /// Middleware execution result.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -153,7 +154,9 @@ pub struct MiddlewarePipeline {
 impl MiddlewarePipeline {
     /// Create a new empty pipeline.
     pub fn new() -> Self {
-        Self { middleware: Vec::new() }
+        Self {
+            middleware: Vec::new(),
+        }
     }
 
     /// Add middleware to the end of the pipeline.
@@ -166,10 +169,13 @@ impl MiddlewarePipeline {
 
     /// Add middleware to the beginning of the pipeline.
     pub fn prepend(&mut self, name: impl Into<String>, handler: MiddlewareFn) {
-        self.middleware.insert(0, Middleware {
-            name: name.into(),
-            handler,
-        });
+        self.middleware.insert(
+            0,
+            Middleware {
+                name: name.into(),
+                handler,
+            },
+        );
     }
 
     /// Execute the pipeline on a request/response.
@@ -202,9 +208,16 @@ impl Default for MiddlewarePipeline {
 /// Common middleware: CORS headers.
 pub fn cors_middleware() -> MiddlewareFn {
     Box::new(|_req: &mut ServerRequest, res: &mut ServerResponse| {
-        res.headers.insert("Access-Control-Allow-Origin".to_string(), "*".to_string());
-        res.headers.insert("Access-Control-Allow-Methods".to_string(), "GET, POST, PUT, DELETE, OPTIONS".to_string());
-        res.headers.insert("Access-Control-Allow-Headers".to_string(), "Content-Type, Authorization".to_string());
+        res.headers
+            .insert("Access-Control-Allow-Origin".to_string(), "*".to_string());
+        res.headers.insert(
+            "Access-Control-Allow-Methods".to_string(),
+            "GET, POST, PUT, DELETE, OPTIONS".to_string(),
+        );
+        res.headers.insert(
+            "Access-Control-Allow-Headers".to_string(),
+            "Content-Type, Authorization".to_string(),
+        );
         MiddlewareResult::Continue
     })
 }
@@ -224,7 +237,8 @@ pub fn logging_middleware() -> MiddlewareFn {
 pub fn compression_middleware() -> MiddlewareFn {
     Box::new(|_req: &mut ServerRequest, res: &mut ServerResponse| {
         // Check if client accepts gzip
-        res.headers.insert("Vary".to_string(), "Accept-Encoding".to_string());
+        res.headers
+            .insert("Vary".to_string(), "Accept-Encoding".to_string());
         MiddlewareResult::Continue
     })
 }
@@ -235,17 +249,18 @@ mod tests {
 
     #[test]
     fn test_server_request() {
-        let req = ServerRequest::get("/users")
-            .with_header("Accept", "application/json");
+        let req = ServerRequest::get("/users").with_header("Accept", "application/json");
         assert_eq!(req.method, HttpMethod::Get);
         assert_eq!(req.path, "/users");
-        assert_eq!(req.headers.get("Accept"), Some(&"application/json".to_string()));
+        assert_eq!(
+            req.headers.get("Accept"),
+            Some(&"application/json".to_string())
+        );
     }
 
     #[test]
     fn test_server_response() {
-        let res = ServerResponse::ok(b"hello".to_vec())
-            .with_header("Content-Type", "text/plain");
+        let res = ServerResponse::ok(b"hello".to_vec()).with_header("Content-Type", "text/plain");
         assert_eq!(res.status, 200);
         assert_eq!(res.body, b"hello");
         assert!(!res.is_error());
@@ -276,20 +291,29 @@ mod tests {
         let mut res = ServerResponse::ok(Vec::new());
         pipeline.execute(&mut req, &mut res);
 
-        assert_eq!(res.headers.get("Access-Control-Allow-Origin"), Some(&"*".to_string()));
+        assert_eq!(
+            res.headers.get("Access-Control-Allow-Origin"),
+            Some(&"*".to_string())
+        );
     }
 
     #[test]
     fn test_middleware_short_circuit() {
         let mut pipeline = MiddlewarePipeline::new();
-        pipeline.add("auth", Box::new(|_req, res| {
-            res.status = 401;
-            MiddlewareResult::Stop
-        }));
-        pipeline.add("handler", Box::new(|_req, res| {
-            res.status = 200;
-            MiddlewareResult::Continue
-        }));
+        pipeline.add(
+            "auth",
+            Box::new(|_req, res| {
+                res.status = 401;
+                MiddlewareResult::Stop
+            }),
+        );
+        pipeline.add(
+            "handler",
+            Box::new(|_req, res| {
+                res.status = 200;
+                MiddlewareResult::Continue
+            }),
+        );
 
         let mut req = ServerRequest::get("/protected");
         let mut res = ServerResponse::ok(Vec::new());

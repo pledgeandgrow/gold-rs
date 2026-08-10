@@ -99,7 +99,10 @@ impl ProfileSession {
 
     /// Get events by category.
     pub fn events_by_category(&self, category: ProfileCategory) -> Vec<&ProfileEvent> {
-        self.events.iter().filter(|e| e.category == category).collect()
+        self.events
+            .iter()
+            .filter(|e| e.category == category)
+            .collect()
     }
 
     /// Get the total time spent in a category.
@@ -131,7 +134,11 @@ impl ProfileSession {
         html.push_str("font-size:11px; white-space:nowrap; color:#fff; padding:0 4px; }\n");
         html.push_str("</style>\n</head>\n<body>\n");
 
-        html.push_str(&format!("<h2>Profile: {} ({:.3}ms)</h2>\n", self.name, self.total_duration_us as f64 / 1000.0));
+        html.push_str(&format!(
+            "<h2>Profile: {} ({:.3}ms)</h2>\n",
+            self.name,
+            self.total_duration_us as f64 / 1000.0
+        ));
 
         let summary = self.category_summary();
         for (cat, (count, time)) in &summary {
@@ -163,7 +170,10 @@ impl ProfileSession {
         let mut text = String::new();
         text.push_str("=== Performance Profile ===\n\n");
         text.push_str(&format!("Session: {}\n", self.name));
-        text.push_str(&format!("Total time: {:.3}ms\n", self.total_duration_us as f64 / 1000.0));
+        text.push_str(&format!(
+            "Total time: {:.3}ms\n",
+            self.total_duration_us as f64 / 1000.0
+        ));
         text.push_str(&format!("Events: {}\n\n", self.event_count()));
 
         let summary = self.category_summary();
@@ -279,9 +289,27 @@ mod tests {
     #[test]
     fn test_profile_session_events_by_category() {
         let mut session = ProfileSession::new("test");
-        session.record(ProfileEvent { name: "a".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 10, depth: 0 });
-        session.record(ProfileEvent { name: "b".into(), category: ProfileCategory::Signal, start_us: 0, duration_us: 20, depth: 0 });
-        session.record(ProfileEvent { name: "c".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 30, depth: 0 });
+        session.record(ProfileEvent {
+            name: "a".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 10,
+            depth: 0,
+        });
+        session.record(ProfileEvent {
+            name: "b".into(),
+            category: ProfileCategory::Signal,
+            start_us: 0,
+            duration_us: 20,
+            depth: 0,
+        });
+        session.record(ProfileEvent {
+            name: "c".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 30,
+            depth: 0,
+        });
         assert_eq!(session.events_by_category(ProfileCategory::Render).len(), 2);
         assert_eq!(session.events_by_category(ProfileCategory::Signal).len(), 1);
     }
@@ -289,16 +317,40 @@ mod tests {
     #[test]
     fn test_profile_session_time_in_category() {
         let mut session = ProfileSession::new("test");
-        session.record(ProfileEvent { name: "a".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 100, depth: 0 });
-        session.record(ProfileEvent { name: "b".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 200, depth: 0 });
+        session.record(ProfileEvent {
+            name: "a".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 100,
+            depth: 0,
+        });
+        session.record(ProfileEvent {
+            name: "b".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 200,
+            depth: 0,
+        });
         assert_eq!(session.time_in_category(ProfileCategory::Render), 300);
     }
 
     #[test]
     fn test_profile_session_category_summary() {
         let mut session = ProfileSession::new("test");
-        session.record(ProfileEvent { name: "a".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 100, depth: 0 });
-        session.record(ProfileEvent { name: "b".into(), category: ProfileCategory::Signal, start_us: 0, duration_us: 50, depth: 0 });
+        session.record(ProfileEvent {
+            name: "a".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 100,
+            depth: 0,
+        });
+        session.record(ProfileEvent {
+            name: "b".into(),
+            category: ProfileCategory::Signal,
+            start_us: 0,
+            duration_us: 50,
+            depth: 0,
+        });
         let summary = session.category_summary();
         assert_eq!(summary.get(&ProfileCategory::Render), Some(&(1, 100)));
         assert_eq!(summary.get(&ProfileCategory::Signal), Some(&(1, 50)));
@@ -307,7 +359,13 @@ mod tests {
     #[test]
     fn test_profile_session_flamegraph_html() {
         let mut session = ProfileSession::new("test");
-        session.record(ProfileEvent { name: "render".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 1000, depth: 0 });
+        session.record(ProfileEvent {
+            name: "render".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 1000,
+            depth: 0,
+        });
         let html = session.generate_flamegraph_html();
         assert!(html.contains("<!DOCTYPE html>"));
         assert!(html.contains("flamegraph"));
@@ -317,7 +375,13 @@ mod tests {
     #[test]
     fn test_profile_session_text_report() {
         let mut session = ProfileSession::new("test");
-        session.record(ProfileEvent { name: "render".into(), category: ProfileCategory::Render, start_us: 0, duration_us: 1000, depth: 0 });
+        session.record(ProfileEvent {
+            name: "render".into(),
+            category: ProfileCategory::Render,
+            start_us: 0,
+            duration_us: 1000,
+            depth: 0,
+        });
         let text = session.to_text_report();
         assert!(text.contains("Performance Profile"));
         assert!(text.contains("render"));

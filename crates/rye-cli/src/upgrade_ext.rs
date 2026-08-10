@@ -94,7 +94,8 @@ impl UpgradeResult {
 
     /// Record a codemod application.
     pub fn record(&mut self, codemod_id: &str, replacements: usize) {
-        self.codemods_applied.push((codemod_id.to_string(), replacements));
+        self.codemods_applied
+            .push((codemod_id.to_string(), replacements));
         self.total_replacements += replacements;
     }
 
@@ -139,7 +140,10 @@ impl CodemodRegistry {
 
     /// Get codemods for a specific version.
     pub fn for_version(&self, version: &str) -> Vec<&Codemod> {
-        self.codemods.get(version).map(|v| v.iter().collect()).unwrap_or_default()
+        self.codemods
+            .get(version)
+            .map(|v| v.iter().collect())
+            .unwrap_or_default()
     }
 
     /// Get all codemods up to a target version.
@@ -204,19 +208,35 @@ pub fn run(args: &[String]) {
             .breaking_change(),
     );
     registry.register(
-        Codemod::new("rename-component-macro", "0.2.0", "#[rye::component]", "#[component]")
-            .with_description("Simplify component macro path"),
+        Codemod::new(
+            "rename-component-macro",
+            "0.2.0",
+            "#[rye::component]",
+            "#[component]",
+        )
+        .with_description("Simplify component macro path"),
     );
 
     let codemods = registry.up_to_version(target_version);
 
     if dry_run {
-        println!("Dry run — would apply {} codemods for version {}", codemods.len(), target_version);
+        println!(
+            "Dry run — would apply {} codemods for version {}",
+            codemods.len(),
+            target_version
+        );
         for cm in &codemods {
-            println!("  {} (v{}): {} → {}", cm.id, cm.version, cm.search, cm.replace);
+            println!(
+                "  {} (v{}): {} → {}",
+                cm.id, cm.version, cm.search, cm.replace
+            );
         }
     } else {
-        println!("Upgrading to version {} with {} codemods", target_version, codemods.len());
+        println!(
+            "Upgrading to version {} with {} codemods",
+            target_version,
+            codemods.len()
+        );
         for cm in &codemods {
             println!("  Applying {}: {}", cm.id, cm.description);
         }

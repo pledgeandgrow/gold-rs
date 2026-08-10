@@ -6,8 +6,8 @@
 //! - **Goal 144**: Mutation testing support
 //! - **Goal 145**: Contract testing for server actions
 
-pub mod property_testing;
 pub mod a11y_testing;
-pub mod security;
-pub mod mutation_testing;
 pub mod contract_testing;
+pub mod mutation_testing;
+pub mod property_testing;
+pub mod security;

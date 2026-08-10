@@ -1,8 +1,8 @@
 //! Label component — form label with required indicator.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct LabelProps {
@@ -15,14 +15,29 @@ pub struct LabelProps {
 
 impl Default for LabelProps {
     fn default() -> Self {
-        Self { text: String::new(), required: false, disabled: false, class: None, style: None }
+        Self {
+            text: String::new(),
+            required: false,
+            disabled: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl LabelProps {
-    pub fn text(mut self, t: impl Into<String>) -> Self { self.text = t.into(); self }
-    pub fn required(mut self, r: bool) -> Self { self.required = r; self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
+    pub fn text(mut self, t: impl Into<String>) -> Self {
+        self.text = t.into();
+        self
+    }
+    pub fn required(mut self, r: bool) -> Self {
+        self.required = r;
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
 }
 
 pub struct Label;
@@ -37,14 +52,32 @@ impl Label {
 
         let mut children = vec![Template::text(&props.text)];
         if props.required {
-            children.push(Template::new_element("span",
-                vec![("style".to_string(), format!("color:{};margin-left:2px;", vars::DANGER)), ("aria-hidden".to_string(), "true".to_string())],
-                Vec::new(), vec![Template::text("*")]));
+            children.push(Template::new_element(
+                "span",
+                vec![
+                    (
+                        "style".to_string(),
+                        format!("color:{};margin-left:2px;", vars::DANGER),
+                    ),
+                    ("aria-hidden".to_string(), "true".to_string()),
+                ],
+                Vec::new(),
+                vec![Template::text("*")],
+            ));
         }
 
-        Element::Template(Template::new_element("label",
-            vec![("style".to_string(), style), ("class".to_string(), format!("rye-label {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "label",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!("rye-label {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 

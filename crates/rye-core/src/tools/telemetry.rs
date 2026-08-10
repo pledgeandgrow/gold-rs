@@ -100,7 +100,9 @@ impl LogEntry {
         );
 
         if !self.fields.is_empty() {
-            let fields: Vec<String> = self.fields.iter()
+            let fields: Vec<String> = self
+                .fields
+                .iter()
                 .map(|(k, v)| format!("{}={}", k, v))
                 .collect();
             line.push_str(&format!(" {{{}}}", fields.join(", ")));
@@ -309,7 +311,11 @@ impl CrashReport {
     pub fn to_json(&self) -> String {
         let mut json = format!(
             r#"{{"id":"{}","message":"{}","timestamp":{},"platform":"{}","app_version":"{}""#,
-            self.id, escape_json(&self.message), self.timestamp, self.platform, self.app_version
+            self.id,
+            escape_json(&self.message),
+            self.timestamp,
+            self.platform,
+            self.app_version
         );
 
         if let Some(trace) = &self.stack_trace {
@@ -317,7 +323,9 @@ impl CrashReport {
         }
 
         if !self.context.is_empty() {
-            let ctx: Vec<String> = self.context.iter()
+            let ctx: Vec<String> = self
+                .context
+                .iter()
                 .map(|(k, v)| format!(r#""{}":"{}""#, escape_json(k), escape_json(v)))
                 .collect();
             json.push_str(&format!(r#","context":{{{}}}"#, ctx.join(",")));
@@ -330,13 +338,19 @@ impl CrashReport {
 
 fn detect_platform() -> String {
     #[cfg(target_arch = "wasm32")]
-    { "wasm".to_string() }
+    {
+        "wasm".to_string()
+    }
     #[cfg(not(target_arch = "wasm32"))]
-    { "native".to_string() }
+    {
+        "native".to_string()
+    }
 }
 
 fn escape_json(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n")
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
 }
 
 /// Crash reporter — collects and sends crash reports.
@@ -441,15 +455,17 @@ mod tests {
 
     #[test]
     fn test_log_entry_trace() {
-        let entry = LogEntry::new(LogLevel::Error, "Database error", "db")
-            .trace("trace-abc");
+        let entry = LogEntry::new(LogLevel::Error, "Database error", "db").trace("trace-abc");
         let formatted = entry.format();
         assert!(formatted.contains("trace=trace-abc"));
     }
 
     #[test]
     fn test_logger() {
-        let config = TelemetryConfig { min_level: LogLevel::Warn, ..Default::default() };
+        let config = TelemetryConfig {
+            min_level: LogLevel::Warn,
+            ..Default::default()
+        };
         let mut logger = Logger::new(config);
 
         logger.log(LogEntry::new(LogLevel::Info, "Info message", "test"));

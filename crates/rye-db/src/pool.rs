@@ -65,7 +65,10 @@ impl ConnectionPool {
     pub fn new(config: PoolConfig) -> Self {
         let mut connections = VecDeque::new();
         for _ in 0..config.min_idle {
-            connections.push_back(PooledConnection { id: 0, in_use: false });
+            connections.push_back(PooledConnection {
+                id: 0,
+                in_use: false,
+            });
         }
 
         let next_id = Mutex::new(config.min_idle as u64);
@@ -121,7 +124,12 @@ impl ConnectionPool {
 
     /// Get the number of idle connections.
     pub fn idle_count(&self) -> usize {
-        self.connections.lock().unwrap().iter().filter(|c| !c.in_use).count()
+        self.connections
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|c| !c.in_use)
+            .count()
     }
 
     /// Get the total number of connections (active + idle).

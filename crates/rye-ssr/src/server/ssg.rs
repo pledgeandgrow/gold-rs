@@ -120,17 +120,20 @@ impl SsgRoute {
             return vec![self.get_output_path()];
         }
 
-        self.params.iter().map(|params| {
-            let mut path = self.path.clone();
-            for (key, value) in params {
-                path = path.replace(&format!(":{}", key), value);
-            }
-            if path == "/" {
-                "index.html".to_string()
-            } else {
-                format!("{}/index.html", path.trim_start_matches('/'))
-            }
-        }).collect()
+        self.params
+            .iter()
+            .map(|params| {
+                let mut path = self.path.clone();
+                for (key, value) in params {
+                    path = path.replace(&format!(":{}", key), value);
+                }
+                if path == "/" {
+                    "index.html".to_string()
+                } else {
+                    format!("{}/index.html", path.trim_start_matches('/'))
+                }
+            })
+            .collect()
     }
 }
 
@@ -220,7 +223,9 @@ pub fn create_build_plan(config: &SsgConfig) -> SsgBuildPlan {
 
     let sitemap = if config.sitemap {
         if let Some(base_url) = &config.base_url {
-            let entries: Vec<SitemapEntry> = config.routes.iter()
+            let entries: Vec<SitemapEntry> = config
+                .routes
+                .iter()
                 .flat_map(|r| {
                     if r.params.is_empty() {
                         vec![SitemapEntry {
@@ -230,18 +235,21 @@ pub fn create_build_plan(config: &SsgConfig) -> SsgBuildPlan {
                             priority: Some(0.8),
                         }]
                     } else {
-                        r.params.iter().map(|params| {
-                            let mut path = r.path.clone();
-                            for (key, value) in params {
-                                path = path.replace(&format!(":{}", key), value);
-                            }
-                            SitemapEntry {
-                                loc: path,
-                                lastmod: None,
-                                changefreq: Some("weekly".to_string()),
-                                priority: Some(0.8),
-                            }
-                        }).collect()
+                        r.params
+                            .iter()
+                            .map(|params| {
+                                let mut path = r.path.clone();
+                                for (key, value) in params {
+                                    path = path.replace(&format!(":{}", key), value);
+                                }
+                                SitemapEntry {
+                                    loc: path,
+                                    lastmod: None,
+                                    changefreq: Some("weekly".to_string()),
+                                    priority: Some(0.8),
+                                }
+                            })
+                            .collect()
                     }
                 })
                 .collect();
@@ -254,12 +262,19 @@ pub fn create_build_plan(config: &SsgConfig) -> SsgBuildPlan {
     };
 
     let robots = if config.robots {
-        config.base_url.as_ref().map(|base| generate_robots(base, &["/admin/"]))
+        config
+            .base_url
+            .as_ref()
+            .map(|base| generate_robots(base, &["/admin/"]))
     } else {
         None
     };
 
-    SsgBuildPlan { html_files, sitemap, robots }
+    SsgBuildPlan {
+        html_files,
+        sitemap,
+        robots,
+    }
 }
 
 #[cfg(test)]

@@ -2,7 +2,11 @@
 
 > Goal 2: Catalog every known pain from existing UI frameworks to ensure `rye` solves them all.
 >
-> **Status: All pain points addressed.** Every solution listed below is implemented and backed by crate-level code. ✅ markers indicate solutions with verified implementation paths.
+> **Status: Design complete, implementation in progress.** The solutions below
+> describe the intended approach. ✅ markers indicate that code exists for the
+> solution — they do NOT mean the solution is proven or production-ready. Many
+> implementations are scaffolds. See the README status section for what
+> actually works.
 
 ---
 

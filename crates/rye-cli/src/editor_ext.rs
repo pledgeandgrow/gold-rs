@@ -165,7 +165,10 @@ impl ExtensionConfig {
         xml.push_str(&format!("  <id>rye</id>\n"));
         xml.push_str(&format!("  <name>rye</name>\n"));
         xml.push_str(&format!("  <version>{}</version>\n", self.version));
-        xml.push_str(&format!("  <description>{}</description>\n", self.description));
+        xml.push_str(&format!(
+            "  <description>{}</description>\n",
+            self.description
+        ));
         xml.push_str("  <extensions defaultExtensionNs=\"com.intellij\">\n");
         xml.push_str("    <lang.parserDefinition language=\"rye\" implementationClass=\"rye.RyeParserDefinition\"/>\n");
         xml.push_str("    <lang.syntaxHighlighter language=\"rye\" implementationClass=\"rye.RyeSyntaxHighlighter\"/>\n");
@@ -254,14 +257,23 @@ impl LspDiagnostic {
 
 /// Run the extension generation command.
 pub fn run(args: &[String]) {
-    let editor = args.iter().find(|a| !a.starts_with("--")).map(|s| s.as_str()).unwrap_or("vscode");
+    let editor = args
+        .iter()
+        .find(|a| !a.starts_with("--"))
+        .map(|s| s.as_str())
+        .unwrap_or("vscode");
 
     let config = match editor {
         "jetbrains" | "intellij" => ExtensionConfig::jetbrains(),
         _ => ExtensionConfig::vscode(),
     };
 
-    println!("Generating {} extension: {} v{}", config.editor.display_name(), config.name, config.version);
+    println!(
+        "Generating {} extension: {} v{}",
+        config.editor.display_name(),
+        config.name,
+        config.version
+    );
     println!("Features:");
     for f in &config.features {
         println!("  - {}", f.display_name());
@@ -288,8 +300,14 @@ mod tests {
 
     #[test]
     fn test_lsp_feature_display_name() {
-        assert_eq!(LspFeature::SyntaxHighlighting.display_name(), "Syntax Highlighting");
-        assert_eq!(LspFeature::PropAutocomplete.display_name(), "Prop Autocomplete");
+        assert_eq!(
+            LspFeature::SyntaxHighlighting.display_name(),
+            "Syntax Highlighting"
+        );
+        assert_eq!(
+            LspFeature::PropAutocomplete.display_name(),
+            "Prop Autocomplete"
+        );
     }
 
     #[test]

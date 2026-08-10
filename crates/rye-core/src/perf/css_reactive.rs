@@ -84,11 +84,7 @@ impl CssStateStylesheet {
 /// `state_attr(&[("active", true), ("visible", false), ("enabled", true)])`
 /// → `"active--enabled"` (present flags included, absent flags skipped with `--` separator).
 pub fn state_attr(flags: &[(&str, bool)]) -> String {
-    let parts: Vec<&str> = flags
-        .iter()
-        .filter(|(_, v)| *v)
-        .map(|(k, _)| *k)
-        .collect();
+    let parts: Vec<&str> = flags.iter().filter(|(_, v)| *v).map(|(k, _)| *k).collect();
     if parts.is_empty() {
         "default".to_string()
     } else {
@@ -190,7 +186,10 @@ mod tests {
     fn test_css_stylesheet() {
         let sheet = CssStateStylesheet::new(".btn")
             .rule("active", vec![("background", "blue"), ("color", "white")])
-            .rule("disabled", vec![("opacity", "0.5"), ("cursor", "not-allowed")]);
+            .rule(
+                "disabled",
+                vec![("opacity", "0.5"), ("cursor", "not-allowed")],
+            );
 
         let css = sheet.to_css();
         assert!(css.contains(".btn[data-state=\"active\"]"));

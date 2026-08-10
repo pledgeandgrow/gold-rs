@@ -3,7 +3,7 @@
 //! The template! macro uses a custom parser that converts HTML-like syntax
 //! into calls to the Renderer trait.
 
-use proc_macro2::{TokenStream, TokenTree, Group};
+use proc_macro2::{Group, TokenStream, TokenTree};
 use quote::quote;
 
 /// A node in the template AST.
@@ -88,7 +88,7 @@ fn parse_node(
             Ok(TemplateNode::Dynamic(group.stream()))
         }
         Some(TokenTree::Punct(p)) if p.as_char() == '#' => {
-            // Fragment: #{} 
+            // Fragment: #{}
             iter.next();
             match iter.peek() {
                 Some(TokenTree::Group(g)) if g.delimiter() == proc_macro2::Delimiter::Brace => {
@@ -189,10 +189,7 @@ fn parse_attribute_value(
         let event = name[2..].to_string();
         // Parse the handler expression — collect tokens until we hit the next attribute or child
         let handler = collect_expression(iter)?;
-        return Ok(Attribute::Event {
-            event,
-            handler,
-        });
+        return Ok(Attribute::Event { event, handler });
     }
 
     // Parse value — could be a string literal or an expression
@@ -349,10 +346,13 @@ pub(crate) fn generate_template_code(node: &TemplateNode) -> TokenStream {
             }
 
             // Generate children as Template values (not Element)
-            let child_code: Vec<TokenStream> = children.iter().map(|child| {
-                let child_gen = generate_template_code(child);
-                quote! { children.push(#child_gen); }
-            }).collect();
+            let child_code: Vec<TokenStream> = children
+                .iter()
+                .map(|child| {
+                    let child_gen = generate_template_code(child);
+                    quote! { children.push(#child_gen); }
+                })
+                .collect();
 
             let has_reactive_attrs = !reactive_attr_code.is_empty();
 

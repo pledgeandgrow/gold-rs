@@ -1,9 +1,9 @@
 //! GlobalSignal — app-wide reactive state without context providers.
 
 use crate::runtime;
+use std::any::TypeId;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::any::TypeId;
 
 /// A global signal accessible from any component without context.
 ///
@@ -37,9 +37,7 @@ thread_local! {
 impl<T: Send + Sync + Clone + 'static> GlobalSignal<T> {
     /// Create a new global signal with a lazy initializer.
     pub const fn new(init: fn() -> T) -> Self {
-        Self {
-            init,
-        }
+        Self { init }
     }
 
     fn key(&self) -> (TypeId, usize) {

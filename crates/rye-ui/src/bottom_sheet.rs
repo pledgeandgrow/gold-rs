@@ -1,8 +1,8 @@
 //! BottomSheet — mobile-friendly slide-up panel.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct BottomSheetProps {
@@ -16,16 +16,34 @@ pub struct BottomSheetProps {
 
 impl Default for BottomSheetProps {
     fn default() -> Self {
-        Self { open: false, title: None, height: "auto".to_string(),
-               dismissible: true, class: None, style: None }
+        Self {
+            open: false,
+            title: None,
+            height: "auto".to_string(),
+            dismissible: true,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl BottomSheetProps {
-    pub fn open(mut self, o: bool) -> Self { self.open = o; self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
-    pub fn height(mut self, h: impl Into<String>) -> Self { self.height = h.into(); self }
-    pub fn dismissible(mut self, d: bool) -> Self { self.dismissible = d; self }
+    pub fn open(mut self, o: bool) -> Self {
+        self.open = o;
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
+    pub fn height(mut self, h: impl Into<String>) -> Self {
+        self.height = h.into();
+        self
+    }
+    pub fn dismissible(mut self, d: bool) -> Self {
+        self.dismissible = d;
+        self
+    }
 }
 
 pub struct BottomSheet;
@@ -36,7 +54,11 @@ impl BottomSheet {
             return Element::None;
         }
 
-        let backdrop_style = format!("position:fixed;inset:0;background:{};z-index:{};", vars::OVERLAY, vars::Z_OVERLAY);
+        let backdrop_style = format!(
+            "position:fixed;inset:0;background:{};z-index:{};",
+            vars::OVERLAY,
+            vars::Z_OVERLAY
+        );
 
         let sheet_style = format!(
             "position:fixed;bottom:0;left:0;right:0;height:{};\
@@ -60,23 +82,48 @@ impl BottomSheet {
                 Vec::new(), vec![Template::text(title)]));
         }
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "padding:20px;overflow-y:auto;flex:1;".to_string()),
-                 ("class".to_string(), "rye-bottom-sheet-body".to_string())],
-            Vec::new(), Vec::new()));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "padding:20px;overflow-y:auto;flex:1;".to_string(),
+                ),
+                ("class".to_string(), "rye-bottom-sheet-body".to_string()),
+            ],
+            Vec::new(),
+            Vec::new(),
+        ));
 
-        let sheet = Template::new_element("div",
-            vec![("style".to_string(), sheet_style),
-                 ("class".to_string(), format!("rye-bottom-sheet {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children);
+        let sheet = Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), sheet_style),
+                (
+                    "class".to_string(),
+                    format!("rye-bottom-sheet {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        );
 
-        let backdrop = Template::new_element("div",
-            vec![("style".to_string(), backdrop_style.to_string()),
-                 ("class".to_string(), "rye-bottom-sheet-backdrop".to_string())],
-            Vec::new(), Vec::new());
+        let backdrop = Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), backdrop_style.to_string()),
+                ("class".to_string(), "rye-bottom-sheet-backdrop".to_string()),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
 
-        Element::Template(Template::new_element("div",
-            Vec::new(), Vec::new(), vec![backdrop, sheet]))
+        Element::Template(Template::new_element(
+            "div",
+            Vec::new(),
+            Vec::new(),
+            vec![backdrop, sheet],
+        ))
     }
 }
 
@@ -93,7 +140,11 @@ mod tests {
 
     #[test]
     fn test_bottom_sheet_builder() {
-        let p = BottomSheetProps::default().open(true).title("Options").height("400px").dismissible(false);
+        let p = BottomSheetProps::default()
+            .open(true)
+            .title("Options")
+            .height("400px")
+            .dismissible(false);
         assert!(p.open);
         assert_eq!(p.title.as_deref(), Some("Options"));
         assert!(!p.dismissible);

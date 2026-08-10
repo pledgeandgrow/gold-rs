@@ -1,8 +1,8 @@
 //! Table — sortable columns, rows, headers.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct TableColumn {
@@ -14,10 +14,21 @@ pub struct TableColumn {
 
 impl TableColumn {
     pub fn new(key: impl Into<String>, label: impl Into<String>) -> Self {
-        Self { key: key.into(), label: label.into(), width: None, sortable: false }
+        Self {
+            key: key.into(),
+            label: label.into(),
+            width: None,
+            sortable: false,
+        }
     }
-    pub fn width(mut self, w: impl Into<String>) -> Self { self.width = Some(w.into()); self }
-    pub fn sortable(mut self) -> Self { self.sortable = true; self }
+    pub fn width(mut self, w: impl Into<String>) -> Self {
+        self.width = Some(w.into());
+        self
+    }
+    pub fn sortable(mut self) -> Self {
+        self.sortable = true;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -26,7 +37,9 @@ pub struct TableRow {
 }
 
 impl TableRow {
-    pub fn new(cells: Vec<String>) -> Self { Self { cells } }
+    pub fn new(cells: Vec<String>) -> Self {
+        Self { cells }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -41,24 +54,50 @@ pub struct TableProps {
 
 impl Default for TableProps {
     fn default() -> Self {
-        Self { columns: Vec::new(), rows: Vec::new(), striped: false,
-               bordered: true, class: None, style: None }
+        Self {
+            columns: Vec::new(),
+            rows: Vec::new(),
+            striped: false,
+            bordered: true,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl TableProps {
-    pub fn columns(mut self, c: Vec<TableColumn>) -> Self { self.columns = c; self }
-    pub fn rows(mut self, r: Vec<TableRow>) -> Self { self.rows = r; self }
-    pub fn striped(mut self, s: bool) -> Self { self.striped = s; self }
-    pub fn bordered(mut self, b: bool) -> Self { self.bordered = b; self }
+    pub fn columns(mut self, c: Vec<TableColumn>) -> Self {
+        self.columns = c;
+        self
+    }
+    pub fn rows(mut self, r: Vec<TableRow>) -> Self {
+        self.rows = r;
+        self
+    }
+    pub fn striped(mut self, s: bool) -> Self {
+        self.striped = s;
+        self
+    }
+    pub fn bordered(mut self, b: bool) -> Self {
+        self.bordered = b;
+        self
+    }
 }
 
 pub struct Table;
 
 impl Table {
     pub fn render(props: TableProps) -> Element {
-        let border = if props.bordered { format!("border:1px solid {};", vars::BORDER) } else { String::new() };
-        let style = format!("width:100%;border-collapse:collapse;font-size:var(--rye-font-size-md);{}{}", border, props.style.as_deref().unwrap_or(""));
+        let border = if props.bordered {
+            format!("border:1px solid {};", vars::BORDER)
+        } else {
+            String::new()
+        };
+        let style = format!(
+            "width:100%;border-collapse:collapse;font-size:var(--rye-font-size-md);{}{}",
+            border,
+            props.style.as_deref().unwrap_or("")
+        );
 
         // Header
         let headers: Vec<Template> = props.columns.iter().map(|col| {
@@ -77,9 +116,12 @@ impl Table {
                 Vec::new(), children)
         }).collect();
 
-        let thead = Template::new_element("thead", Vec::new(), Vec::new(), vec![
-            Template::new_element("tr", Vec::new(), Vec::new(), headers),
-        ]);
+        let thead = Template::new_element(
+            "thead",
+            Vec::new(),
+            Vec::new(),
+            vec![Template::new_element("tr", Vec::new(), Vec::new(), headers)],
+        );
 
         // Body
         let body_rows: Vec<Template> = props.rows.iter().enumerate().map(|(i, row)| {
@@ -97,10 +139,18 @@ impl Table {
 
         let tbody = Template::new_element("tbody", Vec::new(), Vec::new(), body_rows);
 
-        Element::Template(Template::new_element("table",
-            vec![("class".to_string(), format!("rye-table {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), vec![thead, tbody]))
+        Element::Template(Template::new_element(
+            "table",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-table {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            vec![thead, tbody],
+        ))
     }
 }
 
@@ -141,9 +191,11 @@ mod tests {
 
     #[test]
     fn test_table_render() {
-        let el = Table::render(TableProps::default()
-            .columns(vec![TableColumn::new("name", "Name")])
-            .rows(vec![TableRow::new(vec!["Alice".into()])]));
+        let el = Table::render(
+            TableProps::default()
+                .columns(vec![TableColumn::new("name", "Name")])
+                .rows(vec![TableRow::new(vec!["Alice".into()])]),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

@@ -157,10 +157,20 @@ fn figma_to_rye_recursive(node: &FigmaNode, output: &mut String, indent: usize) 
         FigmaNodeType::Text => {
             let text = node.text_content.as_deref().unwrap_or("");
             let style_str = format_figma_style(&node.style);
-            output.push_str(&format!("{}<span style=\"{}\">{}</span>\n", pad, style_str, text));
+            output.push_str(&format!(
+                "{}<span style=\"{}\">{}</span>\n",
+                pad, style_str, text
+            ));
         }
-        FigmaNodeType::Rectangle | FigmaNodeType::Frame | FigmaNodeType::Component | FigmaNodeType::Instance => {
-            let tag = if matches!(node.node_type, FigmaNodeType::Rectangle) { "div" } else { "div" };
+        FigmaNodeType::Rectangle
+        | FigmaNodeType::Frame
+        | FigmaNodeType::Component
+        | FigmaNodeType::Instance => {
+            let tag = if matches!(node.node_type, FigmaNodeType::Rectangle) {
+                "div"
+            } else {
+                "div"
+            };
             let style_str = format_figma_layout_style(&node.layout, &node.style);
             output.push_str(&format!("{}<{} style=\"{}\">\n", pad, tag, style_str));
 
@@ -181,11 +191,17 @@ fn figma_to_rye_recursive(node: &FigmaNode, output: &mut String, indent: usize) 
             }
         }
         FigmaNodeType::Ellipse => {
-            let style_str = format!("{}; border-radius: 50%", format_figma_layout_style(&node.layout, &node.style));
+            let style_str = format!(
+                "{}; border-radius: 50%",
+                format_figma_layout_style(&node.layout, &node.style)
+            );
             output.push_str(&format!("{}<div style=\"{}\"></div>\n", pad, style_str));
         }
         FigmaNodeType::Vector => {
-            output.push_str(&format!("{}<svg width=\"{}\" height=\"{}\"></svg>\n", pad, node.layout.width, node.layout.height));
+            output.push_str(&format!(
+                "{}<svg width=\"{}\" height=\"{}\"></svg>\n",
+                pad, node.layout.width, node.layout.height
+            ));
         }
         FigmaNodeType::Other(_) => {
             // Skip unknown node types
@@ -252,7 +268,10 @@ fn format_figma_layout_style(layout: &FigmaLayout, style: &FigmaStyle) -> String
 
 /// Figma API URL for fetching a node.
 pub fn figma_api_url(file_key: &str, node_id: &str) -> String {
-    format!("https://api.figma.com/v1/files/{}/nodes?id={}", file_key, node_id)
+    format!(
+        "https://api.figma.com/v1/files/{}/nodes?id={}",
+        file_key, node_id
+    )
 }
 
 #[cfg(test)]
@@ -300,7 +319,10 @@ mod tests {
     fn test_figma_node_type_from_str() {
         assert_eq!(FigmaNodeType::from_str("FRAME"), FigmaNodeType::Frame);
         assert_eq!(FigmaNodeType::from_str("TEXT"), FigmaNodeType::Text);
-        assert!(matches!(FigmaNodeType::from_str("CUSTOM"), FigmaNodeType::Other(_)));
+        assert!(matches!(
+            FigmaNodeType::from_str("CUSTOM"),
+            FigmaNodeType::Other(_)
+        ));
     }
 
     #[test]
@@ -375,9 +397,7 @@ mod tests {
 
     #[test]
     fn test_figma_import_config() {
-        let config = FigmaImportConfig::new("file123")
-            .node("1:2")
-            .node("3:4");
+        let config = FigmaImportConfig::new("file123").node("1:2").node("3:4");
         assert_eq!(config.file_key, "file123");
         assert_eq!(config.node_ids, vec!["1:2", "3:4"]);
     }

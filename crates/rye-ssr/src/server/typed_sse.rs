@@ -140,7 +140,12 @@ impl<T: SseEventType> SseChannel<T> {
 
     /// Get all pending events without draining.
     pub fn peek(&self) -> Vec<String> {
-        self.events.lock().unwrap().iter().map(|e| e.to_sse_string()).collect()
+        self.events
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|e| e.to_sse_string())
+            .collect()
     }
 }
 
@@ -159,7 +164,8 @@ impl SseChannelRegistry {
 
     /// Register a typed channel.
     pub fn register<T: SseEventType + 'static>(&mut self, channel: SseChannel<T>) {
-        self.channels.insert(channel.name.clone(), Box::new(channel));
+        self.channels
+            .insert(channel.name.clone(), Box::new(channel));
     }
 
     /// Get a typed channel by name.
@@ -288,7 +294,10 @@ mod tests {
         }
 
         fn serialize(&self) -> String {
-            format!("{{\"user_id\":\"{}\",\"action\":\"{}\"}}", self.user_id, self.action)
+            format!(
+                "{{\"user_id\":\"{}\",\"action\":\"{}\"}}",
+                self.user_id, self.action
+            )
         }
 
         fn deserialize(data: &str) -> Option<Self> {
@@ -310,7 +319,10 @@ mod tests {
 
     #[test]
     fn test_sse_event_new() {
-        let event = UserEvent { user_id: "u1".to_string(), action: "login".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "login".to_string(),
+        };
         let sse = SseEvent::new(&event);
         assert_eq!(sse.event_type, "user-event");
         assert!(sse.data.contains("u1"));
@@ -319,7 +331,10 @@ mod tests {
 
     #[test]
     fn test_sse_event_with_id_and_retry() {
-        let event = UserEvent { user_id: "u1".to_string(), action: "click".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "click".to_string(),
+        };
         let sse = SseEvent::new(&event).with_id("evt-123").with_retry(5000);
         assert_eq!(sse.id, Some("evt-123".to_string()));
         assert_eq!(sse.retry, Some(5000));
@@ -327,7 +342,10 @@ mod tests {
 
     #[test]
     fn test_sse_event_to_sse_string() {
-        let event = UserEvent { user_id: "u1".to_string(), action: "login".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "login".to_string(),
+        };
         let sse = SseEvent::new(&event).with_id("42");
         let output = sse.to_sse_string();
         assert!(output.contains("id: 42"));
@@ -339,7 +357,10 @@ mod tests {
     #[test]
     fn test_sse_channel_send_flush() {
         let channel = SseChannel::<UserEvent>::new("user-events");
-        let event = UserEvent { user_id: "u1".to_string(), action: "login".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "login".to_string(),
+        };
         channel.send(&event);
         channel.send(&event);
         assert_eq!(channel.pending_count(), 2);
@@ -352,7 +373,10 @@ mod tests {
     #[test]
     fn test_sse_channel_send_with_id() {
         let channel = SseChannel::<UserEvent>::new("test");
-        let event = UserEvent { user_id: "u1".to_string(), action: "click".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "click".to_string(),
+        };
         let sse = channel.send_with_id(&event, "evt-1");
         assert_eq!(sse.id, Some("evt-1".to_string()));
     }
@@ -368,7 +392,10 @@ mod tests {
     #[test]
     fn test_sse_channel_peek() {
         let channel = SseChannel::<UserEvent>::new("test");
-        let event = UserEvent { user_id: "u1".to_string(), action: "login".to_string() };
+        let event = UserEvent {
+            user_id: "u1".to_string(),
+            action: "login".to_string(),
+        };
         channel.send(&event);
         let peeked = channel.peek();
         assert_eq!(peeked.len(), 1);
@@ -398,8 +425,7 @@ mod tests {
 
     #[test]
     fn test_sse_receiver_script() {
-        let receiver = SseReceiver::<UserEvent>::new("/api/sse", "user-events")
-            .with_last_id("123");
+        let receiver = SseReceiver::<UserEvent>::new("/api/sse", "user-events").with_last_id("123");
         let script = receiver.event_source_script();
         assert!(script.contains("EventSource"));
         assert!(script.contains("user-events"));
@@ -433,9 +459,12 @@ mod tests {
     #[test]
     fn test_user_event_deserialize() {
         let event = UserEvent::deserialize("{\"user_id\":\"u1\",\"action\":\"login\"}");
-        assert_eq!(event, Some(UserEvent {
-            user_id: "u1".to_string(),
-            action: "login".to_string(),
-        }));
+        assert_eq!(
+            event,
+            Some(UserEvent {
+                user_id: "u1".to_string(),
+                action: "login".to_string(),
+            })
+        );
     }
 }

@@ -100,17 +100,25 @@ impl A11yReport {
 
     /// Whether the report has any errors.
     pub fn has_errors(&self) -> bool {
-        self.violations.iter().any(|v| v.severity == A11ySeverity::Error)
+        self.violations
+            .iter()
+            .any(|v| v.severity == A11ySeverity::Error)
     }
 
     /// Number of error-level violations.
     pub fn error_count(&self) -> usize {
-        self.violations.iter().filter(|v| v.severity == A11ySeverity::Error).count()
+        self.violations
+            .iter()
+            .filter(|v| v.severity == A11ySeverity::Error)
+            .count()
     }
 
     /// Number of warning-level violations.
     pub fn warning_count(&self) -> usize {
-        self.violations.iter().filter(|v| v.severity == A11ySeverity::Warning).count()
+        self.violations
+            .iter()
+            .filter(|v| v.severity == A11ySeverity::Warning)
+            .count()
     }
 
     /// Generate a summary string.
@@ -215,7 +223,11 @@ fn check_element(element: &HtmlElement, report: &mut A11yReport) {
 
     // Check inputs for labels
     if element.tag == "input" {
-        let input_type = element.get_attr("type").and_then(|v| v.as_ref()).map(|s| s.as_str()).unwrap_or("text");
+        let input_type = element
+            .get_attr("type")
+            .and_then(|v| v.as_ref())
+            .map(|s| s.as_str())
+            .unwrap_or("text");
         if input_type != "hidden" && input_type != "submit" && input_type != "button" {
             if !element.has_attr("aria-label") && !element.has_attr("aria-labelledby") {
                 report.add(A11yViolation {
@@ -278,21 +290,41 @@ fn relative_luminance(rgb: (u8, u8, u8)) -> f64 {
     let g = rgb.1 as f64 / 255.0;
     let b = rgb.2 as f64 / 255.0;
 
-    let r = if r <= 0.03928 { r / 12.92 } else { ((r + 0.055) / 1.055).powf(2.4) };
-    let g = if g <= 0.03928 { g / 12.92 } else { ((g + 0.055) / 1.055).powf(2.4) };
-    let b = if b <= 0.03928 { b / 12.92 } else { ((b + 0.055) / 1.055).powf(2.4) };
+    let r = if r <= 0.03928 {
+        r / 12.92
+    } else {
+        ((r + 0.055) / 1.055).powf(2.4)
+    };
+    let g = if g <= 0.03928 {
+        g / 12.92
+    } else {
+        ((g + 0.055) / 1.055).powf(2.4)
+    };
+    let b = if b <= 0.03928 {
+        b / 12.92
+    } else {
+        ((b + 0.055) / 1.055).powf(2.4)
+    };
 
     0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 /// Check if contrast meets WCAG AA (4.5:1 for normal text, 3:1 for large text).
 pub fn meets_wcag_aa(ratio: f64, large_text: bool) -> bool {
-    if large_text { ratio >= 3.0 } else { ratio >= 4.5 }
+    if large_text {
+        ratio >= 3.0
+    } else {
+        ratio >= 4.5
+    }
 }
 
 /// Check if contrast meets WCAG AAA (7:1 for normal text, 4.5:1 for large text).
 pub fn meets_wcag_aaa(ratio: f64, large_text: bool) -> bool {
-    if large_text { ratio >= 4.5 } else { ratio >= 7.0 }
+    if large_text {
+        ratio >= 4.5
+    } else {
+        ratio >= 7.0
+    }
 }
 
 #[cfg(test)]
@@ -334,8 +366,8 @@ mod tests {
 
     #[test]
     fn test_button_with_aria_label() {
-        let button = HtmlElement::new("button")
-            .attr("aria-label", Some("Close dialog".to_string()));
+        let button =
+            HtmlElement::new("button").attr("aria-label", Some("Close dialog".to_string()));
         let report = check_accessibility(&button);
         assert!(!report.has_errors());
     }

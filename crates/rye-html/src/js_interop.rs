@@ -328,10 +328,7 @@ mod tests {
 
     #[test]
     fn test_js_value_array_display() {
-        let v = JsValue::Array(vec![
-            JsValue::Number(1.0),
-            JsValue::String("two".into()),
-        ]);
+        let v = JsValue::Array(vec![JsValue::Number(1.0), JsValue::String("two".into())]);
         assert_eq!(v.to_display_string(), "[1, two]");
     }
 
@@ -354,8 +351,8 @@ mod tests {
         let n: JsValue = 42i32.into();
         assert_eq!(n.as_number(), Some(42.0));
 
-        let f: JsValue = 3.14f64.into();
-        assert_eq!(f.as_number(), Some(3.14));
+        let f: JsValue = 1.5f64.into();
+        assert_eq!(f.as_number(), Some(1.5));
 
         let b: JsValue = true.into();
         assert_eq!(b.as_bool(), Some(true));
@@ -392,11 +389,7 @@ mod tests {
 
     #[test]
     fn test_js_array_builder() {
-        let arr = JsArrayBuilder::new()
-            .push(1)
-            .push("two")
-            .push(true)
-            .build();
+        let arr = JsArrayBuilder::new().push(1).push("two").push(true).build();
 
         match arr {
             JsValue::Array(items) => {

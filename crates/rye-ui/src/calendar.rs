@@ -1,8 +1,8 @@
 //! Calendar — full month calendar grid.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct CalendarDay {
@@ -15,11 +15,26 @@ pub struct CalendarDay {
 
 impl CalendarDay {
     pub fn new(day: u32, in_month: bool) -> Self {
-        Self { day, in_month, selected: false, today: false, disabled: false }
+        Self {
+            day,
+            in_month,
+            selected: false,
+            today: false,
+            disabled: false,
+        }
     }
-    pub fn selected(mut self) -> Self { self.selected = true; self }
-    pub fn today(mut self) -> Self { self.today = true; self }
-    pub fn disabled(mut self) -> Self { self.disabled = true; self }
+    pub fn selected(mut self) -> Self {
+        self.selected = true;
+        self
+    }
+    pub fn today(mut self) -> Self {
+        self.today = true;
+        self
+    }
+    pub fn disabled(mut self) -> Self {
+        self.disabled = true;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,19 +48,44 @@ pub struct CalendarProps {
 
 impl Default for CalendarProps {
     fn default() -> Self {
-        Self { year: 2025, month: 1, days: Vec::new(), class: None, style: None }
+        Self {
+            year: 2025,
+            month: 1,
+            days: Vec::new(),
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl CalendarProps {
-    pub fn year(mut self, y: u32) -> Self { self.year = y; self }
-    pub fn month(mut self, m: u32) -> Self { self.month = m; self }
-    pub fn days(mut self, d: Vec<CalendarDay>) -> Self { self.days = d; self }
+    pub fn year(mut self, y: u32) -> Self {
+        self.year = y;
+        self
+    }
+    pub fn month(mut self, m: u32) -> Self {
+        self.month = m;
+        self
+    }
+    pub fn days(mut self, d: Vec<CalendarDay>) -> Self {
+        self.days = d;
+        self
+    }
 }
 
 const MONTH_NAMES: [&str; 12] = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ];
 
 const WEEKDAYS: [&str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -62,7 +102,9 @@ impl Calendar {
         let mut children = Vec::new();
 
         // Header
-        let month_name = MONTH_NAMES.get((props.month - 1) as usize).unwrap_or(&"Unknown");
+        let month_name = MONTH_NAMES
+            .get((props.month - 1) as usize)
+            .unwrap_or(&"Unknown");
         children.push(Template::new_element("div",
             vec![("style".to_string(), "display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;".to_string()),
                  ("class".to_string(), "rye-calendar-header".to_string())],
@@ -85,9 +127,15 @@ impl Calendar {
                 Vec::new(), vec![Template::text(*wd)])
         }).collect();
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "display:grid;grid-template-columns:repeat(7,1fr);".to_string())],
-            Vec::new(), weekday_cells));
+        children.push(Template::new_element(
+            "div",
+            vec![(
+                "style".to_string(),
+                "display:grid;grid-template-columns:repeat(7,1fr);".to_string(),
+            )],
+            Vec::new(),
+            weekday_cells,
+        ));
 
         // Days grid
         let day_cells: Vec<Template> = props.days.iter().map(|d| {
@@ -107,15 +155,31 @@ impl Calendar {
                 Vec::new(), vec![Template::text(&d.day.to_string())])
         }).collect();
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "display:grid;grid-template-columns:repeat(7,1fr);gap:2px;".to_string()),
-                 ("class".to_string(), "rye-calendar-grid".to_string())],
-            Vec::new(), day_cells));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "display:grid;grid-template-columns:repeat(7,1fr);gap:2px;".to_string(),
+                ),
+                ("class".to_string(), "rye-calendar-grid".to_string()),
+            ],
+            Vec::new(),
+            day_cells,
+        ));
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-calendar {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!("rye-calendar {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 

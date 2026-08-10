@@ -18,7 +18,7 @@
 //! 6. No tree diffing, no VDOM allocation, no garbage from re-renders.
 
 use crate::element::Element;
-use crate::hooks::{enter_hook_scope, drain_hook_context};
+use crate::hooks::{drain_hook_context, enter_hook_scope};
 use crate::reconcile::{reconcile, Key, ReconcileOp};
 use crate::renderer::{Hydratable, Renderer};
 use crate::template::{ReactiveListFn, TemplateNode};
@@ -169,7 +169,14 @@ fn hydrate_template_nodes<R: Hydratable>(
 ) {
     // Collect info about existing DOM children without holding a long-lived borrow.
     // Each entry is (is_element, is_text, element, text, tag_name, child_count).
-    let dom_info: Vec<(bool, bool, Option<R::Element>, Option<R::Text>, Option<String>, usize)> = {
+    let dom_info: Vec<(
+        bool,
+        bool,
+        Option<R::Element>,
+        Option<R::Text>,
+        Option<String>,
+        usize,
+    )> = {
         let r = renderer.borrow();
         let child_count = r.child_node_count(parent);
         (0..child_count)
@@ -253,12 +260,11 @@ fn hydrate_template_nodes<R: Hydratable>(
                     let mut r = renderer.borrow_mut();
                     for (event, handler) in events {
                         let handler_ref = Rc::clone(handler);
-                        let handler_fn: crate::renderer::EventHandler = Box::new(
-                            move |payload: &dyn std::any::Any| {
+                        let handler_fn: crate::renderer::EventHandler =
+                            Box::new(move |payload: &dyn std::any::Any| {
                                 let mut h = handler_ref.borrow_mut();
                                 h(payload);
-                            },
-                        );
+                            });
                         r.set_event_listener(el, event, handler_fn);
                     }
 
@@ -279,9 +285,11 @@ fn hydrate_template_nodes<R: Hydratable>(
 
                     effects.push(Effect::new(move || {
                         let value = compute_clone();
-                        renderer_clone
-                            .borrow_mut()
-                            .set_attribute(&el_clone, &attr_name_clone, &value);
+                        renderer_clone.borrow_mut().set_attribute(
+                            &el_clone,
+                            &attr_name_clone,
+                            &value,
+                        );
                     }));
                 }
 
@@ -366,7 +374,9 @@ fn create_template_nodes<R: Renderer>(
 
                 effects.push(Effect::new(move || {
                     let value = compute_clone();
-                    renderer_clone.borrow_mut().set_text(&text_node_clone, &value);
+                    renderer_clone
+                        .borrow_mut()
+                        .set_text(&text_node_clone, &value);
                 }));
             }
 
@@ -394,12 +404,11 @@ fn create_template_nodes<R: Renderer>(
                     // Event handlers — register in delegation registry
                     for (event, handler) in events {
                         let handler_ref = Rc::clone(handler);
-                        let handler_fn: crate::renderer::EventHandler = Box::new(
-                            move |payload: &dyn std::any::Any| {
+                        let handler_fn: crate::renderer::EventHandler =
+                            Box::new(move |payload: &dyn std::any::Any| {
                                 let mut h = handler_ref.borrow_mut();
                                 h(payload);
-                            },
-                        );
+                            });
                         r.set_event_listener(&el, event, handler_fn);
                     }
 
@@ -423,9 +432,11 @@ fn create_template_nodes<R: Renderer>(
 
                     effects.push(Effect::new(move || {
                         let value = compute_clone();
-                        renderer_clone
-                            .borrow_mut()
-                            .set_attribute(&el_clone, &attr_name_clone, &value);
+                        renderer_clone.borrow_mut().set_attribute(
+                            &el_clone,
+                            &attr_name_clone,
+                            &value,
+                        );
                     }));
                 }
 
@@ -715,12 +726,8 @@ mod tests {
 
     #[test]
     fn test_render_tree_with_nested_elements() {
-        let child = Template::new_element(
-            "span",
-            vec![],
-            Vec::new(),
-            vec![Template::text("inner")],
-        );
+        let child =
+            Template::new_element("span", vec![], Vec::new(), vec![Template::text("inner")]);
         let el = Element::Template(Template::new_element(
             "div",
             vec![],
@@ -735,9 +742,9 @@ mod tests {
 
     #[test]
     fn test_render_tree_with_reactive_node() {
-        let el = Element::Template(Template::new(vec![TemplateNode::Reactive(
-            Rc::new(|| "dynamic".to_string()),
-        )]));
+        let el = Element::Template(Template::new(vec![TemplateNode::Reactive(Rc::new(|| {
+            "dynamic".to_string()
+        }))]));
         let output = render_tree_to_string(&el);
         assert!(output.contains("reactive"));
     }
@@ -775,7 +782,8 @@ mod tests {
         }
 
         fn set_attribute(&mut self, el: &Self::Element, name: &str, value: &str) {
-            self.ops.push(format!("set_attr({}, {}, {})", el, name, value));
+            self.ops
+                .push(format!("set_attr({}, {}, {})", el, name, value));
         }
 
         fn remove_attribute(&mut self, el: &Self::Element, name: &str) {
@@ -783,22 +791,31 @@ mod tests {
         }
 
         fn insert_child(&mut self, parent: &Self::Element, child: &Self::Node, index: usize) {
-            self.ops.push(format!("insert_child({}, {}, {})", parent, child, index));
+            self.ops
+                .push(format!("insert_child({}, {}, {})", parent, child, index));
         }
 
         fn remove_child(&mut self, parent: &Self::Element, index: usize) {
-            self.ops.push(format!("remove_child({}, {})", parent, index));
+            self.ops
+                .push(format!("remove_child({}, {})", parent, index));
         }
 
         fn replace_child(&mut self, parent: &Self::Element, new: &Self::Node, index: usize) {
-            self.ops.push(format!("replace_child({}, {}, {})", parent, new, index));
+            self.ops
+                .push(format!("replace_child({}, {}, {})", parent, new, index));
         }
 
         fn move_child(&mut self, parent: &Self::Element, from: usize, to: usize) {
-            self.ops.push(format!("move_child({}, {}, {})", parent, from, to));
+            self.ops
+                .push(format!("move_child({}, {}, {})", parent, from, to));
         }
 
-        fn set_event_listener(&mut self, _el: &Self::Element, _event: &str, _handler: crate::renderer::EventHandler) {
+        fn set_event_listener(
+            &mut self,
+            _el: &Self::Element,
+            _event: &str,
+            _handler: crate::renderer::EventHandler,
+        ) {
             self.ops.push("set_event_listener".to_string());
         }
 
@@ -887,7 +904,9 @@ mod tests {
 
         let scope = mount(
             || {
-                Element::Template(Template::new(vec![TemplateNode::Text("static".to_string())]))
+                Element::Template(Template::new(vec![TemplateNode::Text(
+                    "static".to_string(),
+                )]))
             },
             renderer,
         );
@@ -901,10 +920,7 @@ mod tests {
     /// A simulated DOM node for testing hydration.
     #[derive(Debug, Clone)]
     enum SimNode {
-        Element {
-            tag: String,
-            children: Vec<SimNode>,
-        },
+        Element { tag: String, children: Vec<SimNode> },
         Text(String),
     }
 
@@ -945,7 +961,8 @@ mod tests {
         }
 
         fn set_attribute(&mut self, el: &Self::Element, name: &str, value: &str) {
-            self.ops.push(format!("SET_ATTR({}, {}, {})", el, name, value));
+            self.ops
+                .push(format!("SET_ATTR({}, {}, {})", el, name, value));
         }
 
         fn remove_attribute(&mut self, el: &Self::Element, name: &str) {
@@ -953,22 +970,31 @@ mod tests {
         }
 
         fn insert_child(&mut self, parent: &Self::Element, child: &Self::Node, index: usize) {
-            self.ops.push(format!("INSERT_CHILD({}, {:?}, {})", parent, child, index));
+            self.ops
+                .push(format!("INSERT_CHILD({}, {:?}, {})", parent, child, index));
         }
 
         fn remove_child(&mut self, parent: &Self::Element, index: usize) {
-            self.ops.push(format!("REMOVE_CHILD({}, {})", parent, index));
+            self.ops
+                .push(format!("REMOVE_CHILD({}, {})", parent, index));
         }
 
         fn replace_child(&mut self, parent: &Self::Element, new: &Self::Node, index: usize) {
-            self.ops.push(format!("REPLACE_CHILD({}, {:?}, {})", parent, new, index));
+            self.ops
+                .push(format!("REPLACE_CHILD({}, {:?}, {})", parent, new, index));
         }
 
         fn move_child(&mut self, parent: &Self::Element, from: usize, to: usize) {
-            self.ops.push(format!("MOVE_CHILD({}, {}, {})", parent, from, to));
+            self.ops
+                .push(format!("MOVE_CHILD({}, {}, {})", parent, from, to));
         }
 
-        fn set_event_listener(&mut self, _el: &Self::Element, event: &str, _handler: crate::renderer::EventHandler) {
+        fn set_event_listener(
+            &mut self,
+            _el: &Self::Element,
+            event: &str,
+            _handler: crate::renderer::EventHandler,
+        ) {
             self.ops.push(format!("SET_EVENT({})", event));
         }
 
@@ -1071,9 +1097,7 @@ mod tests {
         let renderer = TestHydratableRenderer::new(dom);
 
         let scope = hydrate_to_dom(
-            || {
-                Element::Template(Template::new(vec![TemplateNode::Text("hello".to_string())]))
-            },
+            || Element::Template(Template::new(vec![TemplateNode::Text("hello".to_string())])),
             renderer,
         );
 

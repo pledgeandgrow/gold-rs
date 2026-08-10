@@ -1,8 +1,8 @@
 //! Carousel — image/content slider.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct CarouselSlide {
@@ -12,14 +12,31 @@ pub struct CarouselSlide {
 }
 
 impl CarouselSlide {
-    pub fn new() -> Self { Self { image: None, title: None, description: None } }
-    pub fn image(mut self, i: impl Into<String>) -> Self { self.image = Some(i.into()); self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
-    pub fn description(mut self, d: impl Into<String>) -> Self { self.description = Some(d.into()); self }
+    pub fn new() -> Self {
+        Self {
+            image: None,
+            title: None,
+            description: None,
+        }
+    }
+    pub fn image(mut self, i: impl Into<String>) -> Self {
+        self.image = Some(i.into());
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
+    pub fn description(mut self, d: impl Into<String>) -> Self {
+        self.description = Some(d.into());
+        self
+    }
 }
 
 impl Default for CarouselSlide {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,16 +53,36 @@ pub struct CarouselProps {
 
 impl Default for CarouselProps {
     fn default() -> Self {
-        Self { slides: Vec::new(), current: 0, show_arrows: true, show_dots: true,
-               height: "300px".to_string(), autoplay: false, class: None, style: None }
+        Self {
+            slides: Vec::new(),
+            current: 0,
+            show_arrows: true,
+            show_dots: true,
+            height: "300px".to_string(),
+            autoplay: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl CarouselProps {
-    pub fn slides(mut self, s: Vec<CarouselSlide>) -> Self { self.slides = s; self }
-    pub fn current(mut self, c: usize) -> Self { self.current = c; self }
-    pub fn height(mut self, h: impl Into<String>) -> Self { self.height = h.into(); self }
-    pub fn autoplay(mut self, a: bool) -> Self { self.autoplay = a; self }
+    pub fn slides(mut self, s: Vec<CarouselSlide>) -> Self {
+        self.slides = s;
+        self
+    }
+    pub fn current(mut self, c: usize) -> Self {
+        self.current = c;
+        self
+    }
+    pub fn height(mut self, h: impl Into<String>) -> Self {
+        self.height = h.into();
+        self
+    }
+    pub fn autoplay(mut self, a: bool) -> Self {
+        self.autoplay = a;
+        self
+    }
 }
 
 pub struct Carousel;
@@ -70,10 +107,18 @@ impl Carousel {
         let mut slide_children = Vec::new();
 
         if let Some(img) = &slide.image {
-            slide_children.push(Template::new_element("img",
-                vec![("src".to_string(), img.clone()),
-                     ("style".to_string(), "width:100%;height:100%;object-fit:cover;".to_string())],
-                Vec::new(), Vec::new()));
+            slide_children.push(Template::new_element(
+                "img",
+                vec![
+                    ("src".to_string(), img.clone()),
+                    (
+                        "style".to_string(),
+                        "width:100%;height:100%;object-fit:cover;".to_string(),
+                    ),
+                ],
+                Vec::new(),
+                Vec::new(),
+            ));
         }
 
         if slide.title.is_some() || slide.description.is_some() {
@@ -81,37 +126,70 @@ impl Carousel {
 
             let mut overlay_children = Vec::new();
             if let Some(title) = &slide.title {
-                overlay_children.push(Template::new_element("div",
-                    vec![("style".to_string(), "font-size:20px;font-weight:600;margin-bottom:4px;".to_string())],
-                    Vec::new(), vec![Template::text(title)]));
+                overlay_children.push(Template::new_element(
+                    "div",
+                    vec![(
+                        "style".to_string(),
+                        "font-size:20px;font-weight:600;margin-bottom:4px;".to_string(),
+                    )],
+                    Vec::new(),
+                    vec![Template::text(title)],
+                ));
             }
             if let Some(desc) = &slide.description {
-                overlay_children.push(Template::new_element("div",
-                    vec![("style".to_string(), "font-size:14px;opacity:0.9;".to_string())],
-                    Vec::new(), vec![Template::text(desc)]));
+                overlay_children.push(Template::new_element(
+                    "div",
+                    vec![(
+                        "style".to_string(),
+                        "font-size:14px;opacity:0.9;".to_string(),
+                    )],
+                    Vec::new(),
+                    vec![Template::text(desc)],
+                ));
             }
 
-            slide_children.push(Template::new_element("div",
+            slide_children.push(Template::new_element(
+                "div",
                 vec![("style".to_string(), overlay_style.to_string())],
-                Vec::new(), overlay_children));
+                Vec::new(),
+                overlay_children,
+            ));
         }
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), "width:100%;height:100%;position:relative;".to_string()),
-                 ("class".to_string(), "rye-carousel-slide".to_string())],
-            Vec::new(), slide_children));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                (
+                    "style".to_string(),
+                    "width:100%;height:100%;position:relative;".to_string(),
+                ),
+                ("class".to_string(), "rye-carousel-slide".to_string()),
+            ],
+            Vec::new(),
+            slide_children,
+        ));
 
         // Arrows
         if props.show_arrows && props.slides.len() > 1 {
             let arrow_style = "position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.8);border:none;cursor:pointer;font-size:var(--rye-font-size-xl);color:var(--rye-text);display:flex;align-items:center;justify-content:center;";
-            children.push(Template::new_element("button",
-                vec![("style".to_string(), format!("{}left:12px;", arrow_style)),
-                     ("class".to_string(), "rye-carousel-prev".to_string())],
-                Vec::new(), vec![Template::text("‹")]));
-            children.push(Template::new_element("button",
-                vec![("style".to_string(), format!("{}right:12px;", arrow_style)),
-                     ("class".to_string(), "rye-carousel-next".to_string())],
-                Vec::new(), vec![Template::text("›")]));
+            children.push(Template::new_element(
+                "button",
+                vec![
+                    ("style".to_string(), format!("{}left:12px;", arrow_style)),
+                    ("class".to_string(), "rye-carousel-prev".to_string()),
+                ],
+                Vec::new(),
+                vec![Template::text("‹")],
+            ));
+            children.push(Template::new_element(
+                "button",
+                vec![
+                    ("style".to_string(), format!("{}right:12px;", arrow_style)),
+                    ("class".to_string(), "rye-carousel-next".to_string()),
+                ],
+                Vec::new(),
+                vec![Template::text("›")],
+            ));
         }
 
         // Dots
@@ -131,10 +209,18 @@ impl Carousel {
                 Vec::new(), dots));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), container_style),
-                 ("class".to_string(), format!("rye-carousel {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), container_style),
+                (
+                    "class".to_string(),
+                    format!("rye-carousel {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -155,7 +241,10 @@ mod tests {
     #[test]
     fn test_carousel_props_builder() {
         let p = CarouselProps::default()
-            .slides(vec![CarouselSlide::new().title("A"), CarouselSlide::new().title("B")])
+            .slides(vec![
+                CarouselSlide::new().title("A"),
+                CarouselSlide::new().title("B"),
+            ])
             .current(1)
             .height("400px")
             .autoplay(true);
@@ -172,12 +261,14 @@ mod tests {
 
     #[test]
     fn test_carousel_render() {
-        let el = Carousel::render(CarouselProps::default()
-            .slides(vec![
-                CarouselSlide::new().title("First").image("/1.jpg"),
-                CarouselSlide::new().title("Second").image("/2.jpg"),
-            ])
-            .current(0));
+        let el = Carousel::render(
+            CarouselProps::default()
+                .slides(vec![
+                    CarouselSlide::new().title("First").image("/1.jpg"),
+                    CarouselSlide::new().title("Second").image("/2.jpg"),
+                ])
+                .current(0),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

@@ -1,8 +1,8 @@
 //! FileUpload — drag-and-drop file input.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct FileUploadProps {
@@ -17,17 +17,39 @@ pub struct FileUploadProps {
 
 impl Default for FileUploadProps {
     fn default() -> Self {
-        Self { label: None, accept: None, multiple: false, disabled: false,
-               hint: None, class: None, style: None }
+        Self {
+            label: None,
+            accept: None,
+            multiple: false,
+            disabled: false,
+            hint: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl FileUploadProps {
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
-    pub fn accept(mut self, a: impl Into<String>) -> Self { self.accept = Some(a.into()); self }
-    pub fn multiple(mut self, m: bool) -> Self { self.multiple = m; self }
-    pub fn disabled(mut self, d: bool) -> Self { self.disabled = d; self }
-    pub fn hint(mut self, h: impl Into<String>) -> Self { self.hint = Some(h.into()); self }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
+    pub fn accept(mut self, a: impl Into<String>) -> Self {
+        self.accept = Some(a.into());
+        self
+    }
+    pub fn multiple(mut self, m: bool) -> Self {
+        self.multiple = m;
+        self
+    }
+    pub fn disabled(mut self, d: bool) -> Self {
+        self.disabled = d;
+        self
+    }
+    pub fn hint(mut self, h: impl Into<String>) -> Self {
+        self.hint = Some(h.into());
+        self
+    }
 }
 
 pub struct FileUpload;
@@ -52,33 +74,65 @@ impl FileUpload {
             props.style.as_deref().unwrap_or(""),
         );
 
-        let icon_style = format!("font-size:32px;color:{};margin-bottom:8px;", vars::TEXT_SUBTLE);
-        let text_style = format!("font-size:var(--rye-font-size-md);color:{};", vars::TEXT_MUTED);
+        let icon_style = format!(
+            "font-size:32px;color:{};margin-bottom:8px;",
+            vars::TEXT_SUBTLE
+        );
+        let text_style = format!(
+            "font-size:var(--rye-font-size-md);color:{};",
+            vars::TEXT_MUTED
+        );
 
         let mut drop_children = vec![
-            Template::new_element("div",
+            Template::new_element(
+                "div",
                 vec![("style".to_string(), icon_style.to_string())],
-                Vec::new(), vec![Template::text("📁")]),
-            Template::new_element("div",
+                Vec::new(),
+                vec![Template::text("📁")],
+            ),
+            Template::new_element(
+                "div",
                 vec![("style".to_string(), text_style.to_string())],
-                Vec::new(), vec![Template::text(
-                    if props.disabled { "File upload disabled" }
-                    else if props.multiple { "Click or drag files to upload" }
-                    else { "Click or drag a file to upload" }
-                )]),
+                Vec::new(),
+                vec![Template::text(if props.disabled {
+                    "File upload disabled"
+                } else if props.multiple {
+                    "Click or drag files to upload"
+                } else {
+                    "Click or drag a file to upload"
+                })],
+            ),
         ];
 
         if let Some(hint) = &props.hint {
-            drop_children.push(Template::new_element("div",
-                vec![("style".to_string(), format!("font-size:var(--rye-font-size-sm);color:{};margin-top:4px;", vars::TEXT_SUBTLE))],
-                Vec::new(), vec![Template::text(hint)]));
+            drop_children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "font-size:var(--rye-font-size-sm);color:{};margin-top:4px;",
+                        vars::TEXT_SUBTLE
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(hint)],
+            ));
         }
 
         // Hidden file input
         let mut input_attrs = vec![
             ("type".to_string(), "file".to_string()),
-            ("style".to_string(), "position:absolute;opacity:0;width:0;height:0;".to_string()),
-            ("class".to_string(), format!("rye-file-upload-input {}", props.class.as_deref().unwrap_or(""))),
+            (
+                "style".to_string(),
+                "position:absolute;opacity:0;width:0;height:0;".to_string(),
+            ),
+            (
+                "class".to_string(),
+                format!(
+                    "rye-file-upload-input {}",
+                    props.class.as_deref().unwrap_or("")
+                ),
+            ),
         ];
         if let Some(accept) = &props.accept {
             input_attrs.push(("accept".to_string(), accept.clone()));
@@ -90,15 +144,29 @@ impl FileUpload {
             input_attrs.push(("disabled".to_string(), "true".to_string()));
         }
 
-        drop_children.push(Template::new_element("input", input_attrs, Vec::new(), Vec::new()));
+        drop_children.push(Template::new_element(
+            "input",
+            input_attrs,
+            Vec::new(),
+            Vec::new(),
+        ));
 
-        children.push(Template::new_element("div",
-            vec![("style".to_string(), drop_style), ("class".to_string(), "rye-file-upload".to_string())],
-            Vec::new(), drop_children));
+        children.push(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), drop_style),
+                ("class".to_string(), "rye-file-upload".to_string()),
+            ],
+            Vec::new(),
+            drop_children,
+        ));
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-file-upload-wrapper".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 

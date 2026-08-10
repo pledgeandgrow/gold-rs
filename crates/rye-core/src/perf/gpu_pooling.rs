@@ -50,17 +50,29 @@ impl GpuResourceType {
 
     /// Check if this resource is a buffer.
     pub fn is_buffer(&self) -> bool {
-        matches!(self, GpuResourceType::VertexBuffer | GpuResourceType::IndexBuffer | GpuResourceType::UniformBuffer | GpuResourceType::StorageBuffer)
+        matches!(
+            self,
+            GpuResourceType::VertexBuffer
+                | GpuResourceType::IndexBuffer
+                | GpuResourceType::UniformBuffer
+                | GpuResourceType::StorageBuffer
+        )
     }
 
     /// Check if this resource is a texture.
     pub fn is_texture(&self) -> bool {
-        matches!(self, GpuResourceType::Texture2d | GpuResourceType::TextureDepth)
+        matches!(
+            self,
+            GpuResourceType::Texture2d | GpuResourceType::TextureDepth
+        )
     }
 
     /// Check if this resource is a pipeline.
     pub fn is_pipeline(&self) -> bool {
-        matches!(self, GpuResourceType::RenderPipeline | GpuResourceType::ComputePipeline)
+        matches!(
+            self,
+            GpuResourceType::RenderPipeline | GpuResourceType::ComputePipeline
+        )
     }
 }
 
@@ -148,13 +160,19 @@ impl GpuResourcePool {
         let mut pools = self.pools.lock().unwrap();
         let mut stats = self.stats.lock().unwrap();
 
-        let pool = pools.entry(resource_type).or_insert_with(|| ResourceTypePool {
-            resources: Vec::new(),
-            next_id: 0,
-        });
+        let pool = pools
+            .entry(resource_type)
+            .or_insert_with(|| ResourceTypePool {
+                resources: Vec::new(),
+                next_id: 0,
+            });
 
         // Try to find an idle resource of matching size
-        if let Some(resource) = pool.resources.iter_mut().find(|r| !r.in_use && r.size_bytes == size_bytes) {
+        if let Some(resource) = pool
+            .resources
+            .iter_mut()
+            .find(|r| !r.in_use && r.size_bytes == size_bytes)
+        {
             resource.in_use = true;
             resource.reuse_count += 1;
             stats.reuses += 1;
@@ -163,7 +181,11 @@ impl GpuResourcePool {
         }
 
         // Try to find an idle resource with >= size (can sub-allocate)
-        if let Some(resource) = pool.resources.iter_mut().find(|r| !r.in_use && r.size_bytes >= size_bytes) {
+        if let Some(resource) = pool
+            .resources
+            .iter_mut()
+            .find(|r| !r.in_use && r.size_bytes >= size_bytes)
+        {
             resource.in_use = true;
             resource.reuse_count += 1;
             stats.reuses += 1;
@@ -243,12 +265,19 @@ impl GpuResourcePool {
 
     /// Get the pool size for a resource type.
     pub fn pool_size(&self, resource_type: GpuResourceType) -> usize {
-        self.pools.lock().unwrap().get(&resource_type).map(|p| p.resources.len()).unwrap_or(0)
+        self.pools
+            .lock()
+            .unwrap()
+            .get(&resource_type)
+            .map(|p| p.resources.len())
+            .unwrap_or(0)
     }
 
     /// Get the number of idle resources for a type.
     pub fn idle_count(&self, resource_type: GpuResourceType) -> usize {
-        self.pools.lock().unwrap()
+        self.pools
+            .lock()
+            .unwrap()
             .get(&resource_type)
             .map(|p| p.resources.iter().filter(|r| !r.in_use).count())
             .unwrap_or(0)
@@ -256,7 +285,9 @@ impl GpuResourcePool {
 
     /// Get the number of in-use resources for a type.
     pub fn in_use_count(&self, resource_type: GpuResourceType) -> usize {
-        self.pools.lock().unwrap()
+        self.pools
+            .lock()
+            .unwrap()
             .get(&resource_type)
             .map(|p| p.resources.iter().filter(|r| r.in_use).count())
             .unwrap_or(0)

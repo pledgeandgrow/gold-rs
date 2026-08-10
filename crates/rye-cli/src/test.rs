@@ -93,7 +93,10 @@ impl TestConfig {
                 "--coverage" => config.coverage = true,
                 "--" => found_separator = true,
                 "--features" if i + 1 < args.len() => {
-                    config.features = args[i + 1].split(',').map(|s| s.trim().to_string()).collect();
+                    config.features = args[i + 1]
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .collect();
                     i += 1;
                 }
                 s if s.starts_with("--features=") => {
@@ -192,10 +195,16 @@ pub fn run(args: &[String]) {
     let result = execute(&config);
     if result.success {
         println!();
-        println!("  Test result: ok. {} passed; {} failed; {} ignored", result.passed, result.failed, result.ignored);
+        println!(
+            "  Test result: ok. {} passed; {} failed; {} ignored",
+            result.passed, result.failed, result.ignored
+        );
     } else {
         eprintln!();
-        eprintln!("  Test result: FAILED. {} passed; {} failed; {} ignored", result.passed, result.failed, result.ignored);
+        eprintln!(
+            "  Test result: FAILED. {} passed; {} failed; {} ignored",
+            result.passed, result.failed, result.ignored
+        );
         std::process::exit(1);
     }
 }
@@ -250,10 +259,7 @@ fn run_cargo_test(config: &TestConfig) -> TestResult {
     let display = format_command(&cmd);
     println!("  Running: {}", display);
 
-    let output = cmd
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::piped())
-        .output();
+    let output = cmd.stdout(Stdio::inherit()).stderr(Stdio::piped()).output();
 
     match output {
         Ok(result) => {
@@ -322,10 +328,7 @@ fn run_with_coverage(config: &TestConfig) -> TestResult {
     println!("  Running: {}", display);
     println!("  Coverage tool: {}", tool);
 
-    let output = cmd
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::piped())
-        .output();
+    let output = cmd.stdout(Stdio::inherit()).stderr(Stdio::piped()).output();
 
     match output {
         Ok(result) => {
@@ -636,7 +639,8 @@ mod tests {
 
     #[test]
     fn test_parse_test_summary_failed() {
-        let output = "test result: FAILED. 3 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out";
+        let output =
+            "test result: FAILED. 3 passed; 2 failed; 1 ignored; 0 measured; 0 filtered out";
         let (passed, failed, ignored) = parse_test_summary(output);
         assert_eq!(passed, 3);
         assert_eq!(failed, 2);

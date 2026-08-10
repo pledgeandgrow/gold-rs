@@ -1,8 +1,8 @@
 //! Progress — progress bar (determinate/indeterminate).
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct ProgressProps {
@@ -17,17 +17,39 @@ pub struct ProgressProps {
 
 impl Default for ProgressProps {
     fn default() -> Self {
-        Self { value: None, color: vars::PRIMARY.to_string(), track_color: vars::BORDER.to_string(),
-               height: "8px".to_string(), label: None, class: None, style: None }
+        Self {
+            value: None,
+            color: vars::PRIMARY.to_string(),
+            track_color: vars::BORDER.to_string(),
+            height: "8px".to_string(),
+            label: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl ProgressProps {
-    pub fn value(mut self, v: f64) -> Self { self.value = Some(v); self }
-    pub fn indeterminate(mut self) -> Self { self.value = None; self }
-    pub fn color(mut self, c: impl Into<String>) -> Self { self.color = c.into(); self }
-    pub fn height(mut self, h: impl Into<String>) -> Self { self.height = h.into(); self }
-    pub fn label(mut self, l: impl Into<String>) -> Self { self.label = Some(l.into()); self }
+    pub fn value(mut self, v: f64) -> Self {
+        self.value = Some(v);
+        self
+    }
+    pub fn indeterminate(mut self) -> Self {
+        self.value = None;
+        self
+    }
+    pub fn color(mut self, c: impl Into<String>) -> Self {
+        self.color = c.into();
+        self
+    }
+    pub fn height(mut self, h: impl Into<String>) -> Self {
+        self.height = h.into();
+        self
+    }
+    pub fn label(mut self, l: impl Into<String>) -> Self {
+        self.label = Some(l.into());
+        self
+    }
 }
 
 pub struct Progress;
@@ -36,7 +58,9 @@ impl Progress {
     pub fn render(props: ProgressProps) -> Element {
         let track_style = format!(
             "width:100%;height:{};background:{};border-radius:{};overflow:hidden;{}",
-            props.height, props.track_color, props.height,
+            props.height,
+            props.track_color,
+            props.height,
             props.style.as_deref().unwrap_or(""),
         );
 
@@ -50,25 +74,53 @@ impl Progress {
                 props.color),
         };
 
-        let bar = Template::new_element("div",
-            vec![("class".to_string(), "rye-progress-bar".to_string()),
-                 ("style".to_string(), bar_style)],
-            Vec::new(), Vec::new());
+        let bar = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "rye-progress-bar".to_string()),
+                ("style".to_string(), bar_style),
+            ],
+            Vec::new(),
+            Vec::new(),
+        );
 
-        let mut children = vec![Template::new_element("div",
-            vec![("class".to_string(), format!("rye-progress-track {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), track_style)],
-            Vec::new(), vec![bar])];
+        let mut children = vec![Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!(
+                        "rye-progress-track {}",
+                        props.class.as_deref().unwrap_or("")
+                    ),
+                ),
+                ("style".to_string(), track_style),
+            ],
+            Vec::new(),
+            vec![bar],
+        )];
 
         if let Some(label) = &props.label {
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), format!("font-size:var(--rye-font-size-sm);color:{};margin-top:4px;", vars::TEXT_MUTED))],
-                Vec::new(), vec![Template::text(label)]));
+            children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    format!(
+                        "font-size:var(--rye-font-size-sm);color:{};margin-top:4px;",
+                        vars::TEXT_MUTED
+                    ),
+                )],
+                Vec::new(),
+                vec![Template::text(label)],
+            ));
         }
 
-        Element::Template(Template::new_element("div",
+        Element::Template(Template::new_element(
+            "div",
             vec![("class".to_string(), "rye-progress".to_string())],
-            Vec::new(), children))
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -84,7 +136,10 @@ mod tests {
 
     #[test]
     fn test_progress_builder() {
-        let p = ProgressProps::default().value(75.0).color("#16a34a").label("Uploading...");
+        let p = ProgressProps::default()
+            .value(75.0)
+            .color("#16a34a")
+            .label("Uploading...");
         assert_eq!(p.value, Some(75.0));
         assert_eq!(p.label.as_deref(), Some("Uploading..."));
     }

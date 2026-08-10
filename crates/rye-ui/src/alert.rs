@@ -1,8 +1,8 @@
 //! Alert — inline banner (success/error/warning/info).
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AlertVariant {
@@ -39,8 +39,10 @@ impl AlertVariant {
     }
     pub fn icon(&self) -> &'static str {
         match self {
-            Self::Success => "✓", Self::Error => "✕",
-            Self::Warning => "⚠", Self::Info => "ℹ",
+            Self::Success => "✓",
+            Self::Error => "✕",
+            Self::Warning => "⚠",
+            Self::Info => "ℹ",
         }
     }
 }
@@ -57,16 +59,34 @@ pub struct AlertProps {
 
 impl Default for AlertProps {
     fn default() -> Self {
-        Self { title: None, message: String::new(), variant: AlertVariant::Info,
-               dismissible: false, class: None, style: None }
+        Self {
+            title: None,
+            message: String::new(),
+            variant: AlertVariant::Info,
+            dismissible: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl AlertProps {
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
-    pub fn message(mut self, m: impl Into<String>) -> Self { self.message = m.into(); self }
-    pub fn variant(mut self, v: AlertVariant) -> Self { self.variant = v; self }
-    pub fn dismissible(mut self, d: bool) -> Self { self.dismissible = d; self }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
+    pub fn message(mut self, m: impl Into<String>) -> Self {
+        self.message = m.into();
+        self
+    }
+    pub fn variant(mut self, v: AlertVariant) -> Self {
+        self.variant = v;
+        self
+    }
+    pub fn dismissible(mut self, d: bool) -> Self {
+        self.dismissible = d;
+        self
+    }
 }
 
 pub struct Alert;
@@ -80,25 +100,41 @@ impl Alert {
             props.style.as_deref().unwrap_or(""),
         );
 
-        let mut children = vec![
-            Template::new_element("span",
-                vec![("style".to_string(), "font-size:18px;flex-shrink:0;".to_string())],
-                Vec::new(), vec![Template::text(props.variant.icon())]),
-        ];
+        let mut children = vec![Template::new_element(
+            "span",
+            vec![(
+                "style".to_string(),
+                "font-size:18px;flex-shrink:0;".to_string(),
+            )],
+            Vec::new(),
+            vec![Template::text(props.variant.icon())],
+        )];
 
         let mut content_children = Vec::new();
         if let Some(title) = &props.title {
-            content_children.push(Template::new_element("div",
-                vec![("style".to_string(), "font-weight:600;margin-bottom:4px;".to_string())],
-                Vec::new(), vec![Template::text(title)]));
+            content_children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    "font-weight:600;margin-bottom:4px;".to_string(),
+                )],
+                Vec::new(),
+                vec![Template::text(title)],
+            ));
         }
-        content_children.push(Template::new_element("div",
+        content_children.push(Template::new_element(
+            "div",
             vec![("style".to_string(), "flex:1;".to_string())],
-            Vec::new(), vec![Template::text(&props.message)]));
+            Vec::new(),
+            vec![Template::text(&props.message)],
+        ));
 
-        children.push(Template::new_element("div",
+        children.push(Template::new_element(
+            "div",
             vec![("style".to_string(), "flex:1;".to_string())],
-            Vec::new(), content_children));
+            Vec::new(),
+            content_children,
+        ));
 
         if props.dismissible {
             children.push(Template::new_element("button",
@@ -107,10 +143,18 @@ impl Alert {
                 Vec::new(), vec![Template::text("×")]));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-alert {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), style)],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-alert {}", props.class.as_deref().unwrap_or("")),
+                ),
+                ("style".to_string(), style),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -134,14 +178,22 @@ mod tests {
 
     #[test]
     fn test_alert_builder() {
-        let p = AlertProps::default().title("Warning!").message("Check your input").variant(AlertVariant::Warning).dismissible(true);
+        let p = AlertProps::default()
+            .title("Warning!")
+            .message("Check your input")
+            .variant(AlertVariant::Warning)
+            .dismissible(true);
         assert_eq!(p.title.as_deref(), Some("Warning!"));
         assert!(p.dismissible);
     }
 
     #[test]
     fn test_alert_render() {
-        let el = Alert::render(AlertProps::default().message("All good").variant(AlertVariant::Success));
+        let el = Alert::render(
+            AlertProps::default()
+                .message("All good")
+                .variant(AlertVariant::Success),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }

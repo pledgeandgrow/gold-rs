@@ -1,8 +1,8 @@
 //! EmptyState — placeholder for empty data.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct EmptyStateProps {
@@ -16,16 +16,34 @@ pub struct EmptyStateProps {
 
 impl Default for EmptyStateProps {
     fn default() -> Self {
-        Self { icon: None, title: String::new(), description: None,
-               action_label: None, class: None, style: None }
+        Self {
+            icon: None,
+            title: String::new(),
+            description: None,
+            action_label: None,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl EmptyStateProps {
-    pub fn icon(mut self, i: impl Into<String>) -> Self { self.icon = Some(i.into()); self }
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = t.into(); self }
-    pub fn description(mut self, d: impl Into<String>) -> Self { self.description = Some(d.into()); self }
-    pub fn action(mut self, label: impl Into<String>) -> Self { self.action_label = Some(label.into()); self }
+    pub fn icon(mut self, i: impl Into<String>) -> Self {
+        self.icon = Some(i.into());
+        self
+    }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = t.into();
+        self
+    }
+    pub fn description(mut self, d: impl Into<String>) -> Self {
+        self.description = Some(d.into());
+        self
+    }
+    pub fn action(mut self, label: impl Into<String>) -> Self {
+        self.action_label = Some(label.into());
+        self
+    }
 }
 
 pub struct EmptyState;
@@ -41,9 +59,15 @@ impl EmptyState {
         let mut children = Vec::new();
 
         if let Some(icon) = &props.icon {
-            children.push(Template::new_element("div",
-                vec![("style".to_string(), "font-size:48px;margin-bottom:16px;opacity:0.5;".to_string())],
-                Vec::new(), vec![Template::text(icon)]));
+            children.push(Template::new_element(
+                "div",
+                vec![(
+                    "style".to_string(),
+                    "font-size:48px;margin-bottom:16px;opacity:0.5;".to_string(),
+                )],
+                Vec::new(),
+                vec![Template::text(icon)],
+            ));
         }
 
         children.push(Template::new_element("h3",
@@ -63,10 +87,18 @@ impl EmptyState {
                 Vec::new(), vec![Template::text(label)]));
         }
 
-        Element::Template(Template::new_element("div",
-            vec![("style".to_string(), style),
-                 ("class".to_string(), format!("rye-empty-state {}", props.class.as_deref().unwrap_or("")))],
-            Vec::new(), children))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("style".to_string(), style),
+                (
+                    "class".to_string(),
+                    format!("rye-empty-state {}", props.class.as_deref().unwrap_or("")),
+                ),
+            ],
+            Vec::new(),
+            children,
+        ))
     }
 }
 
@@ -94,8 +126,13 @@ mod tests {
 
     #[test]
     fn test_empty_state_render() {
-        let el = EmptyState::render(EmptyStateProps::default()
-            .icon("📋").title("No tasks").description("Create your first task").action("New Task"));
+        let el = EmptyState::render(
+            EmptyStateProps::default()
+                .icon("📋")
+                .title("No tasks")
+                .description("Create your first task")
+                .action("New Task"),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 

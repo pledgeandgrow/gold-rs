@@ -1,8 +1,8 @@
 //! Accordion — collapsible sections.
 
-use rye_core::Element;
-use rye_core::template::Template;
 use crate::theme::vars;
+use rye_core::template::Template;
+use rye_core::Element;
 
 #[derive(Debug, Clone)]
 pub struct AccordionItem {
@@ -13,9 +13,16 @@ pub struct AccordionItem {
 
 impl AccordionItem {
     pub fn new(id: impl Into<String>, title: impl Into<String>) -> Self {
-        Self { id: id.into(), title: title.into(), open: false }
+        Self {
+            id: id.into(),
+            title: title.into(),
+            open: false,
+        }
     }
-    pub fn open(mut self) -> Self { self.open = true; self }
+    pub fn open(mut self) -> Self {
+        self.open = true;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -28,13 +35,24 @@ pub struct AccordionProps {
 
 impl Default for AccordionProps {
     fn default() -> Self {
-        Self { items: Vec::new(), multiple: false, class: None, style: None }
+        Self {
+            items: Vec::new(),
+            multiple: false,
+            class: None,
+            style: None,
+        }
     }
 }
 
 impl AccordionProps {
-    pub fn items(mut self, i: Vec<AccordionItem>) -> Self { self.items = i; self }
-    pub fn multiple(mut self, m: bool) -> Self { self.multiple = m; self }
+    pub fn items(mut self, i: Vec<AccordionItem>) -> Self {
+        self.items = i;
+        self
+    }
+    pub fn multiple(mut self, m: bool) -> Self {
+        self.multiple = m;
+        self
+    }
 }
 
 pub struct Accordion;
@@ -73,10 +91,21 @@ impl Accordion {
                 Vec::new(), children)
         }).collect();
 
-        Element::Template(Template::new_element("div",
-            vec![("class".to_string(), format!("rye-accordion {}", props.class.as_deref().unwrap_or(""))),
-                 ("style".to_string(), props.style.as_deref().unwrap_or("").to_string())],
-            Vec::new(), sections))
+        Element::Template(Template::new_element(
+            "div",
+            vec![
+                (
+                    "class".to_string(),
+                    format!("rye-accordion {}", props.class.as_deref().unwrap_or("")),
+                ),
+                (
+                    "style".to_string(),
+                    props.style.as_deref().unwrap_or("").to_string(),
+                ),
+            ],
+            Vec::new(),
+            sections,
+        ))
     }
 }
 
@@ -100,7 +129,10 @@ mod tests {
     #[test]
     fn test_accordion_props_builder() {
         let p = AccordionProps::default()
-            .items(vec![AccordionItem::new("a", "A"), AccordionItem::new("b", "B").open()])
+            .items(vec![
+                AccordionItem::new("a", "A"),
+                AccordionItem::new("b", "B").open(),
+            ])
             .multiple(true);
         assert_eq!(p.items.len(), 2);
         assert!(p.items[1].open);
@@ -109,8 +141,9 @@ mod tests {
 
     #[test]
     fn test_accordion_render() {
-        let el = Accordion::render(AccordionProps::default()
-            .items(vec![AccordionItem::new("1", "One").open()]));
+        let el = Accordion::render(
+            AccordionProps::default().items(vec![AccordionItem::new("1", "One").open()]),
+        );
         assert!(matches!(el, Element::Template(_)));
     }
 }
