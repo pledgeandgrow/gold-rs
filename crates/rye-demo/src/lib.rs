@@ -61,6 +61,15 @@ struct TodoItem {
     done: bool,
 }
 
+// ─── Activity item model (for dashboard) ──────────────────────────────────────
+
+#[derive(Clone)]
+struct ActivityItem {
+    icon: String,
+    text: String,
+    time: String,
+}
+
 // ─── WASM event helpers ──────────────────────────────────────────────────────
 
 /// Simple random number generator (works on all targets).
@@ -297,252 +306,183 @@ fn dashboard_page() -> Element {
     let disk = Signal::new(23.0f64);
     let net = Signal::new(91.0f64);
 
-    // Simulate live updates via setInterval-like pattern using effects
-    // We'll use a simple approach: each progress bar gets a reactive value
-    let make_progress_card = |label: &str, color: &str, signal: &Signal<f64>| -> Template {
-        let color = color.to_string();
-        let val_signal = signal.clone();
-        let val_fn: ReactiveFn = Rc::new(move || format!("{:.0}%", val_signal.get()));
-
-        let pct_signal = signal.clone();
-        let pct_fn: ReactiveFn = Rc::new(move || {
-            format!("width:{}%;height:100%;background:{};border-radius:inherit;transition:width 0.5s ease;",
-                pct_signal.get().clamp(0.0, 100.0), color)
-        });
-
-        let bar_track = Template::new_element(
-            "div",
-            vec![(
-                "style".to_string(),
-                "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;"
-                    .to_string(),
-            )],
-            Vec::new(),
-            vec![Template::new_element_reactive(
-                "div",
-                Vec::new(),
-                vec![("style".to_string(), pct_fn)],
-                Vec::new(),
-                Vec::new(),
-            )],
-        );
-
-        Template::new_element(
-            "div",
-            vec![("class".to_string(), "progress-card".to_string())],
-            Vec::new(),
-            vec![
-                Template::new_element(
-                    "div",
-                    vec![("class".to_string(), "progress-card-header".to_string())],
-                    Vec::new(),
-                    vec![
-                        Template::new_element(
-                            "span",
-                            Vec::new(),
-                            Vec::new(),
-                            vec![Template::text(label)],
-                        ),
-                        Template::new_element_reactive(
-                            "span",
-                            vec![("class".to_string(), "progress-value".to_string())],
-                            Vec::new(),
-                            Vec::new(),
-                            vec![Template::new(vec![TemplateNode::Reactive(val_fn)])],
-                        ),
-                    ],
-                ),
-                bar_track,
-            ],
-        )
-    };
-
-    let progress_cards = vec![
-        make_progress_card("CPU Usage", "#3b82f6", &cpu),
-        make_progress_card("Memory", "#f59e0b", &mem),
-        make_progress_card("Disk", "#22c55e", &disk),
-        make_progress_card("Network", "#ef4444", &net),
-    ];
-
-    // Interactive refresh button that randomizes values
+    // Clone signals for the refresh button handler
     let cpu_r = cpu.clone();
     let mem_r = mem.clone();
     let disk_r = disk.clone();
     let net_r = net.clone();
-    let refresh_btn = Button::render(
-        ButtonProps::default()
-            .label("\u{1F504} Refresh Metrics")
-            .variant(Variant::Outline)
-            .on_click(move |_| {
-                cpu_r.set(10.0 + (rye_rand() * 80.0));
-                mem_r.set(30.0 + (rye_rand() * 60.0));
-                disk_r.set(5.0 + (rye_rand() * 40.0));
-                net_r.set(50.0 + (rye_rand() * 48.0));
-            }),
-    );
 
-    let stats = vec![
-        Stat::render(
-            StatProps::default()
-                .label("Active Users")
-                .value("12,847")
-                .trend(StatTrend::Up)
-                .trend_value("+12.5%")
-                .icon("\u{1F465}"),
-        ),
-        Stat::render(
-            StatProps::default()
-                .label("Revenue")
-                .value("$42,580")
-                .trend(StatTrend::Up)
-                .trend_value("+8.2%")
-                .icon("\u{1F4B0}"),
-        ),
-        Stat::render(
-            StatProps::default()
-                .label("Sessions")
-                .value("3,291")
-                .trend(StatTrend::Down)
-                .trend_value("-3.1%")
-                .icon("\u{1F4CA}"),
-        ),
-        Stat::render(
-            StatProps::default()
-                .label("Uptime")
-                .value("99.9%")
-                .trend(StatTrend::Neutral)
-                .trend_value("stable")
-                .icon("\u{26A1}"),
-        ),
-    ];
+    // Clone signals for reactive display
+    let cpu_disp = cpu.clone();
+    let mem_disp = mem.clone();
+    let disk_disp = disk.clone();
+    let net_disp = net.clone();
 
+    // Activity feed data
     let activity = vec![
-        ("\u{2705}", "Deploy succeeded", "2 min ago"),
-        ("\u{1F41E}", "Bug #2841 resolved", "14 min ago"),
-        ("\u{1F4E7}", "3 new messages", "1 hour ago"),
-        ("\u{1F504}", "Cache refreshed", "3 hours ago"),
-        ("\u{1F4C1}", "12 files uploaded", "5 hours ago"),
+        ActivityItem {
+            icon: "✅".to_string(),
+            text: "Deploy succeeded".to_string(),
+            time: "2 min ago".to_string(),
+        },
+        ActivityItem {
+            icon: "🐞".to_string(),
+            text: "Bug #2841 resolved".to_string(),
+            time: "14 min ago".to_string(),
+        },
+        ActivityItem {
+            icon: "📧".to_string(),
+            text: "3 new messages".to_string(),
+            time: "1 hour ago".to_string(),
+        },
+        ActivityItem {
+            icon: "🔄".to_string(),
+            text: "Cache refreshed".to_string(),
+            time: "3 hours ago".to_string(),
+        },
+        ActivityItem {
+            icon: "📁".to_string(),
+            text: "12 files uploaded".to_string(),
+            time: "5 hours ago".to_string(),
+        },
     ];
 
-    let activity_items: Vec<Template> = activity
-        .iter()
-        .map(|(icon, text, time)| {
-            Template::new_element(
-                "div",
-                vec![("class".to_string(), "activity-item".to_string())],
-                Vec::new(),
-                vec![
-                    Template::new_element(
-                        "span",
-                        vec![("class".to_string(), "activity-icon".to_string())],
-                        Vec::new(),
-                        vec![Template::text(icon.to_string())],
-                    ),
-                    Template::new_element(
-                        "div",
-                        vec![("class".to_string(), "activity-content".to_string())],
-                        Vec::new(),
-                        vec![
-                            Template::new_element(
-                                "span",
-                                Vec::new(),
-                                Vec::new(),
-                                vec![Template::text(text.to_string())],
-                            ),
-                            Template::new_element(
-                                "span",
-                                vec![("class".to_string(), "activity-time".to_string())],
-                                Vec::new(),
-                                vec![Template::text(time.to_string())],
-                            ),
-                        ],
-                    ),
-                ],
-            )
-        })
-        .collect();
-
-    let header = Template::new_element(
-        "div",
-        vec![("class".to_string(), "page-header".to_string())],
-        Vec::new(),
-        vec![
-            Template::new_element(
-                "h1",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("Dashboard")],
-            ),
-            Template::new_element(
-                "p",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("Real-time metrics powered by rye signals")],
-            ),
-        ],
-    );
-
-    let stats_grid = Template::new_element(
-        "div",
-        vec![("class".to_string(), "stats-grid".to_string())],
-        Vec::new(),
-        to_templates(Element::Fragment(stats)),
-    );
-
-    let stats_title = Template::new_element(
-        "div",
-        vec![("class".to_string(), "section-title".to_string())],
-        Vec::new(),
-        vec![
-            Template::new_element(
-                "h2",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("System Health")],
-            ),
-            Template::new_element(
-                "div",
-                vec![("style".to_string(), "margin-left:auto;".to_string())],
-                Vec::new(),
-                to_templates(refresh_btn),
-            ),
-        ],
-    );
-
-    let progress_grid = Template::new_element(
-        "div",
-        vec![("class".to_string(), "progress-grid".to_string())],
-        Vec::new(),
-        progress_cards,
-    );
-
-    let activity_title = Template::new_element(
-        "div",
-        vec![("class".to_string(), "section-title".to_string())],
-        Vec::new(),
-        vec![Template::new_element(
-            "h2",
-            Vec::new(),
-            Vec::new(),
-            vec![Template::text("Recent Activity")],
-        )],
-    );
-
-    let activity_list = Template::new_element(
-        "div",
-        vec![("class".to_string(), "activity-list".to_string())],
-        Vec::new(),
-        activity_items,
-    );
-
-    Element::Template(combine(vec![
-        header,
-        stats_grid,
-        stats_title,
-        progress_grid,
-        activity_title,
-        activity_list,
-    ]))
+    rye_macros::template! {
+        div {
+            class: "page-wrapper",
+            div {
+                class: "page-header",
+                h1 { "Dashboard" }
+                p { "Real-time metrics powered by rye signals" }
+            },
+            div {
+                class: "stats-grid",
+                Stat {
+                    label: "Active Users",
+                    value: "12,847",
+                    trend: StatTrend::Up,
+                    trend_value: "+12.5%",
+                    icon: "👥"
+                },
+                Stat {
+                    label: "Revenue",
+                    value: "$42,580",
+                    trend: StatTrend::Up,
+                    trend_value: "+8.2%",
+                    icon: "💰"
+                },
+                Stat {
+                    label: "Sessions",
+                    value: "3,291",
+                    trend: StatTrend::Down,
+                    trend_value: "-3.1%",
+                    icon: "📊"
+                },
+                Stat {
+                    label: "Uptime",
+                    value: "99.9%",
+                    trend: StatTrend::Neutral,
+                    trend_value: "stable",
+                    icon: "⚡"
+                }
+            },
+            div {
+                class: "section-title",
+                h2 { "System Health" },
+                div {
+                    style: "margin-left:auto;",
+                    Button {
+                        label: "🔄 Refresh Metrics",
+                        variant: Variant::Outline,
+                        onclick: move |_| {
+                            cpu_r.set(10.0 + (rye_rand() * 80.0));
+                            mem_r.set(30.0 + (rye_rand() * 60.0));
+                            disk_r.set(5.0 + (rye_rand() * 40.0));
+                            net_r.set(50.0 + (rye_rand() * 48.0));
+                        }
+                    }
+                }
+            },
+            div {
+                class: "progress-grid",
+                div {
+                    class: "progress-card",
+                    div {
+                        class: "progress-card-header",
+                        span { "CPU Usage" },
+                        span { class: "progress-value", {cpu_disp.get()} "%" }
+                    },
+                    div {
+                        style: "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;",
+                        div {
+                            style: { format!("width:{}%;height:100%;background:#3b82f6;border-radius:inherit;transition:width 0.5s ease;", cpu.get().clamp(0.0, 100.0)) }
+                        }
+                    }
+                },
+                div {
+                    class: "progress-card",
+                    div {
+                        class: "progress-card-header",
+                        span { "Memory" },
+                        span { class: "progress-value", {mem_disp.get()} "%" }
+                    },
+                    div {
+                        style: "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;",
+                        div {
+                            style: { format!("width:{}%;height:100%;background:#f59e0b;border-radius:inherit;transition:width 0.5s ease;", mem.get().clamp(0.0, 100.0)) }
+                        }
+                    }
+                },
+                div {
+                    class: "progress-card",
+                    div {
+                        class: "progress-card-header",
+                        span { "Disk" },
+                        span { class: "progress-value", {disk_disp.get()} "%" }
+                    },
+                    div {
+                        style: "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;",
+                        div {
+                            style: { format!("width:{}%;height:100%;background:#22c55e;border-radius:inherit;transition:width 0.5s ease;", disk.get().clamp(0.0, 100.0)) }
+                        }
+                    }
+                },
+                div {
+                    class: "progress-card",
+                    div {
+                        class: "progress-card-header",
+                        span { "Network" },
+                        span { class: "progress-value", {net_disp.get()} "%" }
+                    },
+                    div {
+                        style: "width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;",
+                        div {
+                            style: { format!("width:{}%;height:100%;background:#ef4444;border-radius:inherit;transition:width 0.5s ease;", net.get().clamp(0.0, 100.0)) }
+                        }
+                    }
+                }
+            },
+            div {
+                class: "section-title",
+                h2 { "Recent Activity" }
+            },
+            div {
+                class: "activity-list",
+                For {
+                    each: {activity.clone()},
+                    |item, _i| div {
+                        class: "activity-item",
+                        span { class: "activity-icon", {item.icon} },
+                        div {
+                            class: "activity-content",
+                            span { {item.text} },
+                            span { class: "activity-time", {item.time} }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ─── Counter page ───────────────────────────────────────────────────────────
@@ -615,276 +555,80 @@ fn todo_page() -> Element {
         },
     ]);
     let todo_input = Signal::new(String::new());
-    let next_id = Signal::new(100usize);
 
-    // ── Handlers ────────────────────────────────────────────────────────────
-
-    let input_signal = todo_input.clone();
-    let input_handler: SharedEventHandler = shared_event_handler(move |event| {
-        input_signal.set(get_input_value(event));
-    });
-
+    // Clone signals for handlers
     let add_todos = todos.clone();
     let add_input = todo_input.clone();
-    let add_next_id = next_id.clone();
-    let add_btn = Button::render(
-        ButtonProps::default()
-            .label("+ Add")
-            .variant(Variant::Primary)
-            .on_click(move |_| {
-                let text = add_input.get().trim().to_string();
-                if !text.is_empty() {
-                    let mut list = add_todos.get();
-                    list.push(TodoItem { text, done: false });
-                    add_todos.set(list);
-                    add_input.set(String::new());
-                    add_next_id.set(add_next_id.get() + 1);
-                }
-            }),
-    );
 
-    let keydown_input = todo_input.clone();
-    let keydown_todos = todos.clone();
-    let keydown_next_id = next_id.clone();
-    let keydown_handler: SharedEventHandler = shared_event_handler(move |event| {
-        #[cfg(target_arch = "wasm32")]
-        {
-            use wasm_bindgen::JsCast;
-            if let Some(e) = event.downcast_ref::<web_sys::Event>() {
-                if let Some(ke) = e.dyn_ref::<web_sys::KeyboardEvent>() {
-                    if ke.key() == "Enter" {
-                        let text = keydown_input.get().trim().to_string();
+    // Clone signals for reactive display
+    let list_todos = todos.clone();
+    let count_todos = todos.clone();
+    let empty_todos = todos.clone();
+
+    rye_macros::template! {
+        div {
+            class: "page-wrapper",
+            div {
+                class: "page-header",
+                h1 { "Todo List" }
+                p { "Add, toggle done, and remove items — powered by Signal<Vec<TodoItem>>" }
+            },
+            div {
+                class: "todo-input-row",
+                input {
+                    class: "todo-input",
+                    placeholder: "What needs to be done?",
+                    type: "text"
+                },
+                Button {
+                    label: "+ Add",
+                    variant: Variant::Primary,
+                    onclick: move |_| {
+                        let text = add_input.get().trim().to_string();
                         if !text.is_empty() {
-                            let mut list = keydown_todos.get();
+                            let mut list = add_todos.get();
                             list.push(TodoItem { text, done: false });
-                            keydown_todos.set(list);
-                            keydown_input.set(String::new());
-                            keydown_next_id.set(keydown_next_id.get() + 1);
+                            add_todos.set(list);
+                            add_input.set(String::new());
                         }
                     }
                 }
+            },
+            div {
+                class: "todo-count",
+                { format!("{} items — {} done", count_todos.get().len(), count_todos.get().iter().filter(|t| t.done).count()) }
+            },
+            div {
+                class: "todo-list",
+                For {
+                    each: {list_todos.get()},
+                    |item, i| div {
+                        class: "todo-item",
+                        span {
+                            class: { if item.done { "todo-check done" } else { "todo-check" } },
+                            { if item.done { "✓" } else { "○" } }
+                        },
+                        span {
+                            class: { if item.done { "todo-text done" } else { "todo-text" } },
+                            {item.text}
+                        },
+                        button {
+                            class: "todo-remove",
+                            "×"
+                        }
+                    }
+                }
+            },
+            If {
+                {empty_todos.get().is_empty()},
+                div {
+                    class: "todo-empty",
+                    "📝",
+                    p { "No todos yet. Add one above!" }
+                }
             }
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = (&event, &keydown_input, &keydown_todos, &keydown_next_id);
-        }
-    });
-
-    // ── Reactive list with keyed reconciliation ─────────────────────────────
-
-    let list_todos = todos.clone();
-    let todo_list_fn: ReactiveListFn = Rc::new(move || {
-        let list = list_todos.get();
-        list.iter()
-            .enumerate()
-            .map(|(i, _item)| {
-                let key = i;
-
-                let check_todos = list_todos.clone();
-                let check_fn: ReactiveFn = Rc::new(move || {
-                    let l = check_todos.get();
-                    if i < l.len() && l[i].done {
-                        "\u{2713}".to_string()
-                    } else {
-                        "\u{25CB}".to_string()
-                    }
-                });
-
-                let check_class_todos = list_todos.clone();
-                let check_class_fn: ReactiveFn = Rc::new(move || {
-                    let l = check_class_todos.get();
-                    if i < l.len() && l[i].done {
-                        "todo-check done".to_string()
-                    } else {
-                        "todo-check".to_string()
-                    }
-                });
-
-                let text_todos = list_todos.clone();
-                let text_fn: ReactiveFn = Rc::new(move || {
-                    let l = text_todos.get();
-                    if i < l.len() {
-                        l[i].text.clone()
-                    } else {
-                        String::new()
-                    }
-                });
-
-                let text_class_todos = list_todos.clone();
-                let text_class_fn: ReactiveFn = Rc::new(move || {
-                    let l = text_class_todos.get();
-                    if i < l.len() && l[i].done {
-                        "todo-text done".to_string()
-                    } else {
-                        "todo-text".to_string()
-                    }
-                });
-
-                let toggle_todos = list_todos.clone();
-                let toggle_handler: SharedEventHandler = shared_event_handler(move |_| {
-                    let mut l = toggle_todos.get();
-                    if i < l.len() {
-                        l[i].done = !l[i].done;
-                        toggle_todos.set(l);
-                    }
-                });
-
-                let remove_todos = list_todos.clone();
-                let remove_handler: SharedEventHandler = shared_event_handler(move |_| {
-                    let mut l = remove_todos.get();
-                    if i < l.len() {
-                        l.remove(i);
-                        remove_todos.set(l);
-                    }
-                });
-
-                let item_template = Template::new_element(
-                    "div",
-                    vec![("class".to_string(), "todo-item".to_string())],
-                    Vec::new(),
-                    vec![
-                        Template::new_element_reactive(
-                            "span",
-                            Vec::new(),
-                            vec![("class".to_string(), check_class_fn)],
-                            vec![("click".to_string(), toggle_handler)],
-                            vec![Template::new(vec![TemplateNode::Reactive(check_fn)])],
-                        ),
-                        Template::new_element_reactive(
-                            "span",
-                            Vec::new(),
-                            vec![("class".to_string(), text_class_fn)],
-                            Vec::new(),
-                            vec![Template::new(vec![TemplateNode::Reactive(text_fn)])],
-                        ),
-                        Template::new_element(
-                            "button",
-                            vec![("class".to_string(), "todo-remove".to_string())],
-                            vec![("click".to_string(), remove_handler)],
-                            vec![Template::text("\u{00D7}")],
-                        ),
-                    ],
-                );
-
-                (key, item_template)
-            })
-            .collect()
-    });
-
-    // ── Layout ──────────────────────────────────────────────────────────────
-
-    let header = Template::new_element(
-        "div",
-        vec![("class".to_string(), "page-header".to_string())],
-        Vec::new(),
-        vec![
-            Template::new_element(
-                "h1",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("Todo List")],
-            ),
-            Template::new_element(
-                "p",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text(
-                    "Add, toggle done, and remove items \u{2014} powered by Signal<Vec<TodoItem>>",
-                )],
-            ),
-        ],
-    );
-
-    let input_fn: ReactiveFn = {
-        let iv = todo_input.clone();
-        Rc::new(move || iv.get())
-    };
-
-    let input_field = Template::new_element_reactive(
-        "input",
-        vec![
-            ("class".to_string(), "todo-input".to_string()),
-            (
-                "placeholder".to_string(),
-                "What needs to be done?".to_string(),
-            ),
-            ("type".to_string(), "text".to_string()),
-        ],
-        vec![("value".to_string(), input_fn)],
-        vec![
-            ("input".to_string(), input_handler),
-            ("keydown".to_string(), keydown_handler),
-        ],
-        Vec::new(),
-    );
-
-    let mut input_children = vec![input_field];
-    input_children.extend(to_templates(add_btn));
-    let input_row = Template::new_element(
-        "div",
-        vec![("class".to_string(), "todo-input-row".to_string())],
-        Vec::new(),
-        input_children,
-    );
-
-    let count_fn: ReactiveFn = {
-        let ct = todos.clone();
-        Rc::new(move || {
-            let list = ct.get();
-            let done = list.iter().filter(|t| t.done).count();
-            format!("{} items \u{2014} {} done", list.len(), done)
-        })
-    };
-
-    let count_display = Template::new_element_reactive(
-        "div",
-        vec![("class".to_string(), "todo-count".to_string())],
-        Vec::new(),
-        Vec::new(),
-        vec![Template::new(vec![TemplateNode::Reactive(count_fn)])],
-    );
-
-    let todo_list = Template::new_element(
-        "div",
-        vec![("class".to_string(), "todo-list".to_string())],
-        Vec::new(),
-        vec![Template::new_reactive_list(todo_list_fn)],
-    );
-
-    // Reactive empty state — show when list is empty
-    let empty_todos = todos.clone();
-    let empty_style_fn: ReactiveFn = Rc::new(move || {
-        if empty_todos.get().is_empty() {
-            "display:block".to_string()
-        } else {
-            "display:none".to_string()
-        }
-    });
-
-    let empty_state = Template::new_element_reactive(
-        "div",
-        vec![("class".to_string(), "todo-empty".to_string())],
-        vec![("style".to_string(), empty_style_fn)],
-        Vec::new(),
-        vec![
-            Template::text("\u{1F4DD}"),
-            Template::new_element(
-                "p",
-                Vec::new(),
-                Vec::new(),
-                vec![Template::text("No todos yet. Add one above!")],
-            ),
-        ],
-    );
-
-    Element::Template(combine(vec![
-        header,
-        input_row,
-        count_display,
-        todo_list,
-        empty_state,
-    ]))
+    }
 }
 
 // ─── Interactive switch helper ───────────────────────────────────────────────
@@ -2130,5 +1874,200 @@ mod tests {
         assert!(html.contains("Increment"), "increment label");
         assert!(html.contains("Decrement"), "decrement label");
         assert!(html.contains("Reset"), "reset label");
+    }
+
+    // ─── New macro features: components, For, If ─────────────────────────────
+
+    #[test]
+    fn test_template_component_invocation() {
+        // Button component via template! macro
+        let el = rye_macros::template! {
+            Button {
+                label: "Click Me",
+                variant: Variant::Primary
+            }
+        };
+        // Should produce an Element (from Button::render)
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("Click Me"), "should have button label");
+        assert!(html.contains("rye-btn"), "should have button class");
+    }
+
+    #[test]
+    fn test_template_component_with_event() {
+        let clicked = Signal::new(false);
+        let c = clicked.clone();
+        let el = rye_macros::template! {
+            Button {
+                label: "Submit",
+                onclick: move |_| c.set(true)
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("Submit"), "should have submit label");
+    }
+
+    #[test]
+    fn test_template_component_nested_in_element() {
+        let el = rye_macros::template! {
+            div {
+                class: "toolbar",
+                Button {
+                    label: "Save",
+                    variant: Variant::Primary
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("toolbar"), "should have toolbar class");
+        assert!(html.contains("Save"), "should have save button");
+        assert!(html.contains("rye-btn"), "should have button styling");
+    }
+
+    #[test]
+    fn test_template_if_true() {
+        let show = true;
+        let el = rye_macros::template! {
+            div {
+                class: "container",
+                If {
+                    {show},
+                    span { "visible content" }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(
+            html.contains("visible content"),
+            "should show content when true"
+        );
+    }
+
+    #[test]
+    fn test_template_if_false() {
+        let show = false;
+        let el = rye_macros::template! {
+            div {
+                class: "container",
+                If {
+                    {show},
+                    span { "hidden content" }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(
+            !html.contains("hidden content"),
+            "should not show content when false"
+        );
+    }
+
+    #[test]
+    fn test_template_if_with_signal() {
+        let visible = Signal::new(true);
+        let v = visible.clone();
+        let el = rye_macros::template! {
+            If {
+                {v.get()},
+                div { "showing" }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("showing"), "should show when signal is true");
+    }
+
+    #[test]
+    fn test_template_for_list() {
+        let items: Vec<i32> = vec![1, 2, 3];
+        let el = rye_macros::template! {
+            ul {
+                class: "num-list",
+                For {
+                    each: {items.clone()},
+                    |item, _i| li { {item} }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("num-list"), "should have list class");
+        assert!(html.contains("1"), "should have 1");
+        assert!(html.contains("2"), "should have 2");
+        assert!(html.contains("3"), "should have 3");
+    }
+
+    #[test]
+    fn test_template_for_with_index() {
+        let items = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let el = rye_macros::template! {
+            div {
+                For {
+                    each: {items.clone()},
+                    |item, i| span { {item} "-" {i} }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("a-0"), "should have a-0");
+        assert!(html.contains("b-1"), "should have b-1");
+        assert!(html.contains("c-2"), "should have c-2");
+    }
+
+    #[test]
+    fn test_template_for_with_signal_list() {
+        let todos = Signal::new(vec![
+            TodoItem {
+                text: "Task 1".to_string(),
+                done: false,
+            },
+            TodoItem {
+                text: "Task 2".to_string(),
+                done: true,
+            },
+        ]);
+        let t = todos.clone();
+        let el = rye_macros::template! {
+            div {
+                For {
+                    each: {t.get()},
+                    |item, _i| div { class: "todo", {item.text} }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("Task 1"), "should have first task");
+        assert!(html.contains("Task 2"), "should have second task");
+    }
+
+    #[test]
+    fn test_template_combined_features() {
+        // Combine component, If, and For in one template
+        let show_list = true;
+        let items = vec!["x".to_string(), "y".to_string(), "z".to_string()];
+
+        let el = rye_macros::template! {
+            div {
+                class: "app",
+                Button {
+                    label: "Toggle",
+                    variant: Variant::Outline
+                },
+                If {
+                    {show_list},
+                    ul {
+                        For {
+                            each: {items.clone()},
+                            |item, _i| li { {item} }
+                        }
+                    }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("app"), "should have app class");
+        assert!(html.contains("Toggle"), "should have toggle button");
+        assert!(html.contains("rye-btn"), "should have button styling");
+        assert!(html.contains("x"), "should have x");
+        assert!(html.contains("y"), "should have y");
+        assert!(html.contains("z"), "should have z");
     }
 }
