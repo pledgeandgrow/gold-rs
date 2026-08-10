@@ -7,7 +7,7 @@ A UI framework that combines Rust's safety, React's ergonomics, Vue's simplicity
 ## Status
 
 **Early-stage / experimental.** This is not a production-ready framework. The
-codebase compiles and has a test suite (~1,900 tests passing), but many
+codebase compiles and has a test suite (~1,970 tests passing), but many
 features are scaffolds or stubs rather than working implementations. Treat the
 feature list below as a **design roadmap**, not a list of proven capabilities.
 
@@ -18,20 +18,39 @@ feature list below as a **design roadmap**, not a list of proven capabilities.
 - **`rye-core`** — Component trait, Renderer trait, Template type, context/DI,
   suspense/error boundaries, hydration markers, server actions, islands.
   Compiles and is unit-tested, but not yet proven in a real app.
-- **`rye-macros`** — `template!` and `#[component]` proc macros. Basic parsing
-  works; see known limitations below.
+- **`rye-macros`** — `template!` macro: proven with 16 tests covering nested
+  elements, static/dynamic attributes, event handlers, reactive text, void
+  elements, and full SSR pipeline. See known limitations below.
 - **`rye-html`** — WASM/DOM renderer via `web-sys`. The demo app targets this.
-- **`rye-ssr`** — String-based SSR renderer with hydration markers.
+- **`rye-ssr`** — String-based SSR renderer with hydration markers. Proven
+  with 209 tests including void elements, attributes, fragments, and the full
+  `template!` → SSR pipeline.
 - **`rye-cli` (`rpg`)** — CLI binary with 21 subcommands. Builds and runs.
 - **`rye-desktop`** — Native GPU renderer (wgpu + taffy + cosmic-text) with
-  real WGSL shaders. Compiles on desktop; not yet wired to a working app.
+  real WGSL shaders. Proven with 11 tests: render tree building, taffy
+  flexbox layout, style/color parsing, headless GPU init (device + pipeline +
+  glyph atlas without a display), and full render-tree-to-layout pipeline.
+  Fixed a bug where text nodes weren't getting layout computed.
 - **`rye-testing`** — In-memory TestRenderer for unit tests.
+
+### What's proven by dogfooding
+
+- **`template!` macro → SSR pipeline**: The Counter page in `rye-demo` was
+  rewritten to use `template!` (49 lines vs 105 lines of hand-built trees).
+  It renders correctly through SSR with all classes, headings, and buttons.
+- **Desktop GPU renderer core**: Render tree building, taffy layout
+  computation, and wgpu device/pipeline initialization all work headless.
+  The text layout bug (text nodes skipped by `collect_layouts`) was found and
+  fixed through testing.
 
 ### Known limitations (being fixed)
 
-- **`template!` macro is undertested.** The demo app (`rye-demo`) currently
-  builds template trees by hand via `Template::new_element(...)` instead of
-  using the `template!` macro. Dogfooding the macro is a top priority.
+- **`template!` macro limitations**: No component invocation, no reactive list
+  syntax (`For`/keyed reconciliation), no `if`/`for` in template body, single
+  root node only, returns `Element` not `Template`. Signals must be manually
+  cloned before each use in dynamic positions (move closures capture by value).
+  These gaps prevent converting Dashboard and Todo pages (which use component
+  invocations and reactive lists).
 - **`rye-mobile` has FFI bindings but is untested on devices.** The crate
   includes ~2,000 LOC of JNI (Android) and ObjC (iOS) bindings in `src/ffi/`,
   plus ~7,000 LOC of config types and manager APIs. It compiles on desktop
