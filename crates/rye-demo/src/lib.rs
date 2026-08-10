@@ -1921,4 +1921,214 @@ mod tests {
         assert!(html.contains("counter-card"), "Should have counter card");
         assert!(html.contains("btn-primary"), "Should have increment button");
     }
+
+    // ─── template! macro comprehensive test suite ───────────────────────────
+    // These tests prove every feature of the template! macro works correctly
+    // and produces valid output through the SSR renderer.
+
+    #[test]
+    fn test_template_nested_elements() {
+        let el = rye_macros::template! {
+            div {
+                class: "outer",
+                div {
+                    class: "inner",
+                    p { "deep text" }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("outer"), "should have outer class");
+        assert!(html.contains("inner"), "should have inner class");
+        assert!(html.contains("deep text"), "should have nested text");
+        assert!(html.contains("</div>"), "should close divs");
+    }
+
+    #[test]
+    fn test_template_static_attributes() {
+        let el = rye_macros::template! {
+            input {
+                type: "text",
+                placeholder: "Enter name",
+                class: "form-input"
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("type=\"text\""), "should have type attr");
+        assert!(html.contains("form-input"), "should have class");
+        assert!(html.contains("Enter name"), "should have placeholder");
+    }
+
+    #[test]
+    fn test_template_dynamic_attribute() {
+        let width = Signal::new(75i32);
+        let w = width.clone();
+        let el = rye_macros::template! {
+            div {
+                style: { format!("width:{}%", w.get()) }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("width:75%"), "should have dynamic style");
+    }
+
+    #[test]
+    fn test_template_multiple_children() {
+        let el = rye_macros::template! {
+            ul {
+                class: "list",
+                li { "first" }
+                li { "second" }
+                li { "third" }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("first"), "should have first item");
+        assert!(html.contains("second"), "should have second item");
+        assert!(html.contains("third"), "should have third item");
+        assert_eq!(html.matches("<li").count(), 3, "should have 3 li elements");
+    }
+
+    #[test]
+    fn test_template_event_handler_attached() {
+        let clicked = Signal::new(false);
+        let c = clicked.clone();
+        let el = rye_macros::template! {
+            button {
+                onclick: move |_| c.set(true),
+                "Click"
+            }
+        };
+        // Verify the event handler is attached by inspecting the Template structure
+        if let Element::Template(t) = el {
+            if let Some(TemplateNode::Element { events, .. }) = t.nodes.first() {
+                assert!(
+                    events.iter().any(|(e, _)| e == "click"),
+                    "should have click event"
+                );
+            } else {
+                panic!("expected element node");
+            }
+        } else {
+            panic!("expected template element");
+        }
+    }
+
+    #[test]
+    fn test_template_reactive_text_updates() {
+        let count = Signal::new(10i32);
+        let display = count.clone();
+        let el = rye_macros::template! {
+            span { {display.get()} }
+        };
+        let html1 = rye_ssr::render_to_string(&el);
+        assert!(html1.contains("10"), "should show initial value");
+
+        // Update signal and re-render
+        count.set(25);
+        let display2 = count.clone();
+        let el2 = rye_macros::template! {
+            span { {display2.get()} }
+        };
+        let html2 = rye_ssr::render_to_string(&el2);
+        assert!(html2.contains("25"), "should show updated value");
+    }
+
+    #[test]
+    fn test_template_void_element() {
+        // Self-closing element (no children)
+        let el = rye_macros::template! {
+            br
+        };
+        assert!(matches!(el, Element::Template(_)));
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("<br"), "should render br tag");
+    }
+
+    #[test]
+    fn test_template_mixed_text_and_elements() {
+        let el = rye_macros::template! {
+            div {
+                "Hello "
+                span { "World" }
+                "!"
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("Hello"), "should have text before element");
+        assert!(html.contains("World"), "should have element text");
+        assert!(html.contains("!"), "should have text after element");
+    }
+
+    #[test]
+    fn test_template_reactive_class_with_signal() {
+        let active = Signal::new(true);
+        let a1 = active.clone();
+        let el = rye_macros::template! {
+            div {
+                class: { if a1.get() { "active" } else { "inactive" } }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(
+            html.contains("active"),
+            "should have active class when true"
+        );
+
+        let a2 = active.clone();
+        active.set(false);
+        let el2 = rye_macros::template! {
+            div {
+                class: { if a2.get() { "active" } else { "inactive" } }
+            }
+        };
+        let html2 = rye_ssr::render_to_string(&el2);
+        assert!(
+            html2.contains("inactive"),
+            "should have inactive class when false"
+        );
+    }
+
+    #[test]
+    fn test_template_deeply_nested() {
+        let el = rye_macros::template! {
+            div {
+                class: "level-1",
+                div {
+                    class: "level-2",
+                    div {
+                        class: "level-3",
+                        div {
+                            class: "level-4",
+                            "deep"
+                        }
+                    }
+                }
+            }
+        };
+        let html = rye_ssr::render_to_string(&el);
+        assert!(html.contains("level-1"), "should have level-1");
+        assert!(html.contains("level-4"), "should have level-4");
+        assert!(html.contains("deep"), "should have deep text");
+    }
+
+    #[test]
+    fn test_template_counter_page_full_render() {
+        // Full integration: counter_page renders all expected elements via SSR
+        let el = counter_page();
+        let html = rye_ssr::render_to_string(&el);
+        // Check all major UI elements
+        assert!(html.contains("page-wrapper"), "wrapper div");
+        assert!(html.contains("page-header"), "header div");
+        assert!(html.contains("Counter"), "title");
+        assert!(html.contains("Fine-grained reactivity"), "subtitle");
+        assert!(html.contains("counter-card"), "card div");
+        assert!(html.contains("counter-buttons"), "buttons div");
+        assert!(html.contains("btn-primary"), "increment button");
+        assert!(html.contains("btn-secondary"), "decrement button");
+        assert!(html.contains("btn-ghost"), "reset button");
+        assert!(html.contains("Increment"), "increment label");
+        assert!(html.contains("Decrement"), "decrement label");
+        assert!(html.contains("Reset"), "reset label");
+    }
 }

@@ -486,4 +486,119 @@ mod tests {
         assert!(html.contains("Hello"));
         assert!(html.contains("</html>"));
     }
+
+    #[test]
+    fn test_render_void_elements() {
+        // Void elements should not have closing tags
+        let br = Element::Template(Template::new_element(
+            "br",
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        ));
+        let html = render_to_string(&br);
+        assert!(html.contains("<br"), "br should render");
+        assert!(!html.contains("</br>"), "br should not have closing tag");
+
+        let img = Element::Template(Template::new_element(
+            "img",
+            vec![("src".to_string(), "test.png".to_string())],
+            Vec::new(),
+            Vec::new(),
+        ));
+        let html = render_to_string(&img);
+        assert!(html.contains("<img"), "img should render");
+        assert!(html.contains("src=\"test.png\""), "img should have src");
+        assert!(!html.contains("</img>"), "img should not have closing tag");
+    }
+
+    #[test]
+    fn test_render_with_attributes() {
+        let el = Element::Template(Template::new_element(
+            "div",
+            vec![
+                ("id".to_string(), "main".to_string()),
+                ("class".to_string(), "container".to_string()),
+                ("data-testid".to_string(), "wrapper".to_string()),
+            ],
+            Vec::new(),
+            vec![Template::text("content")],
+        ));
+        let html = render_to_string(&el);
+        assert!(html.contains("id=\"main\""), "should have id attr");
+        assert!(
+            html.contains("class=\"container\""),
+            "should have class attr"
+        );
+        assert!(
+            html.contains("data-testid=\"wrapper\""),
+            "should have data attr"
+        );
+        assert!(html.contains("content"), "should have text content");
+    }
+
+    #[test]
+    fn test_render_nested_structure() {
+        // Build: div.card > div.card-header > h2 "Title" + div.card-body > p "Body"
+        let body =
+            Template::new_element("div", Vec::new(), Vec::new(), vec![Template::text("Body")]);
+        let header = Template::new_element(
+            "div",
+            vec![("class".to_string(), "card-header".to_string())],
+            Vec::new(),
+            vec![Template::text("Title")],
+        );
+        let card_body = Template::new_element(
+            "div",
+            vec![("class".to_string(), "card-body".to_string())],
+            Vec::new(),
+            vec![body],
+        );
+        let card = Template::new_element(
+            "div",
+            vec![("class".to_string(), "card".to_string())],
+            Vec::new(),
+            vec![header, card_body],
+        );
+        let el = Element::Template(card);
+        let html = render_to_string(&el);
+        assert!(html.contains("card"), "should have card class");
+        assert!(html.contains("card-header"), "should have header");
+        assert!(html.contains("card-body"), "should have body");
+        assert!(html.contains("Title"), "should have title");
+        assert!(html.contains("Body"), "should have body text");
+    }
+
+    #[test]
+    fn test_render_empty_element() {
+        let el = Element::Template(Template::new_element(
+            "div",
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        ));
+        let html = render_to_string(&el);
+        assert!(html.contains("<div"), "should have opening tag");
+        assert!(html.contains("</div>"), "should have closing tag");
+    }
+
+    #[test]
+    fn test_render_none_element() {
+        let el = Element::None;
+        let html = render_to_string(&el);
+        assert_eq!(html.trim(), "", "None element should produce empty string");
+    }
+
+    #[test]
+    fn test_render_fragment() {
+        let el = Element::Fragment(vec![
+            Element::Template(Template::text("a")),
+            Element::Template(Template::text("b")),
+            Element::Template(Template::text("c")),
+        ]);
+        let html = render_to_string(&el);
+        assert!(html.contains("a"), "should have first fragment");
+        assert!(html.contains("b"), "should have second fragment");
+        assert!(html.contains("c"), "should have third fragment");
+    }
 }
