@@ -11,6 +11,6 @@ path = "src/main.rs"
 
 [dependencies]
 rye-core = { workspace = true }
-notify = "6"
+notify = "8"
 tungstenite = "0.23"
 tiny_http = "0.12"
