@@ -55,6 +55,144 @@ impl NativeRenderer {
         self.layout_dirty = true;
     }
 
+    /// Render a `Template` (from `template!` macro) into the render tree.
+    ///
+    /// This converts the framework's `Template` type into the desktop renderer's
+    /// `RenderElement` tree, evaluating reactive functions once to get initial
+    /// values. This is the bridge between the framework layer and the GPU
+    /// renderer.
+    ///
+    /// The root element is replaced with the rendered template.
+    pub fn render_template(&mut self, template: &rye_core::Template) {
+        let mut new_root = RenderElement::new("root", 0);
+        self.next_id = 1;
+        for node in &template.nodes {
+            self.render_template_node(node, &mut new_root);
+        }
+        self.root = new_root;
+        self.layout_dirty = true;
+    }
+
+    /// Recursively render a `TemplateNode` into the render tree.
+    fn render_template_node(&mut self, node: &rye_core::TemplateNode, parent: &mut RenderElement) {
+        match node {
+            rye_core::TemplateNode::Text(text) => {
+                let mut text_node = RenderText::new(text, self.next_id);
+                self.next_id += 1;
+                parent
+                    .inner
+                    .borrow_mut()
+                    .children
+                    .push(RenderNode::Text(text_node));
+            }
+            rye_core::TemplateNode::Reactive(fn_) => {
+                let text = fn_();
+                let text_node = RenderText::new(&text, self.next_id);
+                self.next_id += 1;
+                parent
+                    .inner
+                    .borrow_mut()
+                    .children
+                    .push(RenderNode::Text(text_node));
+            }
+            rye_core::TemplateNode::Dynamic(val) => {
+                // Try to convert to string
+                let text = if let Some(s) = val.downcast_ref::<String>() {
+                    s.clone()
+                } else if let Some(s) = val.downcast_ref::<&str>() {
+                    s.to_string()
+                } else if let Some(n) = val.downcast_ref::<i32>() {
+                    n.to_string()
+                } else if let Some(n) = val.downcast_ref::<i64>() {
+                    n.to_string()
+                } else if let Some(n) = val.downcast_ref::<u32>() {
+                    n.to_string()
+                } else if let Some(n) = val.downcast_ref::<u64>() {
+                    n.to_string()
+                } else if let Some(n) = val.downcast_ref::<f32>() {
+                    n.to_string()
+                } else if let Some(n) = val.downcast_ref::<f64>() {
+                    n.to_string()
+                } else if let Some(b) = val.downcast_ref::<bool>() {
+                    b.to_string()
+                } else {
+                    "?".to_string()
+                };
+                let text_node = RenderText::new(&text, self.next_id);
+                self.next_id += 1;
+                parent
+                    .inner
+                    .borrow_mut()
+                    .children
+                    .push(RenderNode::Text(text_node));
+            }
+            rye_core::TemplateNode::ReactiveList { items_fn } => {
+                let items = items_fn();
+                for (_key, child_template) in items.iter() {
+                    for child_node in &child_template.nodes {
+                        self.render_template_node(child_node, parent);
+                    }
+                }
+            }
+            rye_core::TemplateNode::Element {
+                tag,
+                attrs,
+                reactive_attrs,
+                events: _,
+                children,
+            } => {
+                let mut el = RenderElement::new(tag, self.next_id);
+                self.next_id += 1;
+
+                // Apply static attributes
+                for (name, value) in attrs {
+                    let mut data = el.inner.borrow_mut();
+                    data.attributes.insert(name.clone(), value.clone());
+                    // Handle special attributes
+                    match name.as_str() {
+                        "style" => {
+                            let prev = data.style.clone();
+                            data.style = parse_style(value, prev);
+                        }
+                        "bg" | "background" => {
+                            let prev = data.background_color;
+                            data.background_color = parse_color(value, prev);
+                        }
+                        "color" => {
+                            let prev = data.text_color;
+                            data.text_color = parse_color(value, prev);
+                        }
+                        _ => {}
+                    }
+                }
+
+                // Apply reactive attributes (evaluate once for initial value)
+                for (name, fn_) in reactive_attrs {
+                    let value = fn_();
+                    let mut data = el.inner.borrow_mut();
+                    data.attributes.insert(name.clone(), value.clone());
+                    if name == "style" {
+                        let prev = data.style.clone();
+                        data.style = parse_style(&value, prev);
+                    }
+                }
+
+                // Render children
+                for child_template in children {
+                    for child_node in &child_template.nodes {
+                        self.render_template_node(child_node, &mut el);
+                    }
+                }
+
+                parent
+                    .inner
+                    .borrow_mut()
+                    .children
+                    .push(RenderNode::Element(el));
+            }
+        }
+    }
+
     /// Ensure the font system and swash cache are initialized.
     fn ensure_text_resources(&mut self) {
         if self.font_system.is_none() {
@@ -819,5 +957,229 @@ mod tests {
             header_text_data.layout.is_some(),
             "header text should have layout"
         );
+    }
+
+    #[test]
+    fn test_template_to_render_tree() {
+        // Prove the bridge: template macro -> Template -> render_template -> render tree
+        // This is the key integration point between the framework layer and GPU renderer.
+        use rye_core::{Element, Template, TemplateNode};
+        use rye_signals::Signal;
+
+        let count = Signal::new(42i32);
+        let display = count.clone();
+
+        // Build a template manually (simulating what template macro generates)
+        let template = Template::new_element(
+            "div",
+            vec![("class".to_string(), "counter".to_string())],
+            Vec::new(),
+            vec![
+                Template::text("Count: "),
+                Template::new(vec![TemplateNode::Reactive(std::rc::Rc::new(move || {
+                    display.get().to_string()
+                })
+                    as rye_core::template::ReactiveFn)]),
+            ],
+        );
+
+        let mut renderer = NativeRenderer::new();
+        renderer.render_template(&template);
+
+        // Verify the render tree was built correctly
+        let root = renderer.root();
+        let root_data = root.inner.borrow();
+        assert_eq!(root_data.children.len(), 1, "root should have 1 child");
+
+        // The child should be a div with class="counter"
+        if let RenderNode::Element(div) = &root_data.children[0] {
+            let div_data = div.inner.borrow();
+            assert_eq!(div_data.tag, "div");
+            assert_eq!(
+                div_data.attributes.get("class"),
+                Some(&"counter".to_string()),
+                "should have class attribute"
+            );
+            assert_eq!(div_data.children.len(), 2, "div should have 2 children");
+
+            // First child should be text "Count: "
+            if let RenderNode::Text(text) = &div_data.children[0] {
+                assert_eq!(text.inner.borrow().content, "Count: ");
+            } else {
+                panic!("first child should be text");
+            }
+
+            // Second child should be reactive text "42"
+            if let RenderNode::Text(text) = &div_data.children[1] {
+                assert_eq!(
+                    text.inner.borrow().content,
+                    "42",
+                    "reactive text should be evaluated"
+                );
+            } else {
+                panic!("second child should be text");
+            }
+        } else {
+            panic!("root child should be an element");
+        }
+    }
+
+    #[test]
+    fn test_template_to_render_tree_with_layout() {
+        // Full pipeline: template -> render_template -> compute_layout -> verify geometry
+        use rye_core::{Template, TemplateNode};
+
+        // Build a card layout: div.card > div.header + div.body
+        let header = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "header".to_string()),
+                (
+                    "style".to_string(),
+                    "width:100%;height:60px;background:#3b82f6".to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![Template::text("Header")],
+        );
+
+        let body = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "body".to_string()),
+                (
+                    "style".to_string(),
+                    "width:100%;height:200px;background:#f3f4f6".to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![Template::text("Body content")],
+        );
+
+        let card = Template::new_element(
+            "div",
+            vec![
+                ("class".to_string(), "card".to_string()),
+                (
+                    "style".to_string(),
+                    "display:flex;flex-direction:column;width:400px;height:300px;padding:20px"
+                        .to_string(),
+                ),
+            ],
+            Vec::new(),
+            vec![header, body],
+        );
+
+        let mut renderer = NativeRenderer::new();
+        renderer.render_template(&card);
+
+        // Compute layout
+        renderer.compute_layout(800.0, 600.0);
+
+        // Verify the card has correct size
+        let root = renderer.root();
+        let root_data = root.inner.borrow();
+        assert_eq!(
+            root_data.children.len(),
+            1,
+            "root should have 1 child (the card)"
+        );
+
+        if let RenderNode::Element(card_el) = &root_data.children[0] {
+            let card_data = card_el.inner.borrow();
+            let card_layout = card_data.layout.expect("card should have layout");
+            assert_eq!(card_layout.size.width, 400.0, "card width should be 400px");
+            assert_eq!(
+                card_layout.size.height, 300.0,
+                "card height should be 300px"
+            );
+
+            // Card should have 2 children: header and body
+            assert_eq!(card_data.children.len(), 2, "card should have 2 children");
+
+            // Header should have layout
+            if let RenderNode::Element(header_el) = &card_data.children[0] {
+                let header_data = header_el.inner.borrow();
+                let header_layout = header_data.layout.expect("header should have layout");
+                assert_eq!(
+                    header_layout.size.height, 60.0,
+                    "header height should be 60px"
+                );
+            } else {
+                panic!("first child should be header element");
+            }
+
+            // Body should have layout and be below header
+            if let RenderNode::Element(body_el) = &card_data.children[1] {
+                let body_data = body_el.inner.borrow();
+                let body_layout = body_data.layout.expect("body should have layout");
+                assert_eq!(
+                    body_layout.size.height, 200.0,
+                    "body height should be 200px"
+                );
+
+                let header_data = if let RenderNode::Element(h) = &card_data.children[0] {
+                    h.inner.borrow()
+                } else {
+                    panic!("expected header element");
+                };
+                let header_layout = header_data.layout.expect("header layout");
+                assert!(
+                    body_layout.location.y > header_layout.location.y,
+                    "body should be below header"
+                );
+            } else {
+                panic!("second child should be body element");
+            }
+        } else {
+            panic!("root child should be card element");
+        }
+    }
+
+    #[test]
+    fn test_template_reactive_list_to_render_tree() {
+        // Prove For blocks work: reactive list → render tree
+        use rye_core::{Template, TemplateNode};
+        use std::rc::Rc;
+
+        let items = vec![
+            "apple".to_string(),
+            "banana".to_string(),
+            "cherry".to_string(),
+        ];
+
+        let list_template = Template::new(vec![TemplateNode::ReactiveList {
+            items_fn: Rc::new(move || {
+                items
+                    .iter()
+                    .enumerate()
+                    .map(|(i, item)| (i, Template::new(vec![TemplateNode::Text(item.clone())])))
+                    .collect()
+            }) as rye_core::template::ReactiveListFn,
+        }]);
+
+        let mut renderer = NativeRenderer::new();
+        renderer.render_template(&list_template);
+
+        let root = renderer.root();
+        let root_data = root.inner.borrow();
+        // Should have 3 text children (one for each item)
+        assert_eq!(root_data.children.len(), 3, "should have 3 text children");
+
+        if let RenderNode::Text(text) = &root_data.children[0] {
+            assert_eq!(text.inner.borrow().content, "apple");
+        } else {
+            panic!("first child should be text");
+        }
+        if let RenderNode::Text(text) = &root_data.children[1] {
+            assert_eq!(text.inner.borrow().content, "banana");
+        } else {
+            panic!("second child should be text");
+        }
+        if let RenderNode::Text(text) = &root_data.children[2] {
+            assert_eq!(text.inner.borrow().content, "cherry");
+        } else {
+            panic!("third child should be text");
+        }
     }
 }
