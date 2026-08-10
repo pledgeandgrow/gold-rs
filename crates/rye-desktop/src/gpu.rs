@@ -100,7 +100,7 @@ pub struct InstanceData {
 pub struct GpuContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
-    surface: wgpu::Surface<'static>,
+    surface: Option<wgpu::Surface<'static>>,
     surface_config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
     uniform_buffer: wgpu::Buffer,
@@ -339,7 +339,7 @@ impl GpuContext {
         Self {
             device,
             queue,
-            surface,
+            surface: Some(surface),
             surface_config,
             pipeline,
             uniform_buffer,
@@ -352,6 +352,226 @@ impl GpuContext {
         }
     }
 
+    /// Initialize a headless GPU context (no surface/window).
+    ///
+    /// This creates the wgpu device, shader pipeline, and glyph atlas without
+    /// needing a display. Used for testing and off-screen rendering.
+    pub fn new_headless(width: u32, height: u32) -> Option<Self> {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::all(),
+            ..Default::default()
+        });
+
+        let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            compatible_surface: None,
+            force_fallback_adapter: true,
+        }))
+        .or_else(|| {
+            // Try without force_fallback_adapter if the fallback wasn't available
+            pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::LowPower,
+                compatible_surface: None,
+                force_fallback_adapter: false,
+            }))
+        })?;
+
+        let (device, queue) = pollster::block_on(adapter.request_device(
+            &wgpu::DeviceDescriptor {
+                label: Some("rye GPU device (headless)"),
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::default(),
+            },
+            None,
+        ))
+        .ok()?;
+
+        // Use a fixed format for headless rendering
+        let surface_format = wgpu::TextureFormat::Bgra8UnormSrgb;
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width,
+            height,
+            present_mode: wgpu::PresentMode::Fifo,
+            desired_maximum_frame_latency: 2,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![],
+        };
+
+        let glyph_atlas = GlyphAtlas::new(&device, &queue, 1024);
+
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("rye render shader"),
+            source: wgpu::ShaderSource::Wgsl(SHADER_SRC.into()),
+        });
+
+        let uniform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("rye uniform buffer"),
+            size: 8,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("rye vertex buffer"),
+            size: QUAD_VERTICES.len() as u64 * 4,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        queue.write_buffer(&vertex_buffer, 0, cast_slice(&QUAD_VERTICES));
+
+        let instance_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("rye instance buffer"),
+            size: (MAX_INSTANCES * std::mem::size_of::<InstanceData>()) as u64,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("rye bind group layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: Some(std::num::NonZeroU64::new(8).unwrap()),
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("rye bind group"),
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: uniform_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(glyph_atlas.texture_view()),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Sampler(glyph_atlas.sampler()),
+                },
+            ],
+        });
+
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("rye pipeline layout"),
+            bind_group_layouts: &[&bind_group_layout],
+            push_constant_ranges: &[],
+        });
+
+        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("rye render pipeline"),
+            layout: Some(&pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                buffers: &[
+                    wgpu::VertexBufferLayout {
+                        array_stride: 8,
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: &[wgpu::VertexAttribute {
+                            shader_location: 0,
+                            offset: 0,
+                            format: wgpu::VertexFormat::Float32x2,
+                        }],
+                    },
+                    wgpu::VertexBufferLayout {
+                        array_stride: std::mem::size_of::<InstanceData>() as u64,
+                        step_mode: wgpu::VertexStepMode::Instance,
+                        attributes: &[
+                            wgpu::VertexAttribute {
+                                shader_location: 1,
+                                offset: 0,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 2,
+                                offset: 8,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 3,
+                                offset: 16,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 4,
+                                offset: 24,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            wgpu::VertexAttribute {
+                                shader_location: 5,
+                                offset: 32,
+                                format: wgpu::VertexFormat::Float32x4,
+                            },
+                        ],
+                    },
+                ],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: surface_format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                ..Default::default()
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
+        Some(Self {
+            device,
+            queue,
+            surface: None,
+            surface_config,
+            pipeline,
+            uniform_buffer,
+            vertex_buffer,
+            instance_buffer,
+            bind_group,
+            glyph_atlas,
+            width,
+            height,
+        })
+    }
+
     /// Resize the surface to match the window.
     pub fn resize(&mut self, width: u32, height: u32) {
         if width == 0 || height == 0 {
@@ -361,11 +581,17 @@ impl GpuContext {
         self.height = height;
         self.surface_config.width = width;
         self.surface_config.height = height;
-        self.surface.configure(&self.device, &self.surface_config);
+        if let Some(surface) = &self.surface {
+            surface.configure(&self.device, &self.surface_config);
+        }
     }
 
     /// Render a frame with the given instances.
     pub fn render(&mut self, instances: &[InstanceData]) {
+        let Some(surface) = &self.surface else {
+            return; // Headless — no surface to render to
+        };
+
         // Update uniform buffer (surface dimensions).
         let uniforms: [f32; 2] = [self.width as f32, self.height as f32];
         self.queue
@@ -379,10 +605,10 @@ impl GpuContext {
         }
 
         // Get the next frame texture.
-        let output = match self.surface.get_current_texture() {
+        let output = match surface.get_current_texture() {
             Ok(frame) => frame,
             Err(wgpu::SurfaceError::Lost) => {
-                self.surface.configure(&self.device, &self.surface_config);
+                surface.configure(&self.device, &self.surface_config);
                 return;
             }
             Err(wgpu::SurfaceError::OutOfMemory) => {
@@ -431,5 +657,46 @@ impl GpuContext {
 
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
+    }
+
+    /// Whether this context has a surface (window) attached.
+    pub fn has_surface(&self) -> bool {
+        self.surface.is_some()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_headless_gpu_init() {
+        // Prove the wgpu device, shader, and render pipeline can be created
+        // without a display. This verifies the GPU pipeline is valid.
+        // Uses force_fallback_adapter for CI compatibility.
+        let gpu = GpuContext::new_headless(800, 600);
+        if gpu.is_none() {
+            // No GPU adapter available (headless CI without even fallback)
+            // This is acceptable — the test is advisory.
+            eprintln!("SKIP: No wgpu adapter available for headless GPU test");
+            return;
+        }
+        let gpu = gpu.unwrap();
+        assert!(
+            !gpu.has_surface(),
+            "headless context should have no surface"
+        );
+        assert_eq!(gpu.width, 800);
+        assert_eq!(gpu.height, 600);
+        // The glyph atlas should be initialized with a white pixel
+        let white = gpu.glyph_atlas.white_pixel();
+        assert!(white.x < 1024, "white pixel x should be within atlas");
+        assert!(white.y < 1024, "white pixel y should be within atlas");
+    }
+
+    #[test]
+    fn test_instance_data_layout() {
+        // Verify InstanceData is 48 bytes (12 floats) and is Pod/Zeroable
+        assert_eq!(std::mem::size_of::<InstanceData>(), 48);
     }
 }

@@ -139,8 +139,15 @@ impl NativeRenderer {
         let child_ids: Vec<NodeId> = self.taffy.children(node_id).unwrap_or_default().to_vec();
 
         for (child, child_id) in children.iter().zip(child_ids.iter()) {
-            if let RenderNode::Element(el) = child {
-                self.collect_layouts(el, *child_id);
+            match child {
+                RenderNode::Element(el) => {
+                    self.collect_layouts(el, *child_id);
+                }
+                RenderNode::Text(text) => {
+                    if let Ok(layout) = self.taffy.layout(*child_id) {
+                        text.inner.borrow_mut().layout = Some(*layout);
+                    }
+                }
             }
         }
     }
@@ -548,5 +555,269 @@ fn parse_color(value: &str, fallback: [f32; 4]) -> [f32; 4] {
         "blue" => [0.0, 0.0, 1.0, 1.0],
         "transparent" => [0.0, 0.0, 0.0, 0.0],
         _ => fallback,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rye_core::renderer::Renderer;
+
+    #[test]
+    fn test_render_tree_building() {
+        let mut renderer = NativeRenderer::new();
+        let root = renderer.root();
+
+        // Create a div element
+        let div = renderer.create_element("div");
+        renderer.set_attribute(
+            &div,
+            "style",
+            "display:flex;flex-direction:column;padding:10px",
+        );
+        renderer.set_attribute(&div, "bg", "#3b82f6");
+
+        // Create a text child
+        let text = renderer.create_text("Hello, rye!");
+        let text_node = renderer.text_to_node(&text);
+        renderer.insert_child(&div, &text_node, 0);
+
+        // Insert div into root
+        let div_node = renderer.element_to_node(&div);
+        renderer.insert_child(&root, &div_node, 0);
+
+        // Verify the tree structure
+        let root_data = root.inner.borrow();
+        assert_eq!(root_data.children.len(), 1);
+
+        match &root_data.children[0] {
+            RenderNode::Element(el) => {
+                let el_data = el.inner.borrow();
+                assert_eq!(el_data.tag, "div");
+                let bg = el_data.background_color;
+                assert!((bg[0] - 0.231).abs() < 0.01, "red: {}", bg[0]);
+                assert!((bg[1] - 0.510).abs() < 0.01, "green: {}", bg[1]);
+                assert!((bg[2] - 0.965).abs() < 0.01, "blue: {}", bg[2]);
+                assert_eq!(bg[3], 1.0);
+                assert_eq!(el_data.children.len(), 1);
+                assert_eq!(el_data.style.padding, taffy::Rect::length(10.0));
+
+                match &el_data.children[0] {
+                    RenderNode::Text(t) => {
+                        assert_eq!(t.inner.borrow().content, "Hello, rye!");
+                    }
+                    _ => panic!("Expected text child"),
+                }
+            }
+            _ => panic!("Expected element child"),
+        }
+    }
+
+    #[test]
+    fn test_layout_computation() {
+        let mut renderer = NativeRenderer::new();
+        let root = renderer.root();
+
+        // Create a flex column container with two children
+        let container = renderer.create_element("div");
+        renderer.set_attribute(
+            &container,
+            "style",
+            "display:flex;flex-direction:column;width:300px;height:200px",
+        );
+
+        let child1 = renderer.create_element("div");
+        renderer.set_attribute(&child1, "style", "width:100px;height:50px");
+        let child2 = renderer.create_element("div");
+        renderer.set_attribute(&child2, "style", "width:200px;height:30px");
+
+        let c1_node = renderer.element_to_node(&child1);
+        let c2_node = renderer.element_to_node(&child2);
+        renderer.insert_child(&container, &c1_node, 0);
+        renderer.insert_child(&container, &c2_node, 1);
+
+        let container_node = renderer.element_to_node(&container);
+        renderer.insert_child(&root, &container_node, 0);
+
+        // Compute layout at 800x600
+        renderer.compute_layout(800.0, 600.0);
+
+        // Verify container layout
+        let container_data = container.inner.borrow();
+        let container_layout = container_data.layout.expect("container should have layout");
+        assert_eq!(container_layout.size.width, 300.0);
+        assert_eq!(container_layout.size.height, 200.0);
+
+        // Verify children are stacked vertically (column direction)
+        let child1_data = child1.inner.borrow();
+        let child1_layout = child1_data.layout.expect("child1 should have layout");
+        assert_eq!(child1_layout.size.width, 100.0);
+        assert_eq!(child1_layout.size.height, 50.0);
+        // First child should be at y=0 (top of container)
+        assert_eq!(child1_layout.location.y, 0.0);
+
+        let child2_data = child2.inner.borrow();
+        let child2_layout = child2_data.layout.expect("child2 should have layout");
+        assert_eq!(child2_layout.size.width, 200.0);
+        assert_eq!(child2_layout.size.height, 30.0);
+        // Second child should be below first child (y = 50)
+        assert_eq!(child2_layout.location.y, 50.0);
+    }
+
+    #[test]
+    fn test_style_parsing() {
+        let style = parse_style("display:flex;flex-direction:row;justify-content:center;align-items:center;padding:20px", taffy::Style::default());
+        assert_eq!(style.display, taffy::Display::Flex);
+        assert_eq!(style.flex_direction, taffy::FlexDirection::Row);
+        assert_eq!(style.justify_content, Some(taffy::JustifyContent::Center));
+        assert_eq!(style.align_items, Some(taffy::AlignItems::Center));
+        assert_eq!(style.padding, taffy::Rect::length(20.0));
+    }
+
+    #[test]
+    fn test_color_parsing() {
+        assert_eq!(parse_color("#ff0000", [0.0; 4]), [1.0, 0.0, 0.0, 1.0]);
+        let alpha_color = parse_color("#00ff0080", [0.0; 4]);
+        assert!(
+            (alpha_color[3] - 0.502).abs() < 0.01,
+            "alpha: {}",
+            alpha_color[3]
+        );
+        assert_eq!(parse_color("blue", [0.0; 4]), [0.0, 0.0, 1.0, 1.0]);
+        assert_eq!(parse_color("transparent", [0.0; 4]), [0.0, 0.0, 0.0, 0.0]);
+        assert_eq!(parse_color("unknown", [0.5; 4]), [0.5; 4]); // fallback
+    }
+
+    #[test]
+    fn test_text_node_creation() {
+        let mut renderer = NativeRenderer::new();
+        let text = renderer.create_text("Hello World");
+        assert_eq!(text.inner.borrow().content, "Hello World");
+        assert_eq!(text.inner.borrow().font_size, 16.0); // default
+
+        renderer.set_text(&text, "Updated");
+        assert_eq!(text.inner.borrow().content, "Updated");
+    }
+
+    #[test]
+    fn test_event_handler_storage() {
+        let mut renderer = NativeRenderer::new();
+        let button = renderer.create_element("button");
+
+        let handler: EventHandler = Box::new(|_| {});
+        renderer.set_event_listener(&button, "click", handler);
+
+        assert!(button.inner.borrow().event_handlers.contains_key("click"));
+
+        renderer.remove_event_listener(&button, "click");
+        assert!(!button.inner.borrow().event_handlers.contains_key("click"));
+    }
+
+    #[test]
+    fn test_child_manipulation() {
+        let mut renderer = NativeRenderer::new();
+        let parent = renderer.create_element("div");
+
+        let child1 = renderer.create_element("span");
+        let child2 = renderer.create_element("span");
+        let child3 = renderer.create_element("span");
+
+        renderer.insert_child(&parent, &renderer.element_to_node(&child1), 0);
+        renderer.insert_child(&parent, &renderer.element_to_node(&child2), 1);
+        renderer.insert_child(&parent, &renderer.element_to_node(&child3), 2);
+
+        assert_eq!(parent.inner.borrow().children.len(), 3);
+
+        // Remove middle child
+        renderer.remove_child(&parent, 1);
+        assert_eq!(parent.inner.borrow().children.len(), 2);
+
+        // Move first child to end
+        renderer.move_child(&parent, 0, 1);
+        assert_eq!(parent.inner.borrow().children.len(), 2);
+    }
+
+    #[test]
+    fn test_layout_dirty_flag() {
+        let mut renderer = NativeRenderer::new();
+        assert!(renderer.layout_dirty); // starts dirty
+
+        renderer.compute_layout(800.0, 600.0);
+        assert!(!renderer.layout_dirty); // clean after layout
+
+        // Adding a child should mark dirty
+        let root = renderer.root();
+        let child = renderer.create_element("div");
+        renderer.insert_child(&root, &renderer.element_to_node(&child), 0);
+        assert!(renderer.layout_dirty);
+    }
+
+    #[test]
+    fn test_full_pipeline_render_tree_to_layout() {
+        // Prove the full desktop pipeline: build render tree → compute layout
+        // → verify geometry. This is what happens every frame in the desktop app.
+        let mut renderer = NativeRenderer::new();
+        let root = renderer.root();
+
+        // Build a simple card layout: container > [header, body]
+        let container = renderer.create_element("div");
+        renderer.set_attribute(
+            &container,
+            "style",
+            "display:flex;flex-direction:column;width:400px;height:300px;padding:20px",
+        );
+        renderer.set_attribute(&container, "bg", "#ffffff");
+
+        let header = renderer.create_element("div");
+        renderer.set_attribute(&header, "style", "width:100%;height:60px");
+        renderer.set_attribute(&header, "bg", "#3b82f6");
+        let header_text = renderer.create_text("Dashboard");
+        renderer.insert_child(&header, &renderer.text_to_node(&header_text), 0);
+
+        let body = renderer.create_element("div");
+        renderer.set_attribute(&body, "style", "width:100%;height:200px");
+        renderer.set_attribute(&body, "bg", "#f3f4f6");
+        let body_text = renderer.create_text("Content here");
+        renderer.insert_child(&body, &renderer.text_to_node(&body_text), 0);
+
+        renderer.insert_child(&container, &renderer.element_to_node(&header), 0);
+        renderer.insert_child(&container, &renderer.element_to_node(&body), 1);
+        renderer.insert_child(&root, &renderer.element_to_node(&container), 0);
+
+        // Compute layout
+        renderer.compute_layout(800.0, 600.0);
+
+        // Verify container has correct size
+        let container_data = container.inner.borrow();
+        let container_layout = container_data.layout.expect("container layout");
+        assert_eq!(container_layout.size.width, 400.0);
+        assert_eq!(container_layout.size.height, 300.0);
+
+        // Header should be at top (after padding)
+        let header_data = header.inner.borrow();
+        let header_layout = header_data.layout.expect("header layout");
+        assert_eq!(header_layout.size.height, 60.0);
+        // With 20px padding, header starts at y=20
+        assert!(
+            header_layout.location.y >= 20.0,
+            "header y should account for padding: got {}",
+            header_layout.location.y
+        );
+
+        // Body should be below header
+        let body_data = body.inner.borrow();
+        let body_layout = body_data.layout.expect("body layout");
+        assert_eq!(body_layout.size.height, 200.0);
+        assert!(
+            body_layout.location.y > header_layout.location.y,
+            "body should be below header"
+        );
+
+        // Text nodes should have layout
+        let header_text_data = header_text.inner.borrow();
+        assert!(
+            header_text_data.layout.is_some(),
+            "header text should have layout"
+        );
     }
 }
