@@ -54,7 +54,7 @@ rye-demo = { path = "crates/rye-demo" }
 # External dependencies (shared versions)
 wgpu = "24"
 winit = "0.30"
-taffy = "0.7"
+taffy = "0.14"
 cosmic-text = "0.12"
 lyon = "1"
 web-sys = "0.3"
